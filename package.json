@@ -1,0 +1,16 @@
+{
+    "name": "Mistero-Cheats",
+    "version": "v1.0.0-stable",
+    "scripts": {
+        "start": "bun run index.ts"
+    },
+    "dependencies": {
+        "elysia": "~1.0.27",
+        "mongodb": "^6.8.0",
+        "elysia-rate-limit": "~4.1.0"
+    },
+    "devDependencies": {
+        "@types/bun": "~1.0.6",
+        "@types/node": "~20.10.0"
+    }
+}
