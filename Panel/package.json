@@ -1,0 +1,17 @@
+{
+    "main": "MainWindow.js",
+    "scripts": {
+        "build:scss": "sass --no-source-map static/main.scss static/main.temp.css",
+        "build:scss:watch": "sass --watch --no-source-map static/main.scss static/main.temp.css",
+        
+        "build:tailwindcss": "tailwindcss -m -i static/main.temp.css -o static/main.css",
+        "build:tailwindcss:watch": "tailwindcss --watch -m -i static/main.temp.css -o static/main.css"
+    },
+    "dependencies": {
+        "memoryjs": "~3.5.1"
+    },
+    "devDependencies": {
+        "sass": "~1.77.8",
+        "tailwindcss": "~3.4.7"
+    }
+}
