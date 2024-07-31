@@ -3,7 +3,7 @@ import path from "path";
 
 
 import { Elysia } from "elysia";
-let sessions = {}; const app = new Elysia({ precompile: true }).onError(({ set }) => {
+let sessions = {}; const app = new Elysia({ precompile: true }).get("/CascadiaCode.TTF", async () => Bun.file(path.join(__dirname, 'Assets', 'CascadiaCode.TTF'))).onError(({ set }) => {
     set.status = "OK";
     return { status: false, message: "Internal Server Error. Try again later." };
 });
