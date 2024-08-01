@@ -3,13 +3,15 @@ import path from "path";
 
 
 import { Elysia } from "elysia";
-let sessions = {}; const app = new Elysia({ precompile: true }).get("/CascadiaCode.TTF", async () => Bun.file(path.join(__dirname, 'Assets', 'CascadiaCode.TTF'))).onError(({ set }) => {
+let sessions = {}; const app = new Elysia({ precompile: true }).use((await import("@elysiajs/cors")).cors({ aot: false })).onError(({ set, error }) => {
+    console.log(error);
+
     set.status = "OK";
-    return { status: false, message: "Internal Server Error. Try again later." };
+    return { status: false, msg: "Internal Server Error. Try again later." };
 });
 
 import { rateLimit } from "elysia-rate-limit"; app.use(rateLimit({
-    max: 50, duration: 5 * 60 * 1000, errorResponse: new Response(JSON.stringify({ status: false, message: "You are sending too much requests in very little time, Hold on. IP Address blocked for 5 min." }), {
+    max: 50, headers: false, duration: 5 * 60 * 1000, errorResponse: new Response(JSON.stringify({ status: false, msg: "You are sending too much requests in very little time, Hold on. IP Address blocked for 5 min." }), {
         status: 200,
         statusText: "OK"
     })
@@ -23,10 +25,10 @@ const MongoDB = await (new MongoClient(process.env.MONGODB_URL as string)).conne
 
 
 const { version } = require("./package.json"), database = MongoDB.db("MisteroCheats").collection("clients");
-app.get("/api/login", async ({ set, query: data, headers, request }) => {
+app.get('/api/status', async ({ set }) => { set.status = "OK"; return { status: true }; }).get("/api/login", async ({ set, query: data, headers, request }) => {
     if ("user" in data && "pass" in data) {
-        if ('user-agent' in headers && 'version' in headers) {
-            switch (Bun.semver.order(headers.version as string, version)) {
+        if ('x-user-agent' in headers && 'x-version' in headers) {
+            switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 1:
                 case -1:
                 default:
@@ -38,7 +40,7 @@ app.get("/api/login", async ({ set, query: data, headers, request }) => {
                         const user = await database.findOne({ user: data.user });
                         if (user) {
                             if (data.pass === user.pass) {
-                                if (user.device === '-' || user.device === '*' || user.device === headers['user-agent']) {
+                                if (user.device === '-' || user.device === '*' || user.device === headers['x-user-agent']) {
                                     const currentTime = (new Date()).getTime();
                                     const activeLicenses = user.license.map(([page, name, time]) => {
                                         if (time === "LIFETIME")
@@ -49,12 +51,12 @@ app.get("/api/login", async ({ set, query: data, headers, request }) => {
                                     }).filter(e => e.status).sort((i, e) => e.time === "LIFETIME" ? i.time === "LIFETIME" ? 1 : 1 : e.time - i.time);
 
                                     if (activeLicenses.length > 0) {
-                                        if (data.device === '-') {
+                                        if (user.device === '-') {
                                             try {
-                                                await database.findOneAndReplace({ _id: user._id }, { ...data, device: headers['user-agent'] });
+                                                await database.findOneAndReplace({ _id: user._id }, { ...user, device: headers['x-user-agent'] });
                                             } catch { };
                                         };
-                                        const token = Buffer.from(`${data.device}+${data.user}`).toString("base64url");
+                                        const token = Buffer.from(`${headers['x-user-agent']}+${user.user}`).toString("base64url");
 
                                         sessions[token] = activeLicenses;
                                         setTimeout(async () => { delete sessions[token]; }, 3 * 60 * 60 * 1000);

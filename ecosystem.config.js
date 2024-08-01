@@ -2,8 +2,8 @@ module.exports = {
     apps: [
         {
             name: "MainServer",
-            script: "./index.ts",
-            interpreter: "~/.bun/bin/bun",
+            script: "index.ts",
+            interpreter: "bun",
 
             instances: -1,
             exec_mode: "cluster",

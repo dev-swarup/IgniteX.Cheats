@@ -2,19 +2,17 @@
     "name": "Mistero-Cheats",
     "version": "1.0.0",
     "scripts": {
-        "build:panel": "node build.js",
-        
-        "start": "pm2 start ecosystem.config.json"
+        "start": "pm2 start ecosystem.config.js"
     },
     "dependencies": {
         "pm2": "~5.4.2",
         "elysia": "~1.0.27",
         "mongodb": "^6.8.0",
+        "@elysiajs/cors": "~1.1.0",
         "elysia-rate-limit": "~4.1.0"
     },
     "devDependencies": {
         "@types/bun": "~1.0.6",
-        "@types/node": "~20.10.0",
-        "@electron/packager": "18.3.3"
+        "@types/node": "~20.10.0"
     }
 }
