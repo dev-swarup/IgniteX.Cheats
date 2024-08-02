@@ -1,12 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Mistero Cheats</title>
+    <link rel="stylesheet" type="text/css" href="./main.css">
+
+    <script src="./js/jQuery.js"></script>
+    <script src="./js/jQuery.App.js"></script>
+</head>
+
 <body page="LOGIN">
     <main name="LOGIN">
         <nav>
-            <img src="./icons/logo.png" class="icon">
+            <img src="./icons/logo.png" class="icon" draggable="false">
             <menu>
                 <input autocomplete="off" spellcheck="false" placeholder="USER" id="user">
                 <input autocomplete="off" spellcheck="false" type="password" placeholder="PASSWORD" id="pass">
                 <div>
-                    <button onclick="Login()">
+                    <button onclick="InitLogin()">
                         <span>LOGIN</span>
                         <svg width="30" height="18" viewBox="0 0 23 23" class="hidden">
                             <circle cx="4" cy="12" r="3">
@@ -30,20 +41,9 @@
     <main name="PANEL">
         <nav>
             <menu class="main">
-                <button name="AIM" onclick="GetPage('AIM')">AIM</button>
-                <button name="BRUTAL" onclick="GetPage('BRUTAL')">BRUTAL</button>
-                <button name="HIGH-RISK" onclick="GetPage('HIGH-RISK')">HIGH RISK</button>
-
-                <script type="text/javascript">
-                    async function GetPage(name) {
-                        document.querySelectorAll("menu.main button")
-                            .forEach(e => e.classList.remove('selected')); document.querySelector(`menu.main button[name="${name}"]`).classList.add('selected');
-
-                        document.querySelector('nav div#main').setAttribute('page', name);
-                    };
-
-                    document.querySelector("menu.main button:nth-child(1)").classList.add('selected');
-                </script>
+                <button name="AIM" onclick="SetPage('AIM')" license="false">AIM</button>
+                <button name="BRUTAL" onclick="SetPage('BRUTAL')" license="false">BRUTAL</button>
+                <button name="EXPERIMENTAL" onclick="SetPage('EXPERIMENTAL')" license="false">EXPERIMENTAL</button>
             </menu>
 
             <menu class="location">
@@ -57,19 +57,15 @@
                     <button></button>
                 </div>
                 <br>
-                <div name="COLOR[BLUE]" onclick="InjectMenu('COLOR[BLUE]','Color (Blue)')">
-                    <span>Blue Color</span>
-                    <button></button>
-                </div>
             </menu>
-            <menu>
+            <menu id="EXTRA" license="false">
                 <div name="BYPASS" style="margin-top: 0px;" license="false">
                     <span>BYPASS</span>
-                    <button onclick="InjectCheat('BYPASS')">INJECT</button>
+                    <button onclick="InjectCheat('BYPASS','BYPASS')">INJECT</button>
                 </div>
                 <div name="ANTICHEAT" license="false">
                     <span>ANTICHEAT</span>
-                    <button onclick="InjectCheat('ANTICHEAT')">INJECT</button>
+                    <button onclick="InjectCheat('ANTICHEAT','ANTICHEAT')">INJECT</button>
                 </div>
             </menu>
             <menu>
@@ -90,7 +86,7 @@
                             <div name="AIMBOT" license="false">
                                 <span>AIMBOT</span>
                                 <div>
-                                    <button onclick="InjectCheat('AIMBOT')">INJECT</button>
+                                    <button onclick="InjectCheat('AIMBOT','AIMBOT')">INJECT</button>
                                     <button>OFF</button>
                                 </div>
                             </div>
@@ -109,21 +105,22 @@
                             <div name="SNIPER[SCOPE]" license="false">
                                 <span>SCOPE</span>
                                 <div>
-                                    <button onclick="InjectCheat('SNIPER[SCOPE]')">INJECT</button>
+                                    <button onclick="InjectCheat('SNIPER[SCOPE]','SNIPER SCOPE')">INJECT</button>
                                     <button>OFF</button>
                                 </div>
                             </div>
                             <div name="SNIPER[NO-SCOPE]" license="false">
                                 <span>NO SCOPE</span>
                                 <div>
-                                    <button onclick="InjectCheat('SNIPER[NO-SCOPE]')">INJECT</button>
+                                    <button onclick="InjectCheat('SNIPER[NO-SCOPE]','SNIPER NO SCOPE')">INJECT</button>
                                     <button>OFF</button>
                                 </div>
                             </div>
                             <div name="SNIPER[FAST][SWITCH]" license="false">
                                 <span>FAST SWITCH</span>
                                 <div>
-                                    <button onclick="InjectCheat('SNIPER[FAST][SWITCH]')">INJECT</button>
+                                    <button
+                                        onclick="InjectCheat('SNIPER[FAST][SWITCH]','SNIPER SWITCH')">INJECT</button>
                                     <button>OFF</button>
                                 </div>
                             </div>
@@ -148,14 +145,14 @@
                             <div name="NO-RECOIL" license="false">
                                 <span>NO RECOIL</span>
                                 <div>
-                                    <button onclick="InjectCheat('NO-RECOIL')">INJECT</button>
+                                    <button onclick="InjectCheat('NO-RECOIL','NO RECOIL')">INJECT</button>
                                     <button>OFF</button>
                                 </div>
                             </div>
                             <div name="NO-RELOAD" license="false">
                                 <span>NO RELOAD</span>
                                 <div>
-                                    <button onclick="InjectCheat('NO-RELOAD')">INJECT</button>
+                                    <button onclick="InjectCheat('NO-RELOAD','NO RELOAD')">INJECT</button>
                                     <button>OFF</button>
                                 </div>
                             </div>
@@ -164,18 +161,18 @@
                 </page>
                 <page id="BRUTAL" license="false">
                     <div>
-                        <menu>
+                        <menu license="false">
                             <div name="SPEED" license="false">
                                 <span>SPEED</span>
                                 <div>
-                                    <button onclick="InjectCheat('SPEED')">INJECT</button>
+                                    <button onclick="InjectCheat('SPEED','SPEED')">INJECT</button>
                                     <button>OFF</button>
                                 </div>
                             </div>
                             <div name="MAGIC-BULLET" license="false">
                                 <span>MAGIC BULLET</span>
                                 <div>
-                                    <button onclick="InjectCheat('MAGIC-BULLET')">INJECT</button>
+                                    <button onclick="InjectCheat('MAGIC-BULLET','MAGIC BULLET')">INJECT</button>
                                     <button>OFF</button>
                                 </div>
                             </div>
@@ -184,20 +181,20 @@
                     <div></div>
                     <div></div>
                 </page>
-                <page id="HIGH-RISK" license="false">
+                <page id="EXPERIMENTAL" license="false">
                     <div>
-                        <menu>
+                        <menu license="false">
                             <div name="FAST-MEDKIT" license="false">
                                 <span>FAST MEDKIT</span>
                                 <div>
-                                    <button onclick="InjectCheat('FAST-MEDKIT')">INJECT</button>
+                                    <button onclick="InjectCheat('FAST-MEDKIT','FAST MEDKIT')">INJECT</button>
                                     <button>OFF</button>
                                 </div>
                             </div>
                             <div name="DOUBLE-WEAPON" license="false">
                                 <span>DOUBLE WEAPON</span>
                                 <div>
-                                    <button onclick="InjectCheat('DOUBLE-WEAPON')">INJECT</button>
+                                    <button onclick="InjectCheat('DOUBLE-WEAPON','DOUBLE WEAPON')">INJECT</button>
                                     <button>OFF</button>
                                 </div>
                             </div>
@@ -208,10 +205,9 @@
                 </page>
             </div>
 
-            <div id="terminal"><span class="last-line"></span></div>
+            <div id="terminal"></div>
         </nav>
     </main>
-    <script>
-        log(location);
-    </script>
 </body>
+
+</html>
