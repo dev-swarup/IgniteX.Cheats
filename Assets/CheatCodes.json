@@ -1,4 +1,13 @@
 {
+    "SNIPER[FAST][SWITCH]": [
+        true,
+        [
+            [
+                "00 00 00 00 3F 00 00 80 3E",
+                "00 EC 51 B8 3D 8F C2 F5 3C "
+            ]
+        ]
+    ],
     "MAGIC-BULLET": [
         true,
         [
