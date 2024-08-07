@@ -1,0 +1,39 @@
+{
+    "name": "Mistero.Cheats.NormalVersion",
+    "version": "1.0.0",
+    "scripts": {
+        "build:scss": "sass --no-source-map static/main.scss static/main.temp.css",
+        "build:scss:watch": "sass --watch --no-source-map static/main.scss static/main.temp.css",
+
+        "build:tailwindcss": "tailwindcss -m -i static/main.temp.css -o static/main.css",
+        "build:tailwindcss:watch": "tailwindcss --watch -m -i static/main.temp.css -o static/main.css"
+    },
+    "dependencies": {
+        "axios": "~1.7.3",
+        "express": "~4.19.2",
+        "express-ws": "~5.0.2",
+        "webview-nodejs": "~0.4.3"
+    },
+    "devDependencies": {
+        "sass": "~1.77.8",
+        "tailwindcss": "~3.4.7"
+    },
+    "bin": "index.js",
+    "pkg": {
+        "assets": [
+            "node_modules/**",
+            "static/main.css",
+            "static/alert.wav",
+            "static/index.html",
+            "static/js/jQuery.js",
+            "static/icons/logo.png",
+            "static/CascadiaCode.TTF",
+            "static/js/jQuery.App.js"
+        ],
+        "scripts": [
+            "index.js",
+            "Emulator/index.js",
+            "Emulator/mem.node"
+        ]
+    }
+}
