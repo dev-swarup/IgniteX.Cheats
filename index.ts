@@ -56,7 +56,7 @@ app.get('/api/status', async ({ set }) => { set.status = "OK"; return { status: 
                                                 await database.findOneAndReplace({ _id: user._id }, { ...user, device: headers['x-user-agent'] });
                                             } catch { };
                                         };
-                                        const token = Buffer.from(`${headers['x-user-agent']}+${user.user}`).toString("base64url");
+                                        const token = Buffer.from(`${headers['x-user-agent']?.slice(0, 18)}+${user.user}+${currentTime}`).toString("base64url");
 
                                         sessions[token] = activeLicenses;
                                         setTimeout(async () => { delete sessions[token]; }, 3 * 60 * 60 * 1000);
@@ -103,15 +103,20 @@ fs.watchFile(path.join(__dirname, 'CheatCodes.json'), { interval: 5000 }, async 
 app
     .get('/api/cheat/menu/:token/:code', async ({ set, params }) => {
         if ("token" in params || "code" in params) {
-            if (params.token in sessions)
-                return Bun.file(path.join(__dirname, 'Assets', 'LocationMenu', `${params.code}.dll`));
-            else {
+            if (params.token in sessions) {
+                const __path = path.join(__dirname, 'Assets', 'LocationMenu', `${params.code}.dll`); if (fs.existsSync(__path))
+                    return Bun.file(__path);
+                else {
+                    set.status = 'Forbidden';
+                    return { status: false, msg: "No such chams is ready." };
+                };
+            } else {
                 set.status = 'Forbidden';
-                return { status: false, msg: "Your session has expired. Please restart the app." };
+                return { status: false, msg: "Your session has expired. Restart the app." };
             };
         } else {
             set.status = 'Forbidden';
-            return { status: false, msg: "Invalied request. Are you trying you tamper with the program?" };
+            return { status: false, msg: "Invalied request. Are you trying you tamper with the program ?" };
         };
     })
     .get('/api/cheat/code/:token/:code', async ({ set, params }) => {
@@ -127,19 +132,19 @@ app
 
                     else {
                         set.status = 'OK';
-                        return { status: false, msg: "This feature is not in your subscription. Purchase it first." };
+                        return { status: false, msg: "This cheat is not in your subscription. Purchase it first." };
                     };
                 } else {
                     set.status = 'OK';
-                    return { status: false, msg: "This feature is not yet complete. Ask the developer for more details." };
+                    return { status: false, msg: "This cheat is not yet added. Wait for next update." };
                 };
             } else {
                 set.status = 'OK';
-                return { status: false, msg: "Your session has expired. Please restart the program." };
+                return { status: false, msg: "Your session has expired. Restart the app." };
             };
         } else {
             set.status = 'OK';
-            return { status: false, msg: "Invalied request. Are you trying you tamper with the program?" };
+            return { status: false, msg: "Invalied request. Are you trying you tamper with the program ?" };
         };
     });
 
