@@ -5,8 +5,10 @@ module.exports = {
             script: "index.ts",
             interpreter: "bun",
 
-            instances: -1,
+            watch: true,
+            instances: 1,
             exec_mode: "cluster",
+            restart_delay: 10000,
             max_memory_restart: "300M"
         }
     ]
