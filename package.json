@@ -1,14 +1,12 @@
 {
     "name": "mistero.cheats",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "scripts": {
-        "start": "pm2 start ecosystem.config.js"
+        "start": "bun run index.ts"
     },
     "dependencies": {
-        "pm2": "~5.4.2",
         "elysia": "~1.0.27",
         "mongodb": "^6.8.0",
-        "@elysiajs/cors": "~1.1.0",
         "elysia-rate-limit": "~4.1.0"
     },
     "devDependencies": {

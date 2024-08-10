@@ -1,17 +1,17 @@
 import fs from "fs";
 import path from "path";
-
-
 import { Elysia } from "elysia";
-let sessions = {}; const app = new Elysia({ precompile: true }).use((await import("@elysiajs/cors")).cors({ aot: false })).onError(({ set, error }) => {
+import { rateLimit } from "elysia-rate-limit";
+
+let ElysiaTokens = {}; const app = new Elysia({ precompile: true }).onError(({ set, code, error }) => {
     console.log(error);
 
     set.status = "OK";
-    return { status: false, msg: "Internal Server Error. Try again later." };
+    return { status: false, err: code == "NOT_FOUND" ? "Invalid path called" : "Internal Server Error. Try again later." };
 });
 
-import { rateLimit } from "elysia-rate-limit"; app.use(rateLimit({
-    max: 50, headers: false, duration: 5 * 60 * 1000, errorResponse: new Response(JSON.stringify({ status: false, msg: "You are sending too much requests in very little time, Hold on. IP Address blocked for 5 min." }), {
+app.use(rateLimit({
+    max: 50, headers: false, duration: 5 * 60 * 1000, errorResponse: new Response(JSON.stringify({ status: false, err: "You are sending too much requests in very little time, Hold on. IP Address blocked for 5 min." }), {
         status: 200,
         statusText: "OK"
     })
@@ -24,128 +24,132 @@ const MongoDB = await (new MongoClient(process.env.MONGODB_URL as string)).conne
 });
 
 
-const { version } = require("./package.json"), database = MongoDB.db("MisteroCheats").collection("clients");
-app.get('/api/status', async ({ set }) => { set.status = "OK"; return { status: true }; }).get("/api/login", async ({ set, query: data, headers, request }) => {
-    if ("user" in data && "pass" in data) {
-        if ('x-user-agent' in headers && 'x-version' in headers) {
+const { version } = require("./package.json"),
+    cheats = MongoDB.db("MisteroCheats").collection("cheats"),
+    clients = MongoDB.db("MisteroCheats").collection("clients");
+
+
+app
+    .get('/api/status', async ({ set, query: data, headers }) => {
+        set.status = "OK";
+        if (data.auth && 'x-user-agent' in headers && 'x-version' in headers)
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 1:
                 case -1:
                 default:
-                    set.status = 'OK';
-                    return { status: false, msg: "Newer Version is here. Download the latest version." };
+                    return { status: false, err: "This Version is outdated. Download the latest version." };
 
                 case 0:
-                    try {
-                        const user = await database.findOne({ user: data.user });
-                        if (user) {
-                            if (data.pass === user.pass) {
-                                if (user.device === '-' || user.device === '*' || user.device === headers['x-user-agent']) {
-                                    const currentTime = (new Date()).getTime();
-                                    const activeLicenses = user.license.map(([page, name, time]) => {
-                                        if (time === "LIFETIME")
-                                            return { status: true, page, name, time: "LIFETIME" };
+                    if (data.auth in ElysiaTokens) {
+                        const session = ElysiaTokens[data.auth];
+                        if (headers['x-user-agent'] === session.device)
+                            return { status: true };
+                        else
+                            return { status: false, err: "This device is not registered. Ask the Owner for a Device Reset." };
+                    } else
+                        return { status: false, err: "Your session has expired. Re-Login to the Panel." };
+            }
+        else
+            return { status: true };
+    })
 
-                                        else
-                                            return currentTime < time ? { status: true, page, name, time } : { status: false };
-                                    }).filter(e => e.status).sort((i, e) => e.time === "LIFETIME" ? i.time === "LIFETIME" ? 1 : 1 : e.time - i.time);
-
-                                    if (activeLicenses.length > 0) {
-                                        if (user.device === '-') {
-                                            try {
-                                                await database.findOneAndReplace({ _id: user._id }, { ...user, device: headers['x-user-agent'] });
-                                            } catch { };
-                                        };
-                                        const token = Buffer.from(`${headers['x-user-agent']?.slice(0, 18)}+${user.user}+${currentTime}`).toString("base64url");
-
-                                        sessions[token] = activeLicenses;
-                                        setTimeout(async () => { delete sessions[token]; }, 3 * 60 * 60 * 1000);
-
-                                        set.status = 'OK';
-                                        return { status: true, data: { token, license: activeLicenses.map(e => { return { page: e.page, name: e.name, time: e.time } }), expiry: activeLicenses.at(0).time } };
-                                    } else {
-                                        set.status = 'OK';
-                                        return { status: false, msg: "You have no cheats left in your subscription to access the application." };
-                                    };
-                                } else {
-                                    set.status = 'OK';
-                                    return { status: false, msg: "This device is not registed. Please ask the developer for Device Reset." };
-                                };
-                            } else {
-                                set.status = 'OK';
-                                return { status: false, msg: "Password is incorrect. Please check the username and password or Try again later." };
-                            };
-                        } else {
-                            set.status = 'OK';
-                            return { status: false, msg: "Username is not registered. Please ask the developer to register your username." };
-                        };
-                    } catch (err) {
-                        console.log(err);
-
-                        set.status = 'OK';
-                        return { status: false, msg: "Sorry, our servers are unable to process your request. Try again later." };
-                    };
-            };
-        } else {
-            set.status = 'OK';
-            return { status: false, msg: "The device you are using is unknown to us. Are you trying you tamper with the program?" };
-        };
-    } else {
+    .get("/api/login", async ({ set, query: data, headers, request }) => {
         set.status = 'OK';
-        return { status: false, msg: "Enter your username and password." };
-    };
-});
+        if ("user" in data && "pass" in data)
+            if ('x-user-agent' in headers && 'x-version' in headers)
+                switch (Bun.semver.order(headers['x-version'] as string, version)) {
+                    case 1:
+                    case -1:
+                    default:
+                        return { status: false, err: "This Version is outdated. Download the latest version." };
+
+                    case 0:
+                        try {
+                            const client = await clients.findOne({ user: data.user }); if (client)
+                                if (data.pass === client.pass)
+                                    if (client.device === '-' || client.device === '*' || client.device === headers['x-user-agent']) {
+                                        const currentTime = (new Date()).getTime();
+                                        const activeLicenses = client.license.map(([page, name, time]) => {
+                                            if (time === "LIFETIME")
+                                                return { status: true, page, name, time: "LIFETIME" };
+
+                                            else
+                                                return currentTime < time ? { status: true, page, name, time } : { status: false };
+                                        }).filter(e => e.status).sort((i, e) => e.time === "LIFETIME" ? i.time === "LIFETIME" ? 1 : 1 : e.time - i.time);
+
+                                        if (client.device === '-') {
+                                            try {
+                                                await clients.findOneAndReplace({ _id: client._id }, { ...client, device: headers['x-user-agent'] });
+                                            } catch {
+                                                return { status: false, err: "Failed to register your device. Try again later." };
+                                            };
+                                        };
+
+                                        if (activeLicenses.length === 0)
+                                            return { status: false, err: "Subscription's Expired. Purchase new ones." };
 
 
-let cheat_codes: Record<string, [boolean, Array<[string, string]>]> = JSON.parse(fs.readFileSync(path.join(__dirname, 'Assets', 'CheatCodes.json'), 'utf8'));
-fs.watchFile(path.join(__dirname, 'CheatCodes.json'), { interval: 5000 }, async () => cheat_codes = JSON.parse(fs.readFileSync(path.join(__dirname, 'Assets', 'CheatCodes.json'), 'utf8')));
+                                        const token = Buffer.from(`${headers['x-user-agent']?.slice(0, 18)}+${client.user}+${currentTime}`).toString("base64url");
+
+                                        ElysiaTokens[token] = activeLicenses;
+                                        setTimeout(async () => { delete ElysiaTokens[token]; }, 3 * 60 * 60 * 1000);
+
+                                        return { status: true, data: { token, license: activeLicenses.map(e => { return { page: e.page, name: e.name, time: e.time } }), expiry: activeLicenses.at(0).time } };
+                                    } else
+                                        return { status: false, err: "This device is not registered. Ask the Owner for a Device Reset." };
+                                else
+                                    return { status: false, err: "Incorrect password. Please check the username and password or Try again later." };
+                            else
+                                return { status: false, err: "Username is not registered. Ask the Owner to register your username." };
+                        } catch (err) {
+                            console.log(err);
+                            return { status: false, err: "Sorry, our servers are unable to process your request. Try again later." };
+                        };
+                }
+            else
+                return { status: false, err: "Invalid Request. Ensure you are using correct version." };
+        else
+            return { status: false, err: "Enter your username and password." };
+    })
+
+    .get('/api/cheat/code/:token/:code', async ({ set, params }) => {
+        set.status = 'OK';
+        if ("token" in params || "code" in params) {
+            if (params.token in ElysiaTokens) {
+                const cheat = await cheats.findOne({ name: params.code }); if (cheat) {
+                    const licenses = ElysiaTokens[params.token];
+
+                    let license = licenses.find(e => e.name === "ALL" || e.name === params.code); if (license)
+                        return { status: true, data: { status: cheat.status, data: cheat.data } };
+                    else
+                        return { status: false, err: "This cheat is not in your subscription. Purchase it first." };
+                } else
+                    return { status: false, err: "This cheat is not yet ready. Wait for next update." };
+            } else
+                return { status: false, err: "Your session has expired. Re-Login to the Panel." };
+        } else
+            return { status: false, err: "Invalid Request. Ensure you are using correct version." };
+    });
+
 
 app
     .get('/api/cheat/menu/:token/:code', async ({ set, params }) => {
         if ("token" in params || "code" in params) {
-            if (params.token in sessions) {
+            if (params.token in ElysiaTokens) {
                 const __path = path.join(__dirname, 'Assets', 'LocationMenu', `${params.code}.dll`); if (fs.existsSync(__path))
                     return Bun.file(__path);
                 else {
                     set.status = 'Forbidden';
-                    return { status: false, msg: "No such chams is ready." };
+                    return { status: false, err: "This Location Chams is not yet ready. Wait for next update." };
                 };
             } else {
                 set.status = 'Forbidden';
-                return { status: false, msg: "Your session has expired. Restart the app." };
+                return { status: false, err: "Your session has expired. Re-Login to the Panel." };
             };
         } else {
             set.status = 'Forbidden';
-            return { status: false, msg: "Invalied request. Are you trying you tamper with the program ?" };
-        };
-    })
-    .get('/api/cheat/code/:token/:code', async ({ set, params }) => {
-        if ("token" in params || "code" in params) {
-            if (params.token in sessions) {
-                if (params.code in cheat_codes) {
-                    const licenses = sessions[params.token];
-
-                    let license = licenses.find(e => e.name === "ALL" || e.name === params.code); if (license) {
-                        set.status = "OK";
-                        return { status: true, data: cheat_codes[params.code] };
-                    }
-
-                    else {
-                        set.status = 'OK';
-                        return { status: false, msg: "This cheat is not in your subscription. Purchase it first." };
-                    };
-                } else {
-                    set.status = 'OK';
-                    return { status: false, msg: "This cheat is not yet added. Wait for next update." };
-                };
-            } else {
-                set.status = 'OK';
-                return { status: false, msg: "Your session has expired. Restart the app." };
-            };
-        } else {
-            set.status = 'OK';
-            return { status: false, msg: "Invalied request. Are you trying you tamper with the program ?" };
+            return { status: false, err: "Invalid Request. Ensure you are using correct version." };
         };
     });
 
-app.listen({ reusePort: true, hostname: '0.0.0.0', port: process.env.PORT }, () => console.log(`[${process.pid}] Listening ...`));
+app.listen({ reusePort: true, hostname: '0.0.0.0', port: process.env.PORT }, () => console.log(`[${process.env.PORT}] Listening ...`));
