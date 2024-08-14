@@ -1,9 +1,8 @@
 {
-    "name": "mistero.cheats",
-    "version": "1.2.0",
+    "name": "Mistero Cheats",
+    "version": "v1.2.0",
     "scripts": {
-        "start": "bun run start.ts",
-        "start:watch": "bun run start.ts --watch"
+        "start": "bun run start.ts"
     },
     "dependencies": {
         "elysia": "~1.0.27",
