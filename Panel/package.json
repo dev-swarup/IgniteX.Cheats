@@ -1,25 +1,24 @@
 {
-    "version": "1.0.0",
+    "main": "main.js",
+    "version": "v1.2.0",
     "scripts": {
-        "start": "electron .",
-        "build": "electron-builder -h",
+        "start": "nodemon start.js",
+        "build": "electron-builder -c electron.builder.js --win",
 
         "build:scss": "sass --no-source-map static/main.scss static/main.temp.css",
         "build:scss:watch": "sass --watch --no-source-map static/main.scss static/main.temp.css",
-
+        
         "build:tailwindcss": "tailwindcss -m -i static/main.temp.css -o static/main.css",
         "build:tailwindcss:watch": "tailwindcss --watch -m -i static/main.temp.css -o static/main.css"
     },
-    "main": "index.js",
-    "name": "mistero.cheats",
     "dependencies": {
-        "axios": "~1.7.3",
-        "memoryjs": "~3.5.1"
+        "bytenode": "~1.5.6"
     },
     "devDependencies": {
+        "pkg": "~5.8.1",
         "sass": "~1.77.8",
+        "nodemon": "~3.1.4",
         "electron": "~31.3.1",
-        "tailwindcss": "~3.4.7",
-        "electron-builder": "~24.13.3"
+        "tailwindcss": "~3.4.7"
     }
 }

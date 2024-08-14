@@ -6,7 +6,10 @@ const jQFast = require(path.join(__dirname, "mem.scan.node"));
 
 
 module.exports.FindEmulator = () => {
-    const result = jQ.getProcesses().map(({ szExeFile, th32ProcessID }) => {
+    const result = jQ.getProcesses().map(({ szExeFile, cntThreads, th32ProcessID }) => {
+        if (cntThreads == 0)
+            return false;
+
         switch (szExeFile) {
             default:
                 return false;
@@ -53,4 +56,4 @@ module.exports.AsyncFindValues = (pid, scanValue) => new Promise((resolve, rejec
 });
 
 module.exports.InjectValues =
-    (pid, addresses, replaceValue) => { jQ.openProcess(pid); addresses.forEach(address => jQ.writeBuffer(handle, address, replaceValue)); };
+    (pid, addresses, replaceValue) => { const { handle } = jQ.openProcess(pid); addresses.forEach(address => jQ.writeBuffer(handle, address, replaceValue)); };
