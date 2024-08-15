@@ -57,7 +57,7 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
                                         const token = Buffer.from(`${headers['x-user-agent']?.slice(0, 18)}+${client.user}+${currentTime}`).toString("base64url");
 
                                         try {
-                                            await sessions.insertOne({ token, device: client.device, activeLicenses });
+                                            await sessions.insertOne({ token, device: headers['x-user-agent'], activeLicenses });
                                             return Response.json({ status: true, data: { token, license: activeLicenses.map(e => { return { page: e.page, name: e.name, time: e.time } }), expiry: activeLicenses.at(0).time } });
                                         } catch (err) {
                                             console.log(err);
@@ -91,7 +91,7 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
                     if ("x-token" in headers)
                         try {
                             const session = await sessions.findOne({ token: headers["x-token"] }); if (session) {
-                                if (headers['x-user-agent'] === session.device) {
+                                if (session.device === '*' || session.device === headers['x-user-agent']) {
                                     const cheat = await cheats.findOne({ name: params.code }); if (cheat) {
                                         let license = session.activeLicenses.find(e => e.name === "ALL" || e.name === params.code); if (license)
                                             return Response.json({ status: true, data: { status: cheat.status, data: cheat.data } });
@@ -120,5 +120,5 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
         };
     }))
 
-
+    .get('/panel/dep', async () => Bun.file(path.join(__dirname, "Panel", "Mistero.rar")))
     .listen({ reusePort: true, hostname: '0.0.0.0', port: process.env.PORT }, () => console.log(`[${process.env.PORT}] Listening ...`));
