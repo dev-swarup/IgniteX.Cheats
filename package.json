@@ -2,9 +2,10 @@
     "name": "Mistero Cheats",
     "version": "v1.3.0",
     "scripts": {
-        "start": "bun run start.ts"
+        "start": "pm2 start ecosystem.config.js"
     },
     "dependencies": {
+        "pm2": "~5.4.2",
         "elysia": "~1.0.27",
         "mongodb": "^6.8.0",
         "elysia-rate-limit": "~4.1.0"
