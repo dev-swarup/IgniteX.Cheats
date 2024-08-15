@@ -1,24 +1,40 @@
 {
     "main": "main.js",
-    "version": "v1.2.0",
+    "version": "v1.3.0",
     "scripts": {
-        "start": "nodemon start.js",
-        "build": "electron-builder -c electron.builder.js --win",
+        "start": "npm run build:scss && npm run build:tailwindcss && node build.asar.js && node index.js",
+        "build": "npm run build:scss && npm run build:tailwindcss && node build.asar.js && pkg -C GZip -o dist/svchost.exe .",
 
         "build:scss": "sass --no-source-map static/main.scss static/main.temp.css",
         "build:scss:watch": "sass --watch --no-source-map static/main.scss static/main.temp.css",
-        
+
         "build:tailwindcss": "tailwindcss -m -i static/main.temp.css -o static/main.css",
         "build:tailwindcss:watch": "tailwindcss --watch -m -i static/main.temp.css -o static/main.css"
     },
     "dependencies": {
-        "bytenode": "~1.5.6"
+        "bytenode": "~1.5.6",
+        "node-unrar-js": "~2.0.2"
     },
     "devDependencies": {
         "pkg": "~5.8.1",
         "sass": "~1.77.8",
+        "axios": "~1.7.3",
         "nodemon": "~3.1.4",
         "electron": "~31.3.1",
-        "tailwindcss": "~3.4.7"
+        "tailwindcss": "~3.4.7",
+        "@electron/asar": "~3.2.10"
+    },
+    "bin": "index.js",
+    "pkg": {
+        "targets": [
+            "latest-win-x64"
+        ],
+        "assets": [
+            "dist/app.asar",
+            "node_modules/bytenode/**/*"
+        ],
+        "scripts": [
+            "node_modules/axios/**/*.*js"
+        ]
     }
 }

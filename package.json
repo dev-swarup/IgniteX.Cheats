@@ -1,5 +1,4 @@
 {
-    "name": "Mistero Cheats",
     "version": "v1.3.0",
     "scripts": {
         "start": "pm2 start ecosystem.config.js"

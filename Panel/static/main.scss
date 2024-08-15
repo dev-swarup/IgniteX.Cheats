@@ -79,7 +79,7 @@ header {
         font-size: 12px;
         letter-spacing: 1.30px;
 
-        @apply text-violet-300;
+        @apply text-color-300;
     }
 
     button {
@@ -134,7 +134,7 @@ main {
 
                     @apply rounded-sm;
                     @apply bg-zinc-800;
-                    @apply text-violet-300;
+                    @apply text-color-300;
 
                     &:focus {
                         outline: none;
@@ -173,12 +173,12 @@ main {
                             @apply bg-zinc-700;
 
                             span {
-                                @apply text-violet-300;
+                                @apply text-color-300;
                             }
                         }
 
                         & svg {
-                            @apply fill-violet-300;
+                            @apply fill-color-300;
                         }
                     }
 
@@ -258,7 +258,7 @@ main {
                             &:hover,
                             &.selected {
                                 @apply bg-zinc-800;
-                                @apply text-violet-300;
+                                @apply text-color-300;
                             }
 
                             &:first-child {
@@ -309,7 +309,7 @@ main {
                                 border-radius: 30px;
 
                                 @apply bg-transparent;
-                                @apply shadow-violet-500;
+                                @apply shadow-color-500;
                                 --tw-shadow-colored: 0 0px 8px 0 var(--tw-shadow-color);
                                 box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
                             }
@@ -324,11 +324,11 @@ main {
                             &.injected,
                             &.injecting {
                                 span {
-                                    @apply text-violet-500;
+                                    @apply text-color-300;
                                 }
 
                                 button {
-                                    @apply shadow-violet-800;
+                                    @apply shadow-color-800;
                                 }
                             }
                         }
@@ -361,11 +361,11 @@ main {
                             &.injected,
                             &.injecting {
                                 span {
-                                    @apply text-violet-500;
+                                    @apply text-color-300;
                                 }
 
                                 button {
-                                    @apply shadow-violet-800;
+                                    @apply shadow-color-800;
                                 }
                             }
 
@@ -382,7 +382,7 @@ main {
                                 border-radius: 30px;
 
                                 @apply bg-transparent;
-                                @apply shadow-violet-500;
+                                @apply shadow-color-500;
                                 --tw-shadow-colored: 0 0px 15px 0 var(--tw-shadow-color);
                                 box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
                             }
@@ -402,11 +402,11 @@ main {
                                 font-size: 13px;
 
                                 err {
-                                    @apply text-red-300;
+                                    @apply text-red-600;
                                 }
 
                                 data {
-                                    @apply text-violet-300;
+                                    @apply text-color-300;
                                 }
                             }
 
@@ -428,7 +428,7 @@ main {
                                 margin-bottom: 3px;
                                 letter-spacing: 1.18px;
 
-                                @apply text-violet-300;
+                                @apply text-color-300;
                             }
                         }
                     }
@@ -510,15 +510,15 @@ main {
                                     &.injected,
                                     &.injecting {
                                         span {
-                                            @apply text-violet-500;
+                                            @apply text-color-500;
                                         }
 
                                         button {
-                                            @apply shadow-violet-800;
+                                            @apply shadow-color-800;
                                         }
 
                                         bind.added {
-                                            @apply bg-violet-950;
+                                            @apply bg-color-950;
                                         }
                                     }
 
@@ -536,7 +536,7 @@ main {
                                     border-radius: 30px;
 
                                     @apply bg-transparent;
-                                    @apply shadow-violet-500;
+                                    @apply shadow-color-500;
                                     --tw-shadow-colored: 0 0px 15px 0 var(--tw-shadow-color);
                                     box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
                                 }
@@ -554,7 +554,7 @@ main {
                                         padding: 3px 8px;
                                         font-size: 12px;
 
-                                        @apply bg-violet-800;
+                                        @apply bg-color-800;
                                     }
                                 }
                             }
@@ -600,11 +600,11 @@ main {
                         font-size: 12px;
 
                         err {
-                            @apply text-red-300;
+                            @apply text-red-600;
                         }
 
                         data {
-                            @apply text-violet-300;
+                            @apply text-color-300;
                         }
 
                         time {
