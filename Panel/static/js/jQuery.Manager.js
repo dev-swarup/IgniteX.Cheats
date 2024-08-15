@@ -179,19 +179,19 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                                     skipWarnCode.delete(name);
                                     try {
                                         let cheatCodes = data.data;
-                                        cheatCodes = await Promise.all(cheatCodes.map(([scanValue, replaceValue]) => new Promise(async resolve => {
+                                        cheatCodes = await Promise.all(cheatCodes.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
                                             replaceValue = Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))); try {
                                                 scanValue = scanValue
                                                     .split(" ").map(i => i == "??" ? "?" : i).join(" ");
 
-                                                resolve({ address: await ipcRenderer.invoke("AsyncFindValues", process.at(0).pid, scanValue), replaceValue });
-                                            } catch (err) { console.log(err); resolve({ address: [], replaceValue }); };
+                                                resolve({ address: await ipcRenderer.invoke("AsyncFindValues", process.at(0).pid, scanValue), replaceValue, repValue });
+                                            } catch (err) { console.log(err); resolve({ address: [], replaceValue, repValue }); };
                                         })));
 
                                         if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
                                             return resolve({ status: false, err: `Failed to scan for ${visual}. Restart your Emulator.` });
 
-                                        cheatCodes.map(({ address, replaceValue }) => InjectValues(process.at(0).pid, address, replaceValue));
+                                        cheatCodes.map(({ address, replaceValue, repValue }) => InjectValues(process.at(0).pid, address, replaceValue, repValue));
 
                                         let i = 0; cheatCodes
                                             .forEach(({ address }) => address.forEach(() => i++)); resolve({ status: true, replaces: i });

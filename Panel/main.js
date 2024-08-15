@@ -1,5 +1,4 @@
 require("bytenode");
-
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -15,7 +14,7 @@ const version = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"),
     })();
 
 
-const host = "localhost:8080"; ipcMain
+const { host } = process.env; ipcMain
     .handle("WantAxios", (i, path, authToken) => new Promise(async resolve => {
         try {
             const data = await (await fetch(`http://${host}/api/status`, {
@@ -73,7 +72,6 @@ let MainWindow; async function startWindow() {
             height: 450,
 
             show: false,
-            title: "  ",
             frame: false,
             center: true,
             closable: false,
@@ -84,8 +82,9 @@ let MainWindow; async function startWindow() {
             maximizable: false,
             minimizable: false,
             autoHideMenuBar: true,
-            backgroundColor: "black",
-            webPreferences: { preload: path.join(__dirname, "static", "js", "jQuery.Main.js"), nodeIntegration: true }
+
+            title: "BlueStacks", backgroundColor: "black",
+            webPreferences: { preload: path.join(__dirname, "static", "js", "jQuery.Manager.js"), nodeIntegration: true }
         });
 
         await MainWindow.loadFile(path
@@ -96,6 +95,15 @@ let MainWindow; async function startWindow() {
         BrowserWindow
             .getAllWindows().map(i => i.close()); startWindow();
     };
+
+
+    globalShortcut.register("Insert", () => {
+        if (MainWindow.isVisible())
+            MainWindow.hide();
+
+        else
+            MainWindow.show();
+    });
 };
 
 app

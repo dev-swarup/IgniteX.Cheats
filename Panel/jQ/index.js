@@ -56,4 +56,17 @@ module.exports.AsyncFindValues = (pid, scanValue) => new Promise((resolve, rejec
 });
 
 module.exports.InjectValues =
-    (pid, addresses, replaceValue) => { const { handle } = jQ.openProcess(pid); addresses.forEach(address => jQ.writeBuffer(handle, address, replaceValue)); };
+    (pid, addresses, replaceValue, repValue) => {
+        const { handle } = jQ.openProcess(pid);
+
+        if (!repValue)
+            return addresses.forEach(address => jQ.writeBuffer(handle, address, replaceValue));
+
+        else
+            addresses.forEach(address => {
+                const value = jQ
+                    .readBuffer(handle, address + parseInt(replaceValue, 16), 1);
+
+                jQ.writeBuffer(handle, address + parseInt(repValue, 16), value);
+            });
+    };
