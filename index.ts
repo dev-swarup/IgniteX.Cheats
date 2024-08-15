@@ -21,7 +21,7 @@ const MongoDB = await (new MongoClient(process.env.MONGODB_URL as string)).conne
 const cheats = db.collection("cheats"), clients = db.collection("clients"), sessions = db.collection("sessions");
 app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Response.json({ status: false, err: "You have reached the max request limit, Try again after 10 min." }) })).group("/api", app => app
     .get('/status', async ({ headers }) => {
-        if ("x-user-agent" in headers)
+        if ("x-version" in headers)
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 0:
                     return { status: true };
@@ -130,7 +130,8 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
             set.status = 'Forbidden';
             return { status: false, err: "This location is not yet ready. Wait for next update." };
         };
-    }))
+    }));
 
+app
     .get('/panel/modules', async () => Bun.file(path.join(__dirname, "Panel", "Mistero.rar")))
     .listen({ reusePort: true, hostname: '0.0.0.0', port: process.env.PORT }, () => console.log(`[${process.env.PORT}] Listening ...`));
