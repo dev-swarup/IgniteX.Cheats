@@ -14,24 +14,13 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                 if (client.pass === pass)
                     if (client.device === '-' || client.device === '*' || client.device === device) {
                         const currentTime = (new Date()).getTime();
-                        const activeLicenses = (await Promise.all(client.license.map(([page, name, time]) => {
+                        const activeLicenses = client.license.map(([page, name, time]) => {
                             if (time === "LIFETIME")
                                 return { status: true, page, name, time: "LIFETIME" };
 
                             else
                                 return currentTime < time ? { status: true, page, name, time } : { status: false };
-                        }).filter(e => e.status).map(async e => {
-                            if (e.name === "ALL")
-                                return e;
-
-                            if (await db.collection("cheats").findOne({ name: e.name }))
-                                return e;
-
-                            else
-                                return { status: false };
-                        })))
-
-                            .filter(e => e.status).sort((i, e) => e.time === "LIFETIME" ? i.time === "LIFETIME" ? 1 : 1 : e.time - i.time);
+                        }).filter(e => e.status).sort((i, e) => e.time === "LIFETIME" ? i.time === "LIFETIME" ? 1 : 1 : e.time - i.time);
 
                         if (client.device === '-')
                             try {
