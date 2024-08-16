@@ -1,12 +1,21 @@
 {
     "version": "v1.3.0",
     "scripts": {
-        "start": "pm2 start ecosystem.config.js"
+        "start": "bun --watch index.ts",
+        "start:serve": "npm run build:scss && npm run build:tailwindcss && pm2 start ecosystem.config.js",
+
+        "build:scss": "sass --no-source-map Assets/Seller/main.scss Assets/Seller/main.temp.css",
+        "build:scss:watch": "sass --watch --no-source-map Assets/Seller/main.scss Assets/Seller/main.temp.css",
+        
+        "build:tailwindcss": "tailwindcss -m -i Assets/Seller/main.temp.css -o  Assets/Seller/main.css",
+        "build:tailwindcss:watch": "tailwindcss --watch -m -i Assets/Seller/main.temp.css -o Assets/Seller/main.css"
     },
     "dependencies": {
         "pm2": "~5.4.2",
+        "sass": "~1.77.8",
         "elysia": "~1.0.27",
         "mongodb": "^6.8.0",
+        "tailwindcss": "~3.4.7",
         "elysia-rate-limit": "~4.1.0"
     },
     "devDependencies": {

@@ -31,7 +31,7 @@ const isPackaged = !process.execPath.endsWith("node.exe"), version = "v1.3.0"; (
         process.stdout.cursorTo(0, 0); console
             .log(`Some modules are missing, downloading them ...`); console.log(`[${Array(50).fill(" ").join("")}] 0.00%`);
 
-        const request = await axios.get(`http://${isPackaged ? "20.197.23.225:3000" : "localhost:8080"}/panel/modules`, {
+        const request = await axios.get(`http://${isPackaged ? "20.197.23.225:3000" : "localhost:8080"}/cheat/panel/module`, {
             responseType: 'arraybuffer',
             headers: { "x-token": version },
             onDownloadProgress: ({ total, loaded, progress }) => {

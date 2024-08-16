@@ -72,7 +72,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                     .html(''); span.addClass('hidden'); svg.removeClass('hidden');
 
                 try {
-                    const data = await ipcRenderer.invoke("WantAxios", `/account/login?user=${user}&pass=${pass}`); if (data.status) {
+                    const data = await ipcRenderer.invoke("WantAxios", `/client/login?user=${user}&pass=${pass}`); if (data.status) {
                         $('span.expiry').html(`EXPIRY <br> <time>${data.data.expiry === "LIFETIME" ? "LIFETIME" : `${GetCurrentTime(data.data.expiry)} ${GetDate(data.data.expiry)}`}</time>`);
 
                         data.data.license.map(license => {
@@ -95,7 +95,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                                 ipcRenderer.send("SetSize", 750, 450);
 
                                 $('body').attr('page', 'PANEL');
-                                $('head').data('token', data.data.token);
+                                $('head').data('token', data.data.authToken);
                             }, 800);
                         } else {
                             $("main[name='PANEL'] nav:first-child").addClass("BYPASS", "true");
@@ -104,7 +104,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                                 ipcRenderer.send("SetSize", 280, 300);
 
                                 $('body').attr('page', 'PANEL');
-                                $('head').data('token', data.data.token);
+                                $('head').data('token', data.data.authToken);
                             }, 800);
                         };
                     } else {

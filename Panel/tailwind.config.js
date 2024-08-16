@@ -3,7 +3,6 @@ const resellers = require("../reseller.config.json");
 
 module.exports = {
     content: [
-        "static/main.css",
         "static/index.html"
     ],
     theme: {

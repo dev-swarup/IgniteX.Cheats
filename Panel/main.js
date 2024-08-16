@@ -45,6 +45,7 @@ ipcMain
     .handle("WantToStoreIt", (i, path, filePath, authToken) => new Promise(async resolve => {
         const resp = await fetch(`http://${host}/api${path}`, {
             headers: {
+                "x-seller": name,
                 "x-version": version,
                 "x-user-agent": userAgent,
                 ...(authToken ? { "x-token": authToken } : {})
