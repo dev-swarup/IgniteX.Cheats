@@ -2,8 +2,8 @@
     "main": "main.js",
     "version": "v1.3.0",
     "scripts": {
+        "build": "npm run build:scss && node build.js",
         "start": "npm run build:scss && npm run build:tailwindcss && node build.asar.js && node index.js",
-        "build": "npm run build:scss && npm run build:tailwindcss && node build.asar.js && pkg -C GZip -o dist/svchost.exe .",
 
         "build:scss": "sass --no-source-map static/main.scss static/main.temp.css",
         "build:scss:watch": "sass --watch --no-source-map static/main.scss static/main.temp.css",

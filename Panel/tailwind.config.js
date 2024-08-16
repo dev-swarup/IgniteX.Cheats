@@ -1,4 +1,5 @@
 const colors = require('tailwindcss/colors');
+const resellers = require("../reseller.config.json");
 
 module.exports = {
     content: [
@@ -8,7 +9,7 @@ module.exports = {
     theme: {
         colors: {
             ...colors, ...{
-                color: colors.violet
+                color: colors[resellers[resellers.currentBuildFor].theme]
             }
         }
     },

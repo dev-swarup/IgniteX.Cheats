@@ -1,5 +1,7 @@
 const fs = require("fs");
 const path = require("path");
+const resellers = require("../reseller.config.json");
+
 const { execSync } = require("child_process");
 const { createPackage } = require("@electron/asar");
 
@@ -15,6 +17,8 @@ const { createPackage } = require("@electron/asar");
     fs.cpSync(path.join(__dirname, "node_modules", "bytenode"), path.join(__dirname, "dist", "resources_temp", "node_modules", "bytenode"), { recursive: true });
     fs.writeFileSync(path.join(__dirname, "dist", "resources_temp", "package.json"), JSON.stringify({
         main: "main.js",
+        name: resellers.currentBuildFor,
+        title: resellers[resellers.currentBuildFor].title,
         version: require("./package.json").version, dependencies: { bytenode: "^1.5.6" }
     }));
 
@@ -29,15 +33,14 @@ const { createPackage } = require("@electron/asar");
     fs.mkdirSync(path.join(__dirname, "dist", "resources_temp", "static", "js"), { recursive: true });
     [
         "index.html",
-        "logo.png",
         "main.css",
         "CascadiaCode.TTF",
         "alert.wav",
-        "logo.png",
         "js/jQuery.js",
         "js/jQuery.Manager.jsc"
     ]
         .map(url => fs.copyFileSync(path.join(__dirname, "static", url), path.join(__dirname, "dist", "resources_temp", "static", url)));
+    fs.copyFileSync(path.join(__dirname, "static", "icons", `${resellers.currentBuildFor}.png`), path.join(__dirname, "dist", "resources_temp", "static", "logo.png"));
     fs.writeFileSync(path.join(__dirname, "dist", "resources_temp", "static", "js", "jQuery.Manager.js"), `require("bytenode"); require("./jQuery.Manager.jsc");`);
 
     fs.copyFileSync(path.join(__dirname, "main.jsc"), path.join(__dirname, "dist", "resources_temp", "main.jsc"));

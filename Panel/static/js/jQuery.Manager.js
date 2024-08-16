@@ -2,7 +2,7 @@ require("bytenode");
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
-const { version } = require("../../package.json");
+const { title, version } = require("../../package.json");
 const { ipcRenderer, contextBridge } = require("electron");
 const { FindEmulator, InjectFile, InjectValues } = require("../../jQ/index.jsc");
 
@@ -11,6 +11,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
     const jQuery = require("./jQuery.js"), $ = selector =>
         jQuery(typeof selector !== "string" ? selector : document.querySelectorAll(selector));
 
+    $("header span.title").html(title);
     const addZero = n => n < 10 ? `0${n}` : `${n}`, GetDate = time => {
         const current_time = new Date(time || new Date());
 

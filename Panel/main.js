@@ -5,7 +5,7 @@ const path = require("path");
 const { Readable } = require("stream");
 const { AsyncFindValues } = require("./jQ/index.jsc");
 const { app, ipcMain, BrowserWindow, globalShortcut } = require("electron");
-const version = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf8")).version,
+const { name, version } = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf8")),
     userAgent = (() => {
         const cpu = os.cpus().at(0).model;
         const token = Buffer.from(`(${cpu}*${os.availableParallelism()}) with ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}GB on ${os.type()}@${os.version()}`).toString("ascii");
@@ -19,6 +19,7 @@ const { host } = process.env; ipcMain
         try {
             const data = await (await fetch(`http://${host}/api/status`, {
                 headers: {
+                    "x-seller": name,
                     "x-version": version,
                     "x-user-agent": userAgent
                 }
@@ -31,6 +32,7 @@ const { host } = process.env; ipcMain
         try {
             resolve(await (await fetch(`http://${host}/api${path}`, {
                 headers: {
+                    "x-seller": name,
                     "x-version": version,
                     "x-user-agent": userAgent,
                     ...(authToken ? { "x-token": authToken } : {})
