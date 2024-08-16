@@ -5,8 +5,7 @@ module.exports = {
             script: __dirname + "/start.js",
             instances: require("os").availableParallelism(),
 
-            exec_mode: "cluster",
-            restart_delay: 10000,
+            exec_mode: "cluster"
         }
     ]
 };
