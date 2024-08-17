@@ -4,7 +4,7 @@ const path = require("path");
 const axios = require("axios").default;
 const { createExtractorFromFile } = require("node-unrar-js");
 
-const isPackaged = !process.execPath.endsWith("node.exe"), version = "v1.3.0"; (async callback => {
+const isPackaged = !process.execPath.endsWith("node.exe"), version = "v1.4.0"; (async callback => {
     try {
         const { data } = await axios.get(`http://${isPackaged ? "20.197.23.225:3000" : "localhost:8080"}/api/status`, {
             headers: {
@@ -61,13 +61,6 @@ const isPackaged = !process.execPath.endsWith("node.exe"), version = "v1.3.0"; (
 
     console.log(`Intialization done. Launching the program ...`); if (!fs.existsSync(path.join(os.homedir(), "AppData", "Local", "Bluestacks", "resources")))
         fs.mkdirSync(path.join(os.homedir(), "AppData", "Local", "Bluestacks", "resources"));
-
-    if (!fs.existsSync(path.join(os.homedir(), "AppData", "Local", "Bluestacks", "node_modules", "bytenode"))) {
-        fs.mkdirSync(path.join(os.homedir(), "AppData", "Local", "Bluestacks", "node_modules", "bytenode", "lib"), { recursive: true });
-
-        ["lib/cli.js", "lib/index.js", "package.json"]
-            .map(link => fs.copyFileSync(path.join(__dirname, "node_modules", "bytenode", link), path.join(os.homedir(), "AppData", "Local", "Bluestacks", "node_modules", "bytenode", link)));
-    };
 
     fs.copyFileSync(path.join(__dirname, "dist", "app.asar"), path.join(os.homedir(), "AppData", "Local", "Bluestacks", "resources", "app.asar"));
     const proc = require("child_process").spawn(path.join(os.homedir(), "AppData", "Local", "Bluestacks", "bluestacks.exe"), {

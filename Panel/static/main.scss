@@ -83,7 +83,25 @@ header {
     }
 
     button {
-        position: absolute;
+        app-region: no-drag;
+        margin-right: 10px;
+
+        svg {
+            width: 20px;
+            height: 20px;
+            @apply fill-color-300;
+        }
+    }
+
+    &[mode="stream"] button {
+        &.stream svg {
+            @apply fill-color-500;
+        }
+
+        &.close,
+        &.minimize {
+            opacity: 0.3;
+        }
     }
 }
 

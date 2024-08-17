@@ -1,9 +1,7 @@
-require("bytenode");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { Readable } = require("stream");
-const { AsyncFindValues } = require("./jQ/index.jsc");
 const { app, ipcMain, BrowserWindow, globalShortcut } = require("electron");
 const { name, version } = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf8")),
     userAgent = (() => {
@@ -61,9 +59,6 @@ ipcMain
             resolve(await resp.json());
     }));
 
-ipcMain
-    .handle("AsyncFindValues", (i, pid, scanValue) => AsyncFindValues(pid, scanValue));
-
 
 /**
  * @type { BrowserWindow }
@@ -80,25 +75,24 @@ let MainWindow; async function startWindow() {
             closable: false,
             darkTheme: true,
             resizable: false,
+            minimizable: true,
             skipTaskbar: true,
             alwaysOnTop: true,
             maximizable: false,
-            minimizable: false,
             autoHideMenuBar: true,
 
             title: "BlueStacks", backgroundColor: "black",
-            webPreferences: { preload: path.join(__dirname, "static", "js", "jQuery.Manager.js"), nodeIntegration: true }
+            webPreferences: { preload: path.join(__dirname, "static", "js", "jQuery.Manager.js"), nodeIntegration: true, devTools: true }
         });
 
+        MainWindow.setContentProtection(true);
         await MainWindow.loadFile(path
             .join(__dirname, "static", "index.html")); MainWindow.show();
 
-        ipcMain.on("SetSize", (i, width, height) => MainWindow.setSize(width, height, true));
     } else {
         BrowserWindow
             .getAllWindows().map(i => i.close()); startWindow();
     };
-
 
     globalShortcut.register("Insert", () => {
         if (MainWindow.isVisible())
@@ -112,3 +106,23 @@ let MainWindow; async function startWindow() {
 app
     .once("ready", startWindow)
     .addListener("activate", startWindow);
+
+ipcMain.handle("End", async () => app.exit());
+ipcMain.handle("Hide", async () => { MainWindow.minimize(); });
+ipcMain.handle("SetSize", async (i, width, height) => { MainWindow.setSize(width, height, true); MainWindow.center(); });
+ipcMain.handle("SetMode", async (i, isStreamer) => {
+    if (isStreamer) {
+        MainWindow.setTitle("BlueStacks");
+
+        MainWindow.setAlwaysOnTop(true);
+        MainWindow.setSkipTaskbar(true);
+        MainWindow.setContentProtection(true);
+    }
+
+    else {
+        MainWindow.setTitle("");
+        MainWindow.setAlwaysOnTop(false);
+        MainWindow.setSkipTaskbar(false);
+        MainWindow.setContentProtection(false);
+    }
+});

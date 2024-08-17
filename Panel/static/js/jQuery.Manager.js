@@ -4,9 +4,9 @@ const fs = require("fs");
 const path = require("path");
 const { title, version } = require("../../package.json");
 const { ipcRenderer, contextBridge } = require("electron");
-const { FindEmulator, InjectFile, InjectValues } = require("../../jQ/index.jsc");
+const { FindEmulator, InjectFile, InjectValues, AsyncFindValues } = require("../../jQ/index.jsc");
 
-let t, terminal, alert_audio = new Audio("alert.wav");
+let t, terminal, logged, alert_audio = new Audio("alert.wav");
 window.addEventListener('contextmenu', e => e.preventDefault()); window.addEventListener("DOMContentLoaded", () => {
     const jQuery = require("./jQuery.js"), $ = selector =>
         jQuery(typeof selector !== "string" ? selector : document.querySelectorAll(selector));
@@ -33,18 +33,26 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                 IWantAResolve = resolve;
             } else
                 IWantAResolve = resolve;
-        }))(); if (e) {
-            $(currentTarget).addClass("added").html((e.key !== " " ? e.key : "SPACE").toLocaleUpperCase());
+        }))(); if (e)
+            $(currentTarget).addClass("added").html((e.key !== " " ? e.key : "SPACE").toLocaleUpperCase())
+                .parent().parent().data("bind", e.key)
+    });
 
-            console.log(e);
+    $("bind").parent().parent().find("span").click(async ({ currentTarget }) => {
+        const btn = $(currentTarget).parent().data("bind");
+
+        if (btn) {
+            t
+                .append(`<span><time>${GetCurrentTime()}</time><err>The requested cheat code is not ready yet. Please check back later.</err></span>`); terminal.scrollBy(0, terminal.scrollHeight);
+        } else {
+            t
+                .append(`<span><time>${GetCurrentTime()}</time><err>Action requires a bind key. Please bind a key to proceed.</err></span>`); terminal.scrollBy(0, terminal.scrollHeight);
         };
     });
 
     window.addEventListener("keydown", async e => {
-        switch (true) {
-            case e.code == "Tab":
-                e.preventDefault();
-        };
+        if (logged)
+            e.preventDefault();
 
         if (IWantAResolve) {
             IWantAResolve(e);
@@ -85,14 +93,17 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                                 page.find(`div[name="${license.name}"]`).attr("license", "true").parent().attr("license", "true");
                         });
 
-                        const FirstFeature = $('menu.main button[license="true"]').toArray(); if (FirstFeature.length > 0) {
+                        logged = true;
+                        const FirstFeature = $('menu.main button[license="true"]').toArray();
+
+                        if (FirstFeature.length > 0) {
                             $(FirstFeature.at(0)).addClass('selected');
                             $("nav div#main").parent().attr("license", "true");
                             $("nav div#main").attr('page', FirstFeature.at(0).getAttribute("name"));
 
                             setTimeout(async () => {
                                 await alert_audio.play();
-                                ipcRenderer.send("SetSize", 750, 450);
+                                await ipcRenderer.invoke("SetSize", 750, 450);
 
                                 $('body').attr('page', 'PANEL');
                                 $('head').data('token', data.data.authToken);
@@ -101,7 +112,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                             $("main[name='PANEL'] nav:first-child").addClass("BYPASS", "true");
                             setTimeout(async () => {
                                 await alert_audio.play();
-                                ipcRenderer.send("SetSize", 280, 300);
+                                await ipcRenderer.invoke("SetSize", 280, 300);
 
                                 $('body').attr('page', 'PANEL');
                                 $('head').data('token', data.data.authToken);
@@ -185,7 +196,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                                                 scanValue = scanValue
                                                     .split(" ").map(i => i == "??" ? "?" : i).join(" ");
 
-                                                resolve({ address: await ipcRenderer.invoke("AsyncFindValues", process.at(0).pid, scanValue), replaceValue, repValue });
+                                                resolve({ address: await AsyncFindValues(process.at(0).pid, scanValue), replaceValue, repValue });
                                             } catch (err) { console.log(err); resolve({ address: [], replaceValue, repValue }); };
                                         })));
 
@@ -225,5 +236,20 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
             t
                 .append(`<span><time>${GetCurrentTime()}</time><err>Emulator is not running. Start your Emulator.</err></span>`); terminal.scrollBy(0, terminal.scrollHeight);
         };
+    });
+
+
+    let isStreamer = false;
+    contextBridge.exposeInMainWorld("Close", () => !isStreamer ? null : ipcRenderer.invoke("End"));
+    contextBridge.exposeInMainWorld("Minimize", () => !isStreamer ? null : ipcRenderer.invoke("Hide")); contextBridge.exposeInMainWorld("ToggleMode", () => {
+        ipcRenderer
+            .invoke("SetMode", isStreamer);
+
+        if (isStreamer)
+            $("header").attr("mode", "stream");
+        else
+            $("header").attr("mode", "normal");
+
+        isStreamer = !isStreamer;
     });
 });
