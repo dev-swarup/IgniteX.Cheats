@@ -10,14 +10,14 @@ const app = new Elysia({ precompile: true }).onError(({ set, code, error }) => {
 
     if (code !== "NOT_FOUND") {
         console.log(error);
-        return { status: false, err: "🚨 Uh-oh! Something went wrong on our end. Internal Server Error. Please try again later. 🔧" };
+        return { status: false, err: "Uh-oh! Something went wrong on our end. Internal Server Error. Please try again later." };
 
     } else
-        return { status: false, err: "❗ Oops! The path you requested doesn't exist on the server. Please check the URL and try again. 🛠️" };
+        return { status: false, err: "Oops! The path you requested doesn't exist on the server. Please check the URL and try again." };
 });
 
 
-app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Response.json({ status: false, err: "⏳ Too many requests in a short time. You've been temporarily banned for 10 minutes. 🚫" }) })).group("/api", app => app
+app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Response.json({ status: false, err: "Too many requests in a short time. You've been temporarily banned for 10 minutes." }) })).group("/api", app => app
     .get('/status', async ({ headers }) => {
         if ("x-version" in headers)
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
@@ -26,7 +26,7 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
 
                 case 1:
                 case -1:
-                    return { status: false, err: "⚠️ Hey! You're using an older version. Please update to the latest version for the best experience. 📲" };
+                    return { status: false, err: "Hey! You're using an older version. Please update to the latest version for the best experience." };
             }
         else
             return { status: true };
@@ -38,14 +38,14 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 1:
                 case -1:
-                    return Response.json({ status: false, err: "⚠️ Hey! You're using an older version. Please update to the latest version for the best experience. 📲" });
+                    return Response.json({ status: false, err: "Hey! You're using an older version. Please update to the latest version for the best experience." });
 
                 case 0:
                     /// @ts-expect-error
                     return Response.json(await loginUser(data.user, data.pass, headers["x-seller"], headers["x-user-agent"]));
             }
         else
-            return Response.json({ status: false, err: "🔍 Hmm, something's off with your request. Please ensure you're using the correct version and try again. 🛠️" });
+            return Response.json({ status: false, err: "Hmm, something's off with your request. Please ensure you're using the correct version and try again." });
     })
 
     .post("/client/register", async ({ query: data, headers }) => {
@@ -53,7 +53,7 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
             /// @ts-expect-error
             return Response.json(await registerUser(data.user, data.pass, headers["x-seller"], headers["x-seller-auth"], ""))
         else
-            return Response.json({ status: false, err: "🔍 Hmm, something's off with your request. Please ensure you're using the correct version and try again. 🛠️" });
+            return Response.json({ status: false, err: "Hmm, something's off with your request. Please ensure you're using the correct version and try again." });
     })
 
 
@@ -251,7 +251,7 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 1:
                 case -1:
-                    return Response.json({ status: false, err: "⚠️ Hey! You're using an older version. Please update to the latest version for the best experience. 📲" });
+                    return Response.json({ status: false, err: "Hey! You're using an older version. Please update to the latest version for the best experience." });
 
                 case 0:
                     if ("x-token" in headers)
@@ -259,10 +259,10 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
                         return Response.json(await extractCheatCode(params.code, headers["x-token"], headers["x-user-agent"]));
 
                     else
-                        return Response.json({ status: false, err: "🔍 Hmm, something's off with your request. Please ensure you're using the correct version and try again. 🛠️" });
+                        return Response.json({ status: false, err: "Hmm, something's off with your request. Please ensure you're using the correct version and try again." });
             }
         else
-            return Response.json({ status: false, err: "🔍 Hmm, something's off with your request. Please ensure you're using the correct version and try again. 🛠️" });
+            return Response.json({ status: false, err: "Hmm, something's off with your request. Please ensure you're using the correct version and try again." });
     })
 
     .get('/cheat/menu/:code', async ({ set, params, headers }) => {
@@ -270,7 +270,7 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 1:
                 case -1:
-                    return Response.json({ status: false, err: "⚠️ Hey! You're using an older version. Please update to the latest version for the best experience. 📲" });
+                    return Response.json({ status: false, err: "Hey! You're using an older version. Please update to the latest version for the best experience." });
 
                 case 0:
                     if (fs.existsSync(path.join(__dirname, "Assets", "LocationMenu", headers["x-seller"] as string, `${params.code}.dll`)))
@@ -282,11 +282,11 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
 
                         else {
                             set.status = 'Forbidden';
-                            return { status: false, err: "⚠️ Cheat Menu not ready yet. Please check back later. 🔄" };
+                            return { status: false, err: "Cheat Menu not ready yet. Please check back later." };
                         };
             }
         else
-            return Response.json({ status: false, err: "🔍 Hmm, something's off with your request. Please ensure you're using the correct version and try again. 🛠️" });
+            return Response.json({ status: false, err: "Hmm, something's off with your request. Please ensure you're using the correct version and try again." });
 
     }));
 

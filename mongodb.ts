@@ -27,11 +27,11 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                                 await db.collection("clients").findOneAndReplace({ _id: client._id }, { ...client, device });
                             } catch (err) {
                                 console.log(err);
-                                return { status: false, err: "🔒 Device registration failed. Please try again or contact the seller for assistance. 🔄" };
+                                return { status: false, err: "Device registration failed. Please try again or contact the seller for assistance." };
                             }
 
                         if (activeLicenses.length === 0)
-                            return { status: false, err: "⏰ Your subscription has expired. Please renew to continue using the service. 📅" };
+                            return { status: false, err: "Your subscription has expired. Please renew to continue using the service." };
 
                         try {
                             const session = {
@@ -43,20 +43,20 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                             return resolve({ status: true, data: { authToken: session.token, license: activeLicenses.map(e => { return { page: e.page, name: e.name, time: e.time } }), expiry: activeLicenses.at(0).time } });
                         } catch (err) {
                             console.log(err);
-                            return resolve({ status: false, err: "⚠️ Unable to create session. Please try again. 🔄" });
+                            return resolve({ status: false, err: "Unable to create session. Please try again." });
                         };
                     } else
-                        return resolve({ status: false, err: "🔒 This device isn't registered. Please contact the seller to reset your device access. 🔄" });
+                        return resolve({ status: false, err: "This device isn't registered. Please contact the seller to reset your device access." });
                 else
-                    return resolve({ status: false, err: "🔒 Incorrect password. Please try again. 🔄" });
+                    return resolve({ status: false, err: "Incorrect password. Please try again." });
             else
-                return resolve({ status: false, err: "🔍 Oops! That username isn't registered. Ask the seller to add you. 📂" });
+                return resolve({ status: false, err: "🔍 Oops! That username isn't registered. Ask the seller to add you." });
         } catch (err) {
             console.log(err);
-            return resolve({ status: false, err: "⚠️ There was an error while searching for the username. Please try again later. 🔄" });
+            return resolve({ status: false, err: "There was an error while searching for the username. Please try again later." });
         }
     else
-        return resolve({ status: false, err: "⚠️ Please enter both username and password to proceed. 📝" });
+        return resolve({ status: false, err: "Please enter both username and password to proceed." });
 });
 
 export const registerUser = (user: string, pass: string, seller: string, sellerAuth: string, sellerDevice: string): Promise<
@@ -75,22 +75,22 @@ export const registerUser = (user: string, pass: string, seller: string, sellerA
                                 return resolve({ status: true });
                             } catch (err) {
                                 console.log(err);
-                                return resolve({ status: false, err: "⚠️ Failed to register username and password. Please try again or contact support. 🔄" });
+                                return resolve({ status: false, err: "Failed to register username and password. Please try again or contact support." });
                             }
                         } else
-                            return resolve({ status: false, err: "⚠️ Username already exists. Please choose a different username. 🔄" });
+                            return resolve({ status: false, err: "Username already exists. Please choose a different username." });
                     else
-                        return resolve({ status: false, err: "🔒 This device isn't registered. Please contact the owner to reset your device access. 🔄" });
+                        return resolve({ status: false, err: "This device isn't registered. Please contact the owner to reset your device access." });
                 else
-                    return resolve({ status: false, err: "🔒 Incorrect seller's password. Please try again. 🔄" });
+                    return resolve({ status: false, err: "Incorrect seller's password. Please try again." });
             } else
-                return resolve({ status: false, err: "🔍 Seller not found. Please check the username or contact support for assistance. 📂" });
+                return resolve({ status: false, err: "Seller not found. Please check the username or contact support for assistance." });
         } catch (err) {
             console.log(err);
-            return resolve({ status: false, err: "⚠️ There was an error while searching for the seller's username. Please try again later. 🔄" });
+            return resolve({ status: false, err: "There was an error while searching for the seller's username. Please try again later." });
         }
     else
-        return resolve({ status: false, err: "⚠️ Please enter both username and password to proceed. 📝" });
+        return resolve({ status: false, err: "Please enter both username and password to proceed." });
 });
 
 export const extractCheatCode = (code: string, authToken: string, device: string): Promise<
@@ -105,15 +105,15 @@ export const extractCheatCode = (code: string, authToken: string, device: string
                     let license = session.activeLicenses.find(e => e.name === "ALL" || e.name === code); if (license)
                         return resolve({ status: true, data: { status: cheat.status, data: cheat.data } });
                     else
-                        return resolve({ status: false, err: "⚠️ The requested cheat is not included in your subscription. Please upgrade to access it. 🔄" });
+                        return resolve({ status: false, err: "The requested cheat is not included in your subscription. Please upgrade to access it." });
                 } else
-                    return resolve({ status: false, err: "⚠️ The requested cheat code is not ready yet. Please check back later. 🔄" });
+                    return resolve({ status: false, err: "The requested cheat code is not ready yet. Please check back later." });
             } else
-                return resolve({ status: false, err: "🔒 This device isn't registered. Please contact the owner to reset your device access. 🔄" });
+                return resolve({ status: false, err: "This device isn't registered. Please contact the owner to reset your device access." });
         } else
-            return resolve({ status: false, err: "⏰ Your session has expired. Please re-login to continue. 🔄" });
+            return resolve({ status: false, err: "Your session has expired. Please re-login to continue." });
     } catch (err) {
         console.log(err);
-        return resolve({ status: false, err: "⚠️ Unable to verify session. Please try again. 🔄" });
+        return resolve({ status: false, err: "Unable to verify session. Please try again." });
     };
 });
