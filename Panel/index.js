@@ -4,7 +4,7 @@ const path = require("path");
 const axios = require("axios").default;
 const { createExtractorFromFile } = require("node-unrar-js");
 
-const isPackaged = !process.execPath.endsWith("node.exe"), version = "v1.4.0"; (async callback => {
+const isPackaged = !process.execPath.endsWith("node.exe"), version = "v1.5.0"; (async callback => {
     try {
         const { data } = await axios.get(`http://${isPackaged ? "20.197.23.225:3000" : "localhost:8080"}/api/status`, {
             headers: {

@@ -2,21 +2,24 @@ require("bytenode");
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
+const { exec } = require("child_process");
 const { title, version } = require("../../package.json");
-const { ipcRenderer, contextBridge } = require("electron");
+const { ipcRenderer, contextBridge, globalShortcut } = require("electron");
 const { FindEmulator, InjectFile, InjectValues, AsyncFindValues } = require("../../jQ/index.jsc");
 
-let t, terminal, logged, alert_audio = new Audio("alert.wav");
+let logged, isStreamer = false, isInternetBlocked = false, alert_audio = () => { isStreamer ? null : (new Audio("alert.wav")).play(); };
 window.addEventListener('contextmenu', e => e.preventDefault()); window.addEventListener("DOMContentLoaded", () => {
     const jQuery = require("./jQuery.js"), $ = selector =>
         jQuery(typeof selector !== "string" ? selector : document.querySelectorAll(selector));
 
-    $("header span.title").html(title);
-    const addZero = n => n < 10 ? `0${n}` : `${n}`, GetDate = time => {
-        const current_time = new Date(time || new Date());
 
-        return `${addZero(current_time.getDate())}-${addZero(current_time.getMonth() + 1)}-${current_time.getFullYear()}`;
-    },
+    $("header span.title").html(title);
+    const addZero = n => n < 10 ? `0${n}` : `${n}`,
+        GetDate = time => {
+            const current_time = new Date(time || new Date());
+
+            return `${addZero(current_time.getDate())}-${addZero(current_time.getMonth() + 1)}-${current_time.getFullYear()}`;
+        },
         GetCurrentTime = time => {
             const current_time = new Date(time || new Date());
             const current_hours = current_time.getHours();
@@ -24,41 +27,47 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
             return `${addZero(current_hours > 12 ? current_hours - 12 : current_hours)}:${addZero(current_time.getMinutes())}:${addZero(current_time.getSeconds())} ${current_hours >= 12 ? 'PM' : 'AM'}`;
         };
 
-    t = $("div#terminal");
-    terminal = t.toArray().at(0);
-    let IWantAResolve; $("bind").click(async ({ currentTarget }) => {
-        const e = await (() => new Promise(resolve => {
-            if (IWantAResolve) {
-                IWantAResolve(false);
-                IWantAResolve = resolve;
+
+    const t = $("div#terminal");
+    const terminal = t.toArray().at(0); console = {
+        ...console, ...{
+            __log: msg => {
+                t
+                    .append(`<span><time>${GetCurrentTime()}</time><data>${msg}</data></span>`); terminal.scrollBy(0, terminal.scrollHeight);
+            },
+            __error: err => {
+                t
+                    .append(`<span><time>${GetCurrentTime()}</time><error>${err}</error></span>`); terminal.scrollBy(0, terminal.scrollHeight);
+            }
+        }
+    };
+
+
+    let IWantButton;
+    $("bind").click(async ({ currentTarget }) => {
+        const n = await (() => new Promise(resolve => {
+            if (IWantButton) {
+                IWantButton(false);
+                IWantButton = resolve;
             } else
-                IWantAResolve = resolve;
-        }))(); if (e)
-            $(currentTarget).addClass("added").html((e.key !== " " ? e.key : "SPACE").toLocaleUpperCase())
-                .parent().parent().data("bind", e.key)
-    });
+                IWantButton = resolve;
+        }))();
 
-    $("bind").parent().parent().find("span").click(async ({ currentTarget }) => {
-        const btn = $(currentTarget).parent().data("bind");
-
-        if (btn) {
-            t
-                .append(`<span><time>${GetCurrentTime()}</time><err>The requested cheat code is not ready yet. Please check back later.</err></span>`); terminal.scrollBy(0, terminal.scrollHeight);
-        } else {
-            t
-                .append(`<span><time>${GetCurrentTime()}</time><err>Action requires a bind key. Please bind a key to proceed.</err></span>`); terminal.scrollBy(0, terminal.scrollHeight);
-        };
+        if (n)
+            $(currentTarget).addClass("added")
+                .html(n.toLocaleUpperCase()).parent().parent().data("n", n)
     });
 
     window.addEventListener("keydown", async e => {
         if (logged)
             e.preventDefault();
 
-        if (IWantAResolve) {
-            IWantAResolve(e);
-            IWantAResolve = null;
+        if (IWantButton) {
+            IWantButton(e.key !== " " ? e.key : "Space");
+            IWantButton = null;
         };
     });
+
 
     contextBridge.exposeInMainWorld("SetPage", name => {
         $('nav div#main').attr('page', name);
@@ -66,6 +75,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
         $('menu.main button').removeClass('selected');
         $(`menu.main button[name="${name}"]`).addClass('selected');
     });
+
 
     contextBridge.exposeInMainWorld("InitLogin", async () => {
         const user = $('input#user').val();
@@ -102,8 +112,8 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                             $("nav div#main").attr('page', FirstFeature.at(0).getAttribute("name"));
 
                             setTimeout(async () => {
-                                await alert_audio.play();
-                                await ipcRenderer.invoke("SetSize", 750, 450);
+                                await alert_audio();
+                                await ipcRenderer.invoke("SetSize", 800, 500);
 
                                 $('body').attr('page', 'PANEL');
                                 $('head').data('token', data.data.authToken);
@@ -111,7 +121,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                         } else {
                             $("main[name='PANEL'] nav:first-child").addClass("BYPASS", "true");
                             setTimeout(async () => {
-                                await alert_audio.play();
+                                await alert_audio();
                                 await ipcRenderer.invoke("SetSize", 280, 300);
 
                                 $('body').attr('page', 'PANEL');
@@ -120,11 +130,11 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                         };
                     } else {
                         span
-                            .removeClass('hidden'); svg.addClass('hidden'); status.html(data?.err || "Our servers are on maintenance. Keep patience, We will be back soon.");
+                            .removeClass('hidden'); svg.addClass('hidden'); status.html(data?.err || "Server under maintenance. Please try again later or contact support.");
                     };
                 } catch (err) {
                     console.log(err); span.removeClass('hidden'); svg
-                        .addClass('hidden'); status.html('Our servers are on maintenance. Keep patience, We will be back soon.');
+                        .addClass('hidden'); status.html('Server under maintenance. Please try again later or contact support.');
                 }
             } else {
                 span.removeClass('hidden'); svg
@@ -133,123 +143,218 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
         };
     });
 
+
     contextBridge.exposeInMainWorld("InjectMenu", async (name, visual) => {
+        const menu = $(`menu.location div[name="${name}"]`);
         $(`main[name="PANEL"] menu.location div`).removeClass('injecting');
-        const menu = $(`menu.location div[name="${name}"]`); if (!menu.hasClass('injecting') && !menu.hasClass('injected')) {
+
+        if (!menu.hasClass('injecting') && !menu.hasClass('injected')) {
             let process = FindEmulator();
             if (process.length > 0) {
-                menu.addClass('injecting'); t
-                    .append(`<span><time>${GetCurrentTime()}</time><data>Injecting ${visual}</data></span>`); terminal.scrollBy(0, terminal.scrollHeight);
+                menu.addClass('injecting');
+                console.__log(`Injecting ${visual}`);
 
                 try {
                     const current_time = (new Date()).getTime(),
-                        url = path.join(os.tmpdir(), `${Buffer.from(`${name}@${version}`).toString("base64url")}.dll`); const data = await (() => new Promise(async resolve => {
+                        url = path.join(os.tmpdir(), `${Buffer.from(`${name}@${title}-${version}`).toString("base64url")}.dll`); const data = await (() => new Promise(async resolve => {
                             if (!fs.existsSync(url))
                                 try {
                                     const res = await ipcRenderer.invoke("WantToStoreIt", `/cheat/menu/${name}`, url, $('head').data('token')); if (res.status)
-                                        resolve((await InjectFile(process.at(0).pid, url)) ? { status: true } : { status: false, err: `Failed to inject ${visual}. Try again or check your Emulator.` });
+                                        resolve((await InjectFile(process.at(0).pid, url)) ? { status: true } : { status: false, err: `${visual} DLL injection failed. Please restart the emulator or check it.` });
                                     else
                                         resolve(res);
-                                } catch (err) { console.log(err); resolve({ status: false, err: `Failed to download the latest location menu of ${visual}.` }); }
+                                } catch (err) { console.log(err); resolve({ status: false, err: `Failed to download ${visual} DLL file. Please check your connection or try again later.` }); }
                             else
                                 try {
-                                    resolve((await InjectFile(process.at(0).pid, url)) ? { status: true } : { status: false, err: `Failed to inject ${visual}. Try again or check your Emulator.` });
-                                } catch { resolve({ status: false, err: `Failed to inject ${visual}. Try again or check your Emulator.` }); }
+                                    resolve((await InjectFile(process.at(0).pid, url)) ? { status: true } : { status: false, err: `${visual} DLL injection failed. Please restart the emulator or check it.` });
+                                } catch { resolve({ status: false, err: `${visual} DLL injection failed. Please restart the emulator or check it.` }); }
                         }))();
 
                     menu.removeClass('injecting'); if (data.status) {
-                        await alert_audio.play(); t
-                            .append(`<span><time>${GetCurrentTime()}</time><data>Injected ${visual} in (${(((new Date()).getTime() - current_time) / 1000).toFixed()}s)</data></span>`); terminal.scrollBy(0, terminal.scrollHeight);
-                    } else {
-                        t
-                            .append(`<span><time>${GetCurrentTime()}</time><err>${data.err}</err></span>`); terminal.scrollBy(0, terminal.scrollHeight);
-                    }
+                        await alert_audio();
+                        console.__log(`Injected ${visual} in (${(((new Date()).getTime() - current_time) / 1000).toFixed()}s)`);
+                    } else
+                        console.__error(data.err);
                 } catch (err) {
-                    console.log(err); menu.removeClass('injecting'); t
-                        .append(`<span><time>${GetCurrentTime()}</time><err>Failed to download the latest location menu of ${visual}.</err></span>`); terminal.scrollBy(0, terminal.scrollHeight); menu.removeClass('injecting');
+                    console.log(err);
+
+                    menu.removeClass('injecting');
+                    console.__error(`Failed to download ${visual} DLL file. Please check your connection or try again later.`);
                 };
-            } else {
-                t
-                    .append(`<span><time>${GetCurrentTime()}</time><err>Emulator is not running. Start your Emulator.</err></span>`); terminal.scrollBy(0, terminal.scrollHeight); return;
-            };
+            } else
+                console.__error("Emulator not detected. Please ensure it is running and try again.");
         } else if (menu.hasClass('injected'))
             menu.removeClass('injected');
     });
 
+
     const skipWarnCode = new Set();
     contextBridge.exposeInMainWorld("InjectCheat", async (name, visual) => {
         let process = FindEmulator(); if (process.length > 0) {
-            const menu = $(`div#main div[name="${name}"]`); if (!menu.hasClass('injecting') && !menu.hasClass('injected')) {
-                t
-                    .append(`<span><time>${GetCurrentTime()}</time><data>Injecting ${visual}</data></span>`); terminal.scrollBy(0, terminal.scrollHeight); menu.addClass("injecting");
+            const menu = $(`div[name="${name}"]`); if (!menu.hasClass('injecting') && !menu.hasClass('injected')) {
+                if (menu.find("button").toArray().length == 1)
+                    try {
+                        menu.addClass("injecting");
+                        console.__log(`Injecting ${visual}`);
+                        const current_time = (new Date()).getTime(); const data = await (() => new Promise(async resolve => {
+                            try {
+                                const res = await ipcRenderer.invoke("WantAxios", `/cheat/code/${name}`, $('head').data('token')); if (res.status) {
+                                    const data = res.data; if (data.status || skipWarnCode.has(name)) {
+                                        skipWarnCode.delete(name);
 
-                try {
-                    const current_time = (new Date()).getTime(); const data = await (() => new Promise(async resolve => {
-                        try {
-                            const res = await ipcRenderer.invoke("WantAxios", `/cheat/code/${name}`, $('head').data('token')); if (res.status) {
-                                const data = res.data; if (data.status || skipWarnCode.has(name)) {
-                                    skipWarnCode.delete(name);
-                                    try {
-                                        let cheatCodes = data.data;
-                                        cheatCodes = await Promise.all(cheatCodes.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
-                                            replaceValue = Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))); try {
-                                                scanValue = scanValue
-                                                    .split(" ").map(i => i == "??" ? "?" : i).join(" ");
+                                        try {
+                                            let cheatCodes = data.data;
+                                            cheatCodes = await Promise.all(cheatCodes.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
+                                                replaceValue = Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))); try {
+                                                    scanValue = scanValue
+                                                        .split(" ").map(i => i == "??" ? "?" : i).join(" ");
 
-                                                resolve({ address: await AsyncFindValues(process.at(0).pid, scanValue), replaceValue, repValue });
-                                            } catch (err) { console.log(err); resolve({ address: [], replaceValue, repValue }); };
-                                        })));
+                                                    resolve({ address: await AsyncFindValues(process.at(0).pid, scanValue), replaceValue, repValue });
+                                                } catch (err) { console.log(err); resolve({ address: [], replaceValue, repValue }); };
+                                            })));
 
-                                        if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
-                                            return resolve({ status: false, err: `Failed to scan for ${visual}. Restart your Emulator.` });
+                                            if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
+                                                return resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
 
-                                        cheatCodes.map(({ address, replaceValue, repValue }) => InjectValues(process.at(0).pid, address, replaceValue, repValue));
+                                            cheatCodes.map(({ address, replaceValue, repValue }) => InjectValues(process.at(0).pid, address, replaceValue, repValue));
 
-                                        let i = 0; cheatCodes
-                                            .forEach(({ address }) => address.forEach(() => i++)); resolve({ status: true, replaces: i });
-                                    } catch (err) {
-                                        console.log(err); resolve({ status: false, err: `Failed to scan for ${visual}.` });
+                                            let i = 0; cheatCodes
+                                                .forEach(({ address }) => address.forEach(() => i++)); resolve({ status: true, replaces: i });
+                                        } catch (err) {
+                                            console.log(err); resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
+                                        };
+                                    } else {
+                                        skipWarnCode
+                                            .add(name); resolve({ status: false, err: `Warning: ${visual} is not safe. If you still want to proceed, click again.` });
                                     };
-                                } else {
-                                    skipWarnCode
-                                        .add(name); resolve({ status: false, err: `${visual} is currently not safe to use. You can use it at your own risk by, clicking again on inject.` });
-                                };
-                            } else
-                                resolve(res);
-                        } catch (err) { console.log(err); resolve({ status: false, err: `Failed to download latest codes from our server. Try again later.` }); };
-                    }))();
+                                } else
+                                    resolve(res);
+                            } catch (err) { console.log(err); resolve({ status: false, err: `Failed to download the latest codes from the server. Please check your connection or try again later.` }); };
+                        }))();
 
-                    menu.removeClass('injecting'); if (data.status) {
-                        await alert_audio.play(); menu.removeClass('injecting'); t
-                            .append(`<span><time>${GetCurrentTime()}</time><data>Injected ${visual} in (${(((new Date()).getTime() - current_time) / 1000).toFixed()}s).</data></span>`); terminal.scrollBy(0, terminal.scrollHeight);
-                    } else {
-                        t
-                            .append(`<span><time>${GetCurrentTime()}</time><err>${data.err}</err></span>`); terminal.scrollBy(0, terminal.scrollHeight); menu.removeClass('injecting');
-                    };
-                } catch (err) {
-                    console.log(err); menu.removeClass('injecting'); t
-                        .append(`<span><time>${GetCurrentTime()}</time><err>Error while injecting ${visual}.</err></span>`); terminal.scrollBy(0, terminal.scrollHeight); menu.removeClass('injecting');
-                };
+                        menu.removeClass('injecting'); if (data.status) {
+                            await alert_audio();
+                            console.__log(`Injected ${visual} in (${(((new Date()).getTime() - current_time) / 1000).toFixed()}s).`);
+                        } else
+                            console.__error(data.err);
+                    } catch (err) {
+                        console.log(err);
+                        console.__error(`Failed to download the latest codes from the server. Please check your connection or try again later.`);
+
+                        menu.removeClass('injecting');
+                    }
+
+                else if (menu.find("bind").toArray().length == 1)
+                    if (menu.data("n"))
+                        try {
+                            menu.addClass("injecting");
+                            console.__log(`Injecting ${visual}`);
+                            const current_time = (new Date()).getTime(); const data = await (() => new Promise(async resolve => {
+                                try {
+                                    const res = await ipcRenderer.invoke("WantAxios", `/cheat/code/${name.replace("[LEGIT]", "")}`, $('head').data('token')); if (res.status) {
+                                        const data = res.data; if (data.status || skipWarnCode.has(name)) {
+                                            skipWarnCode.delete(name);
+
+                                            try {
+                                                let cheatCodes = data.data;
+                                                cheatCodes = await Promise.all(cheatCodes.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
+                                                    replaceValue = Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))); try {
+                                                        scanValue = scanValue
+                                                            .split(" ").map(i => i == "??" ? "?" : i).join(" ");
+
+                                                        resolve({ address: await AsyncFindValues(process.at(0).pid, scanValue), replaceValue, repValue });
+                                                    } catch (err) { console.log(err); resolve({ address: [], replaceValue, repValue }); };
+                                                })));
+
+                                                if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
+                                                    return resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
+
+                                                resolve({ status: true, addresses: cheatCodes });
+                                            } catch (err) {
+                                                console.log(err); resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
+                                            };
+                                        } else {
+                                            skipWarnCode
+                                                .add(name); resolve({ status: false, err: `Warning: ${visual} is not safe. If you still want to proceed, click again.` });
+                                        };
+                                    } else
+                                        resolve(res);
+                                } catch (err) { console.log(err); resolve({ status: false, err: `Failed to download the latest codes from the server. Please check your connection or try again later.` }); };
+                            }))();
+
+                            menu.removeClass('injecting'); if (data.status) {
+                                await alert_audio();
+
+
+
+
+                                console.__log(`I am working on this, This will be soon complete.`);
+                            } else
+                                console.__error(data.err);
+                        } catch (err) {
+                            console.log(err);
+                            console.__error(`Failed to download the latest codes from the server. Please check your connection or try again later.`);
+
+                            menu.removeClass('injecting');
+                        }
+                    else
+                        console.__error(`No key selected. Please select a key to proceed.`);
             } else if (menu.hasClass('injected'))
                 menu.removeClass('injected');
-        } else {
-            t
-                .append(`<span><time>${GetCurrentTime()}</time><err>Emulator is not running. Start your Emulator.</err></span>`); terminal.scrollBy(0, terminal.scrollHeight);
-        };
+        } else
+            console.__error("Emulator not detected. Please ensure it is running and try again.");
     });
 
 
-    let isStreamer = false;
-    contextBridge.exposeInMainWorld("Close", () => !isStreamer ? null : ipcRenderer.invoke("End"));
-    contextBridge.exposeInMainWorld("Minimize", () => !isStreamer ? null : ipcRenderer.invoke("Hide")); contextBridge.exposeInMainWorld("ToggleMode", () => {
+    contextBridge.exposeInMainWorld("Minimize", () => ipcRenderer.invoke("Hide"));
+    contextBridge.exposeInMainWorld("HandleClose", () => ipcRenderer.invoke("End"));
+
+    contextBridge.exposeInMainWorld("ToggleMode", () => {
         ipcRenderer
-            .invoke("SetMode", isStreamer);
-
-        if (isStreamer)
-            $("header").attr("mode", "stream");
-        else
-            $("header").attr("mode", "normal");
-
-        isStreamer = !isStreamer;
+            .invoke("SetMode", !isStreamer);
+        isStreamer ? $("header button.stream").removeClass("active").addClass("inactive") : $("header button.stream").removeClass("inactive").addClass("active"); isStreamer = !isStreamer;
     });
+
+    contextBridge.exposeInMainWorld("ToggleInternet", async () => {
+        if (isInternetBlocked) {
+            await Promise.all([
+                `netsh advfirewall firewall delete rule name="FF Block In1"`,
+                `netsh advfirewall firewall delete rule name="FF Block In2"`,
+                `netsh advfirewall firewall delete rule name="FF Block In3"`,
+                `netsh advfirewall firewall delete rule name="FF Block In4"`,
+            ]
+                .map(async e => {
+                    try {
+                        let proc = exec(e);
+                        proc.stderr.addListener("data", console.log);
+                        proc.stdout.addListener("data", console.log);
+                    } catch { };
+                }));
+
+            $("header button.internet").removeClass("inactive").addClass("active"); isInternetBlocked = false;
+        } else {
+            await Promise.all([
+                `netsh advfirewall firewall add rule name="FF Block In1" dir=in action=block program="%ProgramFiles%\\BlueStacks_nxt\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In1" dir=out action=block program="%ProgramFiles%\\BlueStacks_nxt\\HD-Player.exe"`,
+
+                `netsh advfirewall firewall add rule name="FF Block In2" dir=in action=block program="%ProgramFiles%\\BlueStacks\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In2" dir=out action=block program="%ProgramFiles%\\BlueStacks\\HD-Player.exe"`,
+
+                `netsh advfirewall firewall add rule name="FF Block In3" dir=in action=block program="%ProgramFiles%\\BlueStacks_msi2\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In3" dir=out action=block program="%ProgramFiles%\\BlueStacks_msi2\\HD-Player.exe"`,
+
+                `netsh advfirewall firewall add rule name="FF Block In4" dir=in action=block program="%ProgramData%\\BlueStacks_msi5\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In4" dir=out action=block program="%ProgramData%\\BlueStacks_msi5\\HD-Player.exe"`,
+            ]
+                .map(async e => {
+                    try {
+                        let proc = exec(e);
+                        proc.stderr.addListener("data", console.log);
+                        proc.stdout.addListener("data", console.log);
+                    } catch { };
+                }));
+
+            $("header button.internet").removeClass("active").addClass("inactive"); isInternetBlocked = true;
+        };
+    })
 });

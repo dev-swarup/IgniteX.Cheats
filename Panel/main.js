@@ -63,11 +63,11 @@ ipcMain
 /**
  * @type { BrowserWindow }
  */
-let MainWindow; async function startWindow() {
+let MainWindow, isStreamer = false; async function startWindow() {
     if (BrowserWindow.getAllWindows().length == 0) {
         MainWindow = new BrowserWindow({
             width: 350,
-            height: 450,
+            height: 480,
 
             show: false,
             frame: false,
@@ -76,19 +76,25 @@ let MainWindow; async function startWindow() {
             darkTheme: true,
             resizable: false,
             minimizable: true,
-            skipTaskbar: true,
-            alwaysOnTop: true,
+            skipTaskbar: false,
+            alwaysOnTop: false,
             maximizable: false,
             autoHideMenuBar: true,
 
-            title: "BlueStacks", backgroundColor: "black",
+            title: "", backgroundColor: "black",
             webPreferences: { preload: path.join(__dirname, "static", "js", "jQuery.Manager.js"), nodeIntegration: true, devTools: true }
         });
 
-        MainWindow.setContentProtection(true);
+        MainWindow.setContentProtection(false);
         await MainWindow.loadFile(path
             .join(__dirname, "static", "index.html")); MainWindow.show();
 
+        MainWindow.addListener("focus", () => {
+            if (isStreamer) {
+                MainWindow.setSkipTaskbar(true);
+                MainWindow.setAlwaysOnTop(true);
+            };
+        });
     } else {
         BrowserWindow
             .getAllWindows().map(i => i.close()); startWindow();
@@ -107,22 +113,28 @@ app
     .once("ready", startWindow)
     .addListener("activate", startWindow);
 
-ipcMain.handle("End", async () => app.exit());
-ipcMain.handle("Hide", async () => { MainWindow.minimize(); });
-ipcMain.handle("SetSize", async (i, width, height) => { MainWindow.setSize(width, height, true); MainWindow.center(); });
-ipcMain.handle("SetMode", async (i, isStreamer) => {
-    if (isStreamer) {
-        MainWindow.setTitle("BlueStacks");
+ipcMain.handle("End", () => app.exit(0)); ipcMain.handle("Hide", async () => {
+    MainWindow.setSkipTaskbar(false);
+    MainWindow.setAlwaysOnTop(false);
 
-        MainWindow.setAlwaysOnTop(true);
-        MainWindow.setSkipTaskbar(true);
+    MainWindow.minimize();
+});
+
+ipcMain.handle("SetSize", async (i, width, height) => { MainWindow.setSize(width, height, true); MainWindow.center(); });
+ipcMain.handle("SetMode", async (i, isTrue) => {
+    isStreamer = isTrue; if (isTrue) {
+        MainWindow.setTitle("BlueStacks");
         MainWindow.setContentProtection(true);
+
+        MainWindow.setSkipTaskbar(true);
+        MainWindow.setAlwaysOnTop(true);
     }
 
     else {
         MainWindow.setTitle("");
-        MainWindow.setAlwaysOnTop(false);
-        MainWindow.setSkipTaskbar(false);
         MainWindow.setContentProtection(false);
+
+        MainWindow.setSkipTaskbar(false);
+        MainWindow.setAlwaysOnTop(false);
     }
 });
