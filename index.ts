@@ -3,7 +3,7 @@ import path from "path";
 import { Elysia } from "elysia";
 import { version } from "./package.json";
 import { rateLimit } from "elysia-rate-limit";
-import { loginUser, registerUser, extractCheatCode } from "./mongodb.ts";
+import { status, addToBanlist, loginUser, registerUser, extractCheatCode } from "./mongodb.ts";
 
 const app = new Elysia({ precompile: true }).onError(({ set, code, error }) => {
     set.status = "OK";
@@ -18,10 +18,26 @@ const app = new Elysia({ precompile: true }).onError(({ set, code, error }) => {
 
 
 app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Response.json({ status: false, err: "Too many requests in a short time. You've been temporarily banned for 10 minutes." }) })).group("/api", app => app
-    .get('/status', async ({ headers }) => {
-        if ("x-version" in headers)
+    .get("/status", async ({ request, headers }) => {
+        if ("x-version" in headers && "x-user-agent" in headers)
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 0:
+                    /// @ts-expect-error
+                    return await status(app.server?.requestIP(request)?.address, headers["x-user-agent"]);
+
+                case 1:
+                case -1:
+                    return { status: false, err: "Hey! You're using an older version. Please update to the latest version for the best experience." };
+            }
+        else
+            return { status: true };
+    })
+    .post("/status/update", async ({ request, headers, query: { user } }) => {
+        if ("x-version" in headers && "x-user-agent" in headers)
+            switch (Bun.semver.order(headers['x-version'] as string, version)) {
+                case 0:
+                    /// @ts-expect-error
+                    await addToBanlist(app.server?.requestIP(request)?.address, headers["x-user-agent"], user);
                     return { status: true };
 
                 case 1:
@@ -287,7 +303,6 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
             }
         else
             return Response.json({ status: false, err: "Hmm, something's off with your request. Please ensure you're using the correct version and try again." });
-
     }));
 
 

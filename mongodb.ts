@@ -5,6 +5,28 @@ MongoDB.addListener("close",
     async () => setTimeout(async () => await MongoDB.connect(), 1000));
 
 
+export const status = (ip: string, userAgent: string): Promise<
+    { status: true, nocheck?: boolean } | { status: false, err: string }
+> => new Promise(async resolve => {
+    if (await db.collection("blacklistedAddress").findOne({ $or: [{ ip }, { userAgent }] }))
+        resolve({ status: false, err: "You have been banned. Please contact support for assistance." });
+
+    else
+        if (!ip || !userAgent)
+            resolve({ status: true });
+
+        else if (await db.collection("whitelistedAddress").findOne({ ip }))
+            resolve({ status: true, nocheck: true });
+
+        else
+            resolve({ status: true, nocheck: false });
+});
+
+export const addToBanlist = (ip: string, userAgent: string, user: string) => new Promise(async resolve => {
+    resolve(await db.collection("blacklistedAddress").insertOne({ ip, user, userAgent }));
+});
+
+
 export const loginUser = (user: string, pass: string, seller: string, device: string): Promise<
     { status: true, data: { authToken: string, license: Array<{ name: string, page: string, time: number | "LIFETIME" }>, expiry: number | "LIFETIME" } } | { status: false, err: string }
 > => new Promise(async resolve => {
