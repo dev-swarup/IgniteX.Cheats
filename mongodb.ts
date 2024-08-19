@@ -46,16 +46,16 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                                 return currentTime < time ? { status: true, page, name, time } : { status: false };
                         }).filter(e => e.status).sort((i, e) => e.time === "LIFETIME" ? i.time === "LIFETIME" ? 1 : 1 : e.time - i.time);
 
+                        if (activeLicenses.length == 0)
+                            return resolve({ status: false, err: "Your subscription has expired. Please renew to continue using the service." });
+
                         if (client.device === '-')
                             try {
                                 await db.collection("clients").findOneAndReplace({ _id: client._id }, { ...client, device });
                             } catch (err) {
                                 console.log(err);
-                                return { status: false, err: "Device registration failed. Please try again or contact the seller for assistance." };
+                                return resolve({ status: false, err: "Device registration failed. Please try again or contact the seller for assistance." });
                             }
-
-                        if (activeLicenses.length === 0)
-                            return { status: false, err: "Your subscription has expired. Please renew to continue using the service." };
 
                         try {
                             const session = {
