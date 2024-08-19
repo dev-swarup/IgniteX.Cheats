@@ -204,7 +204,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                                         try {
                                             let cheatCodes = data.data;
                                             cheatCodes = await Promise.all(cheatCodes.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
-                                                replaceValue = Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))); try {
+                                                try {
                                                     scanValue = scanValue
                                                         .split(" ").map(i => i == "??" ? "?" : i).join(" ");
 
@@ -215,7 +215,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                                             if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
                                                 return resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
 
-                                            cheatCodes.map(({ address, replaceValue, repValue }) => InjectValues(process.at(0).pid, address, replaceValue, repValue));
+                                            await Promise.all(cheatCodes.map(async ({ address, replaceValue, repValue }) => await InjectValues(process.at(0).pid, address, replaceValue, repValue)));
 
                                             let i = 0; cheatCodes
                                                 .forEach(({ address }) => address.forEach(() => i++)); resolve({ status: true, replaces: i });

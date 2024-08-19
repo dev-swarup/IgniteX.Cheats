@@ -115,18 +115,14 @@ module.exports.AsyncFindValues = (pid, scanValue) => new Promise((resolve, rejec
     FindInGame(handle, scanValue).then(resolve).catch(reject);
 });
 
-module.exports.InjectValues =
-    (pid, addresses, replaceValue, repValue) => {
-        const { handle } = jQ.openProcess(pid);
+module.exports.InjectValues = (pid, addresses, replaceValue, repValue) => new Promise(resolve => {
+    const { handle } = jQFast.openProcess(pid);
 
-        if (!repValue)
-            return addresses.forEach(address => jQ.writeBuffer(handle, address, replaceValue));
+    if (!repValue) {
+        replaceValue = Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`)));
+        return resolve(addresses.forEach(address => jQFast.writeBuffer(handle, address, replaceValue)));
+    }
 
-        else
-            addresses.forEach(address => {
-                const value = jQ
-                    .readBuffer(handle, address + parseInt(replaceValue, 16), 1);
-
-                jQ.writeBuffer(handle, address + parseInt(repValue, 16), value);
-            });
-    };
+    else
+        return resolve((() => new Promise(resolve => jQFast.InjectAimBot(handle, addresses, Number(replaceValue), Number(repValue), resolve)))());
+});
