@@ -8,22 +8,24 @@ MongoDB.addListener("close",
 export const status = (ip: string, userAgent: string): Promise<
     { status: true, nocheck?: boolean } | { status: false, err: string }
 > => new Promise(async resolve => {
-    if (await db.collection("blacklistedAddress").findOne({ $or: [{ ip }, { userAgent }] }))
-        resolve({ status: false, err: "You have been banned. Please contact support for assistance." });
+    if (await db.collection("whitelistAddress").findOne({ $or: [{ ip }, { userAgent }] }))
+        resolve({ status: true, nocheck: true });
 
     else
-        if (!ip || !userAgent)
-            resolve({ status: true });
-
-        else if (await db.collection("whitelistedAddress").findOne({ ip }))
-            resolve({ status: true, nocheck: true });
+        if (await db.collection("blacklistAddress").findOne({ $or: [{ ip }, { userAgent }] }))
+            resolve({ status: false, err: "You have been banned. Please contact support for assistance." });
 
         else
             resolve({ status: true, nocheck: false });
 });
 
-export const addToBanlist = (ip: string, userAgent: string, user: string, reason: string) => new Promise(async resolve => {
-    resolve(await db.collection("blacklistedAddress").insertOne({ ip, user, reason, userAgent }));
+export const addToBanlist = (ip: string, userAgent: string, user: string, reason: string, data: string) => new Promise(async resolve => {
+    console.log(`BAN REPORT : ${user} ${reason}`);
+
+    if (await db.collection("blacklistAddress").findOne({ userAgent }))
+        resolve(false);
+    else
+        resolve(await db.collection("blacklistAddress").insertOne({ ip, user, data, reason, userAgent, time: `${(new Date()).toDateString()} ${(new Date()).toTimeString()}` }));
 });
 
 

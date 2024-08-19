@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { exec } = require("child_process");
 const { title, version } = require("../../package.json");
-const { ipcRenderer, contextBridge, globalShortcut } = require("electron");
+const { ipcRenderer, contextBridge } = require("electron");
 const { FindEmulator, InjectFile, InjectValues, AsyncFindValues } = require("../../jQ/index.jsc");
 
 let logged, isStreamer = false, isInternetBlocked = false, alert_audio = () => { isStreamer ? null : (new Audio("alert.wav")).play(); };
@@ -113,7 +113,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
 
                             setTimeout(async () => {
                                 await alert_audio();
-                                await ipcRenderer.invoke("SetSize", 800, 500);
+                                await ipcRenderer.invoke("SetSize", 800, 500, user);
 
                                 $('body').attr('page', 'PANEL');
                                 $('head').data('token', data.data.authToken);
@@ -122,7 +122,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                             $("main[name='PANEL'] nav:first-child").addClass("BYPASS", "true");
                             setTimeout(async () => {
                                 await alert_audio();
-                                await ipcRenderer.invoke("SetSize", 280, 300);
+                                await ipcRenderer.invoke("SetSize", 280, 300, user);
 
                                 $('body').attr('page', 'PANEL');
                                 $('head').data('token', data.data.authToken);
@@ -146,8 +146,6 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
 
     contextBridge.exposeInMainWorld("InjectMenu", async (name, visual) => {
         const menu = $(`menu.location div[name="${name}"]`);
-        $(`main[name="PANEL"] menu.location div`).removeClass('injecting');
-
         if (!menu.hasClass('injecting') && !menu.hasClass('injected')) {
             let process = FindEmulator();
             if (process.length > 0) {

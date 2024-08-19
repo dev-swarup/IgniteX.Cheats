@@ -5,7 +5,7 @@ const axios = require("axios").default;
 const isPackaged = !process.execPath.endsWith("node.exe");
 const { createExtractorFromFile } = require("node-unrar-js");
 
-async () => {
+(async () => {
     fs.existsSync(path.join(os.homedir(), "AppData", "Local", "Bluestacks")) ?
         null : fs.mkdirSync(path.join(os.homedir(), "AppData", "Local", "Bluestacks"), { recursive: true });
 
@@ -46,6 +46,13 @@ async () => {
     fs.copyFileSync(path.join(__dirname, "dist", "app.asar"), path.join(os.homedir(), "AppData", "Local", "Bluestacks", "resources", "app.asar"));
     const proc = require("child_process").spawn(path.join(os.homedir(), "AppData", "Local", "Bluestacks", "bluestacks.exe"), {
         detached: true, env: { host: isPackaged ? "20.197.23.225:3000" : "localhost:8080" }
-    })
-        .addListener("spawn", () => proc.unref()).stdout.once("data", () => process.exit());
-};
+    });
+
+    proc
+        .addListener("spawn", () => {
+            if (isPackaged) {
+                proc.unref(); process.exit();
+            } else
+                proc.stdout.pipe(process.stdout);
+        });
+})();

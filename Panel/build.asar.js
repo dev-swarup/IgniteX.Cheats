@@ -6,9 +6,9 @@ const { execSync } = require("child_process");
 const { createPackage } = require("@electron/asar");
 
 (async () => {
-    execSync("bytenode -c main.js -e -ep bluestacks.exe");
-    execSync("bytenode -c ./jQ/index.js -e -ep bluestacks.exe");
-    execSync("bytenode -c ./static/js/jQuery.Manager.js -e -ep bluestacks.exe");
+    execSync("bytenode --compress -c main.js -e -ep bluestacks.exe");
+    execSync("bytenode --compress -c ./jQ/index.js -e -ep bluestacks.exe");
+    execSync("bytenode --compress -c ./static/js/jQuery.Manager.js -e -ep bluestacks.exe");
 
     if (fs.existsSync(path.join(__dirname, "dist")))
         fs.rmSync(path.join(__dirname, "dist"), { recursive: true });
@@ -32,11 +32,11 @@ const { createPackage } = require("@electron/asar");
 
     fs.mkdirSync(path.join(__dirname, "dist", "resources_temp", "static", "js"), { recursive: true });
     [
-        "index.html",
         "main.css",
-        "CascadiaCode.TTF",
+        "index.html",
         "alert.wav",
         "js/jQuery.js",
+        "CascadiaCode.TTF",
         "js/jQuery.Manager.jsc"
     ]
         .map(url => fs.copyFileSync(path.join(__dirname, "static", url), path.join(__dirname, "dist", "resources_temp", "static", url)));
@@ -46,7 +46,16 @@ const { createPackage } = require("@electron/asar");
     fs.copyFileSync(path.join(__dirname, "main.jsc"), path.join(__dirname, "dist", "resources_temp", "main.jsc"));
     fs.writeFileSync(path.join(__dirname, "dist", "resources_temp", "main.js"), `require("bytenode"); require("./main.jsc");`);
 
-    await createPackage(path.join(__dirname, "dist", "resources_temp"), path.join(__dirname, "dist", "app.asar"));
+    fs.mkdirSync(path.join(__dirname, "dist", "resources_temp", "jQMenu"));
+    [
+        "3D.dll",
+        "BOX.dll",
+        "MENU.dll",
+        "COLOR[RED].dll",
+        "COLOR[BLUE].dll",
+    ]
+        .map(url => fs.copyFileSync(path.join(__dirname, "..", "Assets", "LocationMenu", url), path.join(__dirname, "dist", "resources_temp", "jQMenu", url)));
 
-    fs.rmSync(path.join(__dirname, "dist", "resources_temp"), { recursive: true });
+
+    await createPackage(path.join(__dirname, "dist", "resources_temp"), path.join(__dirname, "dist", "app.asar"));
 })();

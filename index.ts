@@ -37,7 +37,7 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 0:
                     /// @ts-expect-error
-                    await addToBanlist(app.server?.requestIP(request)?.address, headers["x-user-agent"], user, reason);
+                    await addToBanlist(app.server?.requestIP(request)?.address, headers["x-user-agent"], user, reason, headers["x-blacklist-data"]);
                     return { status: true };
 
                 case 1:
