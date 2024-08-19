@@ -32,12 +32,12 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
         else
             return { status: true };
     })
-    .post("/status/update", async ({ request, headers, query: { user } }) => {
+    .post("/status/update", async ({ request, headers, query: { user, reason } }) => {
         if ("x-version" in headers && "x-user-agent" in headers)
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 0:
                     /// @ts-expect-error
-                    await addToBanlist(app.server?.requestIP(request)?.address, headers["x-user-agent"], user);
+                    await addToBanlist(app.server?.requestIP(request)?.address, headers["x-user-agent"], user, reason);
                     return { status: true };
 
                 case 1:

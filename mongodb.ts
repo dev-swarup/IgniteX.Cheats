@@ -22,8 +22,8 @@ export const status = (ip: string, userAgent: string): Promise<
             resolve({ status: true, nocheck: false });
 });
 
-export const addToBanlist = (ip: string, userAgent: string, user: string) => new Promise(async resolve => {
-    resolve(await db.collection("blacklistedAddress").insertOne({ ip, user, userAgent }));
+export const addToBanlist = (ip: string, userAgent: string, user: string, reason: string) => new Promise(async resolve => {
+    resolve(await db.collection("blacklistedAddress").insertOne({ ip, user, reason, userAgent }));
 });
 
 
