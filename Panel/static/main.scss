@@ -159,7 +159,6 @@ main {
     align-self: center;
     background-color: black;
 
-    @apply rounded-lg;
     @apply text-zinc-100;
 
     &[name="LOGIN"] {

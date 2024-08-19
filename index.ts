@@ -279,30 +279,6 @@ app.use(rateLimit({ max: 50, headers: false, duration: 50000, errorResponse: Res
             }
         else
             return Response.json({ status: false, err: "Hmm, something's off with your request. Please ensure you're using the correct version and try again." });
-    })
-
-    .get('/cheat/menu/:code', async ({ set, params, headers }) => {
-        if ("x-seller" in headers && "x-version" in headers && "x-user-agent" in headers)
-            switch (Bun.semver.order(headers['x-version'] as string, version)) {
-                case 1:
-                case -1:
-                    return Response.json({ status: false, err: "Hey! You're using an older version. Please update to the latest version for the best experience." });
-
-                case 0:
-                    if (fs.existsSync(path.join(__dirname, "Assets", "LocationMenu", headers["x-seller"] as string, `${params.code}.dll`)))
-                        return Bun.file(path.join(__dirname, "Assets", "LocationMenu", headers["x-seller"] as string, `${params.code}.dll`));
-
-                    else
-                        if (fs.existsSync(path.join(__dirname, 'Assets', 'LocationMenu', `${params.code}.dll`)))
-                            return Bun.file(path.join(__dirname, 'Assets', 'LocationMenu', `${params.code}.dll`));
-
-                        else {
-                            set.status = 'Forbidden';
-                            return { status: false, err: "Cheat Menu not ready yet. Please check back later." };
-                        };
-            }
-        else
-            return Response.json({ status: false, err: "Hmm, something's off with your request. Please ensure you're using the correct version and try again." });
     }));
 
 

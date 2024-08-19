@@ -1,13 +1,11 @@
 {
     "main": "main.js",
-    "version": "v1.5.0",
+    "version": "v1.6.0",
     "scripts": {
         "build": "npm run build:scss && node build.js",
         "start": "npm run build:scss && npm run build:tailwindcss && node build.asar.js && node index.js",
-
         "build:scss": "sass --no-source-map static/main.scss static/main.temp.css",
         "build:scss:watch": "sass --watch --no-source-map static/main.scss static/main.temp.css",
-
         "build:tailwindcss": "tailwindcss -m -i static/main.temp.css -o static/main.css",
         "build:tailwindcss:watch": "tailwindcss --watch -m -i static/main.temp.css -o static/main.css"
     },
