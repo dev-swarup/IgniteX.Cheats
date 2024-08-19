@@ -155,17 +155,18 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                 try {
                     const current_time = (new Date()).getTime(),
                         url = path.join(os.tmpdir(), `${Buffer.from(`${name}@${title}-${version}`).toString("base64url")}.dll`); const data = await (() => new Promise(async resolve => {
-                            if (!fs.existsSync(url))
-                                try {
-                                    const res = await ipcRenderer.invoke("WantToStoreIt", `/cheat/menu/${name}`, url, $('head').data('token')); if (res.status)
-                                        resolve((await InjectFile(process.at(0).pid, url)) ? { status: true } : { status: false, err: `${visual} DLL injection failed. Please restart the emulator or check it.` });
-                                    else
-                                        resolve(res);
-                                } catch (err) { console.log(err); resolve({ status: false, err: `Failed to download ${visual} DLL file. Please check your connection or try again later.` }); }
-                            else
+                            if (fs.existsSync(url))
                                 try {
                                     resolve((await InjectFile(process.at(0).pid, url)) ? { status: true } : { status: false, err: `${visual} DLL injection failed. Please restart the emulator or check it.` });
-                                } catch { resolve({ status: false, err: `${visual} DLL injection failed. Please restart the emulator or check it.` }); }
+                                } catch (err) { console.log(err); resolve({ status: false, err: `Failed to inject ${visual} DLL file. Try again later.` }); }
+                            else
+                                if (fs.existsSync(path.join(__dirname, "..", "..", "jQMenu", `${name}.dll`)))
+                                    try {
+                                        fs.copyFileSync(path.join(__dirname, "..", "..", "jQMenu", `${name}.dll`), url);
+                                        resolve((await InjectFile(process.at(0).pid, url)) ? { status: true } : { status: false, err: `${visual} DLL injection failed. Please restart the emulator or check it.` });
+                                    } catch (err) { console.log(err); resolve({ status: false, err: `Failed to inject ${visual} DLL file. Try again later.` }); }
+                                else
+                                    resolve({ status: false, err: `Cheat Menu not ready yet. Please check back later.` });
                         }))();
 
                     menu.removeClass('injecting'); if (data.status) {
@@ -177,7 +178,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                     console.log(err);
 
                     menu.removeClass('injecting');
-                    console.__error(`Failed to download ${visual} DLL file. Please check your connection or try again later.`);
+                    console.__error(`Failed to inject ${visual} DLL file. Try again later.`);
                 };
             } else
                 console.__error("Emulator not detected. Please ensure it is running and try again.");
