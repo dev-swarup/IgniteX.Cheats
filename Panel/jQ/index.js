@@ -1,11 +1,8 @@
 const path = require("path");
-
-const jQ = require(path.join(__dirname, "mem.node"));
-const jQFast = require(path.join(__dirname, "mem.scan.node"));
-
+const jQFast = require(path.join(__dirname, "mem.node"));
 
 module.exports.FindEmulator = () => {
-    const result = jQ.getProcesses().map(({ szExeFile, cntThreads, th32ProcessID }) => {
+    const result = jQFast.getProcesses().map(({ szExeFile, cntThreads, th32ProcessID }) => {
         if (cntThreads == 0)
             return false;
 
@@ -22,7 +19,7 @@ module.exports.FindEmulator = () => {
 };
 
 module.exports.GetTaskManager = () => {
-    const result = jQ.getProcesses().map(({ szExeFile }) => {
+    const result = jQFast.getProcesses().map(({ szExeFile }) => {
         switch (szExeFile) {
             default:
                 return { status: false };
@@ -102,8 +99,8 @@ module.exports.GetTaskManager = () => {
 };
 
 module.exports.InjectFile = (pid, path) => {
-    const { handle } = jQ.openProcess(pid);
-    return new Promise(resolve => { try { jQ.injectDll(handle, path); setTimeout(() => resolve(true), 1800); } catch { resolve(false); } });
+    const { handle } = jQFast.openProcess(pid);
+    return new Promise(resolve => { try { jQFast.injectDll(handle, path); setTimeout(() => resolve(true), 1800); } catch { resolve(false); } });
 };
 
 const FindInGame = async (handle, scanValue) => new Promise(resolve =>
@@ -117,19 +114,106 @@ module.exports.AsyncFindValues = (pid, scanValue) => new Promise((resolve, rejec
 
 module.exports.AsyncLegitFindValues = (pid, scanValue) => new Promise((resolve, reject) => {
     const { length } = scanValue.split(" "), { handle } = jQFast.openProcess(pid); FindInGame(handle, scanValue).then(address => {
-        const currentValue = jQFast
-            .readBuffer(handle, address, length); address = address.map(address => ({ address, currentValue }));
+        address = address
+            .map(address => ({ address, currentValue: jQFast.readBuffer(handle, address, length) }));
 
-        resolve({ handle, address });
+        resolve(address);
     }).catch(reject);
 });
 
 module.exports.InjectValues = (pid, addresses, replaceValue, repValue) => new Promise(resolve => {
     const { handle } = jQFast.openProcess(pid);
 
-    if (!repValue)
+    if (!repValue && !Array.isArray(replaceValue))
         return resolve(addresses.forEach(address => jQFast.writeBuffer(handle, address, replaceValue)));
+
+    else if (!repValue && Array.isArray(replaceValue))
+        return resolve(addresses.forEach((address, i) => jQFast.writeBuffer(handle, address, replaceValue[i])));
+
 
     else
         return resolve((() => new Promise(resolve => jQFast.InjectAimBot(handle, addresses, Number(replaceValue), Number(repValue), resolve)))());
+});
+
+
+module.exports.globalShortcut = new (require("events").EventEmitter)();
+const keysDown = new Set(), keysPress = {}; jQFast.initEvent(async (name, code, method) => {
+    if (method === 256 && keysDown.has(code))
+        return null;
+
+    if (method === 257 && keysDown.has(code))
+        keysDown.delete(code);
+
+
+    if (method === 256) {
+        keysDown.add(code);
+        keysPress[code] = (new Date()).getTime();
+    };
+
+
+    if (method === 257)
+        method = "UP";
+    else
+        method = "DOWN";
+
+    if (name == "Invalid Key")
+        return null;
+
+    switch (code) {
+        case 35:
+            name = "End"; break;
+
+        case 36:
+            name = "Home"; break;
+
+        case 45:
+            name = "Insert"; break;
+
+        case 33:
+            name = "Page Up"; break;
+
+        case 34:
+            name = "Page Down"; break;
+
+        case 46:
+            name = "Delete"; break;
+
+        case 38:
+            name = "Arrow Up"; break;
+
+        case 40:
+            name = "Arrow Down"; break;
+
+        case 37:
+            name = "Arrow Left"; break;
+
+        case 39:
+            name = "Arrow Right"; break;
+
+        case 110:
+            name = "Num ."; break;
+
+        case 163:
+            name = "Right Ctrl"; break;
+
+        case 165:
+            name = "Right Alt"; break;
+    };
+
+    if (typeof name === "number")
+        return;
+
+    module.exports
+        .globalShortcut.emit(method.toLocaleLowerCase(), { code, name });
+    module.exports.globalShortcut.emit(`${method.toLocaleLowerCase()}-${name}`);
+    module.exports.globalShortcut.emit(`${method.toLocaleLowerCase()}-${code}`);
+
+    if (method == "UP") {
+        if (((new Date()).getTime() - keysPress[code]) < 800) {
+            module.exports
+                .globalShortcut.emit("press", { code, name });
+            module.exports.globalShortcut.emit(`press-${name}`);
+            module.exports.globalShortcut.emit(`press-${code}`);
+        };
+    };
 });
