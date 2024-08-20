@@ -28,14 +28,20 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
         };
 
 
-    const t = $("div#terminal");
-    const terminal = t.toArray().at(0); console = {
+    const x = $("div.xterm"), t = $("div#terminal");
+    const xterm = x.toArray().at(0), terminal = t.toArray().at(0); console = {
         ...console, ...{
             __log: msg => {
+                x
+                    .append(`<span><time>${GetCurrentTime()}</time><data>${msg}</data></span>`); xterm.scrollBy(0, xterm.scrollHeight);
+
                 t
                     .append(`<span><time>${GetCurrentTime()}</time><data>${msg}</data></span>`); terminal.scrollBy(0, terminal.scrollHeight);
             },
             __error: err => {
+                x
+                    .append(`<span><time>${GetCurrentTime()}</time><data>${msg}</data></span>`); xterm.scrollBy(0, xterm.scrollHeight);
+
                 t
                     .append(`<span><time>${GetCurrentTime()}</time><error>${err}</error></span>`); terminal.scrollBy(0, terminal.scrollHeight);
             }
