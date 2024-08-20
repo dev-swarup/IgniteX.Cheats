@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Mistero Cheats - Login</title>
+    <link rel="stylesheet" href="/seller/static/main.css">
+    <link rel="shortcut icon" href="/seller/logo.png" type="image/x-icon">
+
+    <script src="/seller/static/js/jQuery.js"></script>
+    <script src="/seller/static/js/jQuery.Main.js"></script>
+</head>
+
+<body>
+    <div id="login">
+        <menu>
+            <div>
+                <img src="/seller/logo.png" class="icon" draggable="false">
+                <menu>
+                    <input autocomplete="off" spellcheck="false" placeholder="USER" id="user">
+                    <input autocomplete="off" spellcheck="false" type="password" placeholder="PASSWORD" id="pass">
+                    <div class="menu">
+                        <button>
+                            <span>LOGIN</span>
+                            <svg width="30" height="18" viewBox="0 0 23 23" class="hidden">
+                                <circle cx="4" cy="12" r="3">
+                                    <animate id="spinner_jObz" begin="0;spinner_vwSQ.end-0.25s" attributeName="r"
+                                        dur="0.75s" values="3;.2;3" />
+                                </circle>
+                                <circle cx="12" cy="12" r="3">
+                                    <animate begin="spinner_jObz.end-0.6s" attributeName="r" dur="0.75s"
+                                        values="3;.2;3" />
+                                </circle>
+                                <circle cx="20" cy="12" r="3">
+                                    <animate id="spinner_vwSQ" begin="spinner_jObz.end-0.45s" attributeName="r"
+                                        dur="0.75s" values="3;.2;3" />
+                                </circle>
+                            </svg>
+                        </button>
+                        <span class="status"></span>
+                    </div>
+                </menu>
+            </div>
+        </menu>
+    </div>
+    <div id="dashboard" class="hidden">
+
+    </div>
+</body>
+
+</html>
