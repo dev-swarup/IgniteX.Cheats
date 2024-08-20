@@ -1,11 +1,10 @@
-import crypto from "crypto";
 import { MongoClient } from "mongodb";
 const MongoDB = await (new MongoClient(process.env.MONGODB_URL as string)).connect(), db = MongoDB.db("MisteroCheats");
 
 MongoDB.addListener("close",
     async () => setTimeout(async () => await MongoDB.connect(), 1000));
 
-
+export { db };
 export const status = (ip: string, userAgent: string): Promise<
     { status: true, nocheck?: boolean } | { status: false, err: string }
 > => new Promise(async resolve => {
@@ -23,7 +22,7 @@ export const status = (ip: string, userAgent: string): Promise<
 export const addToBanlist = (ip: string, userAgent: string, user: string, reason: string, data: string) => new Promise(async resolve => {
     console.log(`BAN REPORT : ${user} ${reason}`);
 
-    if (await db.collection("blacklistAddress").findOne({ userAgent }))
+    if (await db.collection("blacklistAddress").findOne({ $or: [{ ip }, { userAgent }] }))
         resolve(false);
     else
         resolve(await db.collection("blacklistAddress").insertOne({ ip, user, data, reason, userAgent, time: `${(new Date()).toDateString()} ${(new Date()).toTimeString()}` }));
@@ -60,12 +59,12 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
 
                         try {
                             const session = {
-                                user, seller, device, activeLicenses,
+                                user, seller, device, activeLicenses, sessionType: "client",
                                 token: Buffer.from(`${device?.slice(0, 30)}+${client.user}+${currentTime}`).toString("base64url")
                             };
 
                             await db
-                                .collection("sessions").deleteMany({ user, seller });
+                                .collection("sessions").deleteMany({ user, seller, sessionType: "client" });
 
                             await db.collection("sessions").insertOne(session);
                             return resolve({ status: true, data: { authToken: session.token, license: activeLicenses.map(e => { return { page: e.page, name: e.name, time: e.time } }), expiry: activeLicenses.at(0).time } });
@@ -87,35 +86,26 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
         return resolve({ status: false, err: "Please enter both username and password to proceed." });
 });
 
-export const registerUser = (user: string, pass: string, seller: string, sellerAuth: string, sellerDevice: string): Promise<
+export const registerUser = (user: string, pass: string, seller: string): Promise<
     { status: true } | { status: false, err: string }
 > => new Promise(async resolve => {
     if (user || pass)
         try {
-            const client = await db.collection("sellers").findOne({ name: seller }); if (client) {
-                if (client.pass === sellerAuth)
-                    if (client.device === sellerDevice)
-                        if (!(await db.collection("clients").findOne({ user, seller }))) {
-                            try {
-                                await db.collection("clients")
-                                    .insertOne({ user, pass, seller, device: "-", license: [] });
+            if (!(await db.collection("clients").findOne({ user, seller }))) {
+                try {
+                    await db.collection("clients")
+                        .insertOne({ user, pass, seller, device: "-", license: [] });
 
-                                return resolve({ status: true });
-                            } catch (err) {
-                                console.log(err);
-                                return resolve({ status: false, err: "Failed to register username and password. Please try again or contact support." });
-                            }
-                        } else
-                            return resolve({ status: false, err: "Username already exists. Please choose a different username." });
-                    else
-                        return resolve({ status: false, err: "This device isn't registered. Please contact the owner to reset your device access." });
-                else
-                    return resolve({ status: false, err: "Incorrect seller's password. Please try again." });
+                    return resolve({ status: true });
+                } catch (err) {
+                    console.log(err);
+                    return resolve({ status: false, err: "Failed to register username and password. Please try again or contact support." });
+                }
             } else
-                return resolve({ status: false, err: "Seller not found. Please check the username or contact support for assistance." });
+                return resolve({ status: false, err: "Username already exists. Please choose a different username." });
         } catch (err) {
             console.log(err);
-            return resolve({ status: false, err: "There was an error while searching for the seller's username. Please try again later." });
+            return resolve({ status: false, err: "There was an error while searching for the username. Please try again later." });
         }
     else
         return resolve({ status: false, err: "Please enter both username and password to proceed." });
@@ -125,7 +115,7 @@ export const extractCheatCode = (code: string, authToken: string, device: string
     { status: true, data: string } | { status: false, err: string }
 > => new Promise(async resolve => {
     try {
-        const session = await db.collection("sessions").findOne({ token: authToken }); if (session) {
+        const session = await db.collection("sessions").findOne({ token: authToken, sessionType: "client" }); if (session) {
             if (session.device === '*' || session.device === device) {
                 const cheat = await db.collection("cheats").findOne({ name: code });
 

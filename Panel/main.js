@@ -65,19 +65,6 @@ app.once("ready", () => {
         ipcMain
             .handle("WantAxios", (i, path, authToken) => new Promise(async resolve => {
                 try {
-                    const data = await (await fetch(`http://${process.env.host}/api/status`, {
-                        headers: {
-                            "x-seller": name,
-                            "x-version": version,
-                            "x-user-agent": userAgent
-                        }
-                    })).json();
-
-                    if (!data.status)
-                        return resolve(data);
-                } catch (err) { console.log(err); return resolve({ status: false, err: "Our servers are on maintenance. Keep patience, We will be back soon." }); };
-
-                try {
                     resolve(await (await fetch(`http://${process.env.host}/api${path}`, {
                         headers: {
                             "x-seller": name,
