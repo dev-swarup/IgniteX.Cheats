@@ -3,8 +3,8 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { Readable } = require("stream");
-const { GetTaskManager } = require("./jQ/index.jsc");
-const { app, ipcMain, BrowserWindow, globalShortcut, dialog } = require("electron"), { name, version } = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf8")),
+const { GetTaskManager, globalShortcut } = require("./jQ/index.jsc");
+const { app, ipcMain, BrowserWindow, dialog } = require("electron"), { name, version } = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf8")),
     userAgent = (() => {
         const cpu = os.cpus().at(0).model;
         const token = Buffer.from(`(${cpu}*${os.availableParallelism()}) with ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}GB on ${os.type()}@${os.version()}`).toString("ascii");
@@ -132,7 +132,7 @@ app.once("ready", () => {
                     autoHideMenuBar: true,
 
                     title: "", backgroundColor: "black",
-                    webPreferences: { preload: path.join(__dirname, "static", "js", "jQuery.Manager.js"), nodeIntegration: true, devTools: true }
+                    webPreferences: { preload: path.join(__dirname, "static", "js", "jQuery.Manager.js"), nodeIntegration: true, devTools: nocheck }
                 });
 
                 MainWindow.setContentProtection(false);
@@ -150,7 +150,7 @@ app.once("ready", () => {
                     .getAllWindows().map(i => i.close()); startWindow();
             };
 
-            globalShortcut.register("Home", () => {
+            globalShortcut.addListener("press-Home", () => {
                 if (MainWindow.isVisible())
                     MainWindow.hide();
 

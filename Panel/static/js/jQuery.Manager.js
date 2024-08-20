@@ -5,7 +5,7 @@ const path = require("path");
 const { exec } = require("child_process");
 const { title, version } = require("../../package.json");
 const { ipcRenderer, contextBridge } = require("electron");
-const { FindEmulator, InjectFile, InjectValues, AsyncFindValues } = require("../../jQ/index.jsc");
+const { FindEmulator, InjectFile, InjectValues, AsyncFindValues, AsyncLegitFindValues, globalShortcut } = require("../../jQ/index.jsc");
 
 let logged, isStreamer = false, isInternetBlocked = false, alert_audio = () => { isStreamer ? null : (new Audio("alert.wav")).play(); };
 window.addEventListener('contextmenu', e => e.preventDefault()); window.addEventListener("DOMContentLoaded", () => {
@@ -13,7 +13,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
         jQuery(typeof selector !== "string" ? selector : document.querySelectorAll(selector));
 
 
-    $("header span.title").html(title);
+    $("header span.title").html(`${title}<version>[${version}]</version>`);
     const addZero = n => n < 10 ? `0${n}` : `${n}`,
         GetDate = time => {
             const current_time = new Date(time || new Date());
@@ -52,18 +52,31 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
             } else
                 IWantButton = resolve;
         }))();
+        if (!n)
+            return;
 
-        if (n)
-            $(currentTarget).addClass("added")
-                .html(n.toLocaleUpperCase()).parent().parent().data("n", n)
+        if (n.name === "Home" || n.name === "Insert")
+            console.__log(`Please select another key, ${n.name} is system registered`);
+
+        else {
+            const parent = $(currentTarget).addClass("added")
+                .html(n.name.toLocaleUpperCase()).parent().parent().data("n", n.code).data("name", n.name);
+
+            if (parent.data("code") && parent.data("callback-up") && parent.data("callback-down")) {
+                globalShortcut.removeListener(`up-${parent.data("code")}`, parent.data("callback-up"));
+                globalShortcut.removeListener(`down-${parent.data("code")}`, parent.data("callback-down"));
+            };
+        };
     });
 
     window.addEventListener("keydown", async e => {
         if (logged)
             e.preventDefault();
+    });
 
+    globalShortcut.addListener("down", async e => {
         if (IWantButton) {
-            IWantButton(e.key !== " " ? e.key : "Space");
+            IWantButton(e);
             IWantButton = null;
         };
     });
@@ -91,7 +104,7 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
 
                 try {
                     const data = await ipcRenderer.invoke("WantAxios", `/client/login?user=${user}&pass=${pass}`); if (data.status) {
-                        $('span.expiry').html(`EXPIRY <br> <time>${data.data.expiry === "LIFETIME" ? "LIFETIME" : `${GetCurrentTime(data.data.expiry)} ${GetDate(data.data.expiry)}`}</time>`);
+                        $('span.expiry').html(`<time>${data.data.expiry === "LIFETIME" ? "LIFETIME" : `${GetCurrentTime(data.data.expiry)} ${GetDate(data.data.expiry)}`}</time>`);
 
                         data.data.license.map(license => {
                             const page = $(`#${license.page}`)
@@ -122,8 +135,6 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                             $("main[name='PANEL'] nav:first-child").addClass("BYPASS", "true");
                             setTimeout(async () => {
                                 await alert_audio();
-                                await ipcRenderer.invoke("SetSize", 280, 300, user);
-
                                 $('body').attr('page', 'PANEL');
                                 $('head').data('token', data.data.authToken);
                             }, 800);
@@ -187,47 +198,72 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
     });
 
 
-    const skipWarnCode = new Set();
+    const skipWarnCode = new Set(), cheat_codes = {};
     contextBridge.exposeInMainWorld("InjectCheat", async (name, visual) => {
         let process = FindEmulator(); if (process.length > 0) {
             const menu = $(`div[name="${name}"]`); if (!menu.hasClass('injecting') && !menu.hasClass('injected')) {
                 if (menu.find("button").toArray().length == 1)
                     try {
                         menu.addClass("injecting");
-                        console.__log(`Injecting ${visual}`);
                         const current_time = (new Date()).getTime(); const data = await (() => new Promise(async resolve => {
                             try {
-                                const res = await ipcRenderer.invoke("WantAxios", `/cheat/code/${name}`, $('head').data('token')); if (res.status) {
-                                    const data = res.data; if (data.status || skipWarnCode.has(name)) {
-                                        skipWarnCode.delete(name);
+                                if (!(name in cheat_codes)) {
+                                    console.__log(`Fetching latest codes for ${visual}`);
+                                    const res = await ipcRenderer.invoke("WantAxios", `/cheat/code/${name}`, $('head').data('token')); if (res.status) {
+                                        const data = JSON.parse(Buffer.from(Buffer
+                                            .from(res.data, "hex").toString("utf8").split("").reverse().join(""), "base64url").toString("utf8")); if (data.status || skipWarnCode.has(name)) {
+                                                skipWarnCode.delete(name);
+                                                console.__log(`Injecting ${visual}`);
 
-                                        try {
-                                            let cheatCodes = data.data;
-                                            cheatCodes = await Promise.all(cheatCodes.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
                                                 try {
-                                                    scanValue = scanValue
-                                                        .split(" ").map(i => i == "??" ? "?" : i).join(" ");
+                                                    cheat_codes[name] = data.data;
+                                                    let cheatCodes = await Promise.all(data.data.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
+                                                        replaceValue = repValue ? replaceValue : Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))); try {
+                                                            scanValue = scanValue
+                                                                .split(" ").map(i => i == "??" ? "?" : i).join(" ");
 
-                                                    resolve({ address: await AsyncFindValues(process.at(0).pid, scanValue), replaceValue, repValue });
-                                                } catch (err) { console.log(err); resolve({ address: [], replaceValue, repValue }); };
-                                            })));
+                                                            resolve({ address: await AsyncFindValues(process.at(0).pid, scanValue), replaceValue, repValue });
+                                                        } catch (err) { console.log(err); resolve({ address: [], replaceValue, repValue }); };
+                                                    })));
 
-                                            if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
-                                                return resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
+                                                    if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
+                                                        return resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
 
-                                            await Promise.all(cheatCodes.map(async ({ address, replaceValue, repValue }) => await InjectValues(process.at(0).pid, address, replaceValue, repValue)));
+                                                    await Promise.all(cheatCodes.map(async ({ address, replaceValue, repValue }) => await InjectValues(process.at(0).pid, address, replaceValue, repValue)));
 
-                                            let i = 0; cheatCodes
-                                                .forEach(({ address }) => address.forEach(() => i++)); resolve({ status: true, replaces: i });
-                                        } catch (err) {
-                                            console.log(err); resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
+                                                    let i = 0; cheatCodes
+                                                        .forEach(({ address }) => address.forEach(() => i++)); resolve({ status: true, replaces: i });
+                                                } catch (err) {
+                                                    console.log(err); resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
+                                                };
+                                            } else {
+                                            skipWarnCode
+                                                .add(name); resolve({ status: false, err: `Warning: ${visual} is not safe. If you still want to proceed, click again.` });
                                         };
-                                    } else {
-                                        skipWarnCode
-                                            .add(name); resolve({ status: false, err: `Warning: ${visual} is not safe. If you still want to proceed, click again.` });
+                                    } else
+                                        resolve(res);
+                                } else {
+                                    console.__log(`Injecting ${visual}`); try {
+                                        let cheatCodes = await Promise.all(cheat_codes[name].map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
+                                            replaceValue = repValue ? replaceValue : Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))); try {
+                                                scanValue = scanValue
+                                                    .split(" ").map(i => i == "??" ? "?" : i).join(" ");
+
+                                                resolve({ address: await AsyncFindValues(process.at(0).pid, scanValue), replaceValue, repValue });
+                                            } catch (err) { console.log(err); resolve({ address: [], replaceValue, repValue }); };
+                                        })));
+
+                                        if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
+                                            return resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
+
+                                        await Promise.all(cheatCodes.map(async ({ address, replaceValue, repValue }) => await InjectValues(process.at(0).pid, address, replaceValue, repValue)));
+
+                                        let i = 0; cheatCodes
+                                            .forEach(({ address }) => address.forEach(() => i++)); resolve({ status: true, replaces: i });
+                                    } catch (err) {
+                                        console.log(err); resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
                                     };
-                                } else
-                                    resolve(res);
+                                };
                             } catch (err) { console.log(err); resolve({ status: false, err: `Failed to download the latest codes from the server. Please check your connection or try again later.` }); };
                         }))();
 
@@ -247,47 +283,83 @@ window.addEventListener('contextmenu', e => e.preventDefault()); window.addEvent
                     if (menu.data("n"))
                         try {
                             menu.addClass("injecting");
-                            console.__log(`Injecting ${visual}`);
                             const current_time = (new Date()).getTime(); const data = await (() => new Promise(async resolve => {
                                 try {
-                                    const res = await ipcRenderer.invoke("WantAxios", `/cheat/code/${name.replace("[LEGIT]", "")}`, $('head').data('token')); if (res.status) {
-                                        const data = res.data; if (data.status || skipWarnCode.has(name)) {
-                                            skipWarnCode.delete(name);
+                                    if (!(name in cheat_codes)) {
+                                        console.__log(`Fetching latest codes for ${visual}`);
+                                        const res = await ipcRenderer.invoke("WantAxios", `/cheat/code/${name.replace("[LEGIT]", "")}`, $('head').data('token')); if (res.status) {
+                                            const data = JSON.parse(Buffer.from(Buffer
+                                                .from(res.data, "hex").toString("utf8").split("").reverse().join(""), "base64url").toString("utf8")); if (data.status || skipWarnCode.has(name)) {
+                                                    skipWarnCode.delete(name);
+                                                    console.__log(`Injecting ${visual}`);
 
-                                            try {
-                                                let cheatCodes = data.data;
-                                                cheatCodes = await Promise.all(cheatCodes.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
-                                                    replaceValue = Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))); try {
-                                                        scanValue = scanValue
-                                                            .split(" ").map(i => i == "??" ? "?" : i).join(" ");
+                                                    try {
+                                                        cheat_codes[name] = data.data;
+                                                        let cheatCodes = await Promise.all(data.data.map(([scanValue, replaceValue]) => new Promise(async resolve => {
+                                                            replaceValue = Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))); try {
+                                                                scanValue = scanValue
+                                                                    .split(" ").map(i => i == "??" ? "?" : i).join(" ");
 
-                                                        resolve({ address: await AsyncFindValues(process.at(0).pid, scanValue), replaceValue, repValue });
-                                                    } catch (err) { console.log(err); resolve({ address: [], replaceValue, repValue }); };
-                                                })));
+                                                                resolve({ address: await AsyncLegitFindValues(process.at(0).pid, scanValue), replaceValue });
+                                                            } catch (err) { console.log(err); resolve({ address: [], replaceValue }); };
+                                                        })));
 
-                                                if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
-                                                    return resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
+                                                        if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
+                                                            return resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
 
-                                                resolve({ status: true, addresses: cheatCodes });
-                                            } catch (err) {
-                                                console.log(err); resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
+                                                        resolve({ status: true, address: cheatCodes });
+                                                    } catch (err) {
+                                                        console.log(err); resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
+                                                    };
+                                                } else {
+                                                skipWarnCode
+                                                    .add(name); resolve({ status: false, err: `Warning: ${visual} is not safe. If you still want to proceed, click again.` });
                                             };
-                                        } else {
-                                            skipWarnCode
-                                                .add(name); resolve({ status: false, err: `Warning: ${visual} is not safe. If you still want to proceed, click again.` });
+                                        } else
+                                            resolve(res);
+                                    } else {
+                                        console.__log(`Injecting ${visual}`); try {
+                                            let cheatCodes = await Promise.all(cheat_codes[name].map(([scanValue, replaceValue]) => new Promise(async resolve => {
+                                                replaceValue = Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))); try {
+                                                    scanValue = scanValue
+                                                        .split(" ").map(i => i == "??" ? "?" : i).join(" ");
+
+                                                    resolve({ address: await AsyncLegitFindValues(process.at(0).pid, scanValue), replaceValue });
+                                                } catch (err) { console.log(err); resolve({ address: [], replaceValue }); };
+                                            })));
+
+                                            if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
+                                                return resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
+
+                                            resolve({ status: true, address: cheatCodes });
+                                        } catch (err) {
+                                            console.log(err); resolve({ status: false, err: `Failed to get the required address by ${visual}. Please check the emulator and try again.` });
                                         };
-                                    } else
-                                        resolve(res);
+                                    };
                                 } catch (err) { console.log(err); resolve({ status: false, err: `Failed to download the latest codes from the server. Please check your connection or try again later.` }); };
                             }))();
 
                             menu.removeClass('injecting'); if (data.status) {
-                                await alert_audio();
+                                try {
+                                    const code = menu.data("n");
 
+                                    let resAddresses = data.address
+                                        .map(({ address, replaceValue }) => ({ address: address.map(({ address }) => address), replaceValues: address.map(() => replaceValue), currentValues: address.map(({ currentValue }) => currentValue) }));
 
+                                    const injectionAddresses = resAddresses.map(({ address, replaceValues }) => ([address, replaceValues])),
+                                        deinjectionAddresses = resAddresses.map(({ address, currentValues }) => ([address, currentValues]));
+                                    menu
+                                        .data("code", code)
+                                        .data("callback-up", async () => { try { deinjectionAddresses.map(deinjectionAddresses => InjectValues(process.at(0).pid, ...deinjectionAddresses)) } catch { }; })
+                                        .data("callback-down", async () => { try { injectionAddresses.map(injectionAddresses => InjectValues(process.at(0).pid, ...injectionAddresses)) } catch { }; });
 
-
-                                console.__log(`I am working on this, This will be soon complete.`);
+                                    globalShortcut.addListener(`up-${code}`, menu.data("callback-up"));
+                                    globalShortcut.addListener(`down-${code}`, menu.data("callback-down")); await alert_audio();
+                                    console.__log(`Injected ${visual} in (${(((new Date()).getTime() - current_time) / 1000).toFixed()}s).`);
+                                } catch (err) {
+                                    console.log(err);
+                                    console.__error(`Please select another key, ${menu.data("name")} is system registered`);
+                                };
                             } else
                                 console.__error(data.err);
                         } catch (err) {

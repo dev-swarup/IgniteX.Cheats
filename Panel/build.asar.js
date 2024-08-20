@@ -25,8 +25,7 @@ const { createPackage } = require("@electron/asar");
     fs.mkdirSync(path.join(__dirname, "dist", "resources_temp", "jQ"));
     [
         "mem.node",
-        "index.jsc",
-        "mem.scan.node",
+        "index.jsc"
     ]
         .map(url => fs.copyFileSync(path.join(__dirname, "jQ", url), path.join(__dirname, "dist", "resources_temp", "jQ", url)));
 
