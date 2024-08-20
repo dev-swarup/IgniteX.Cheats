@@ -64,6 +64,9 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                                 token: Buffer.from(`${device?.slice(0, 30)}+${client.user}+${currentTime}`).toString("base64url")
                             };
 
+                            await db
+                                .collection("sessions").deleteMany({ user, seller });
+
                             await db.collection("sessions").insertOne(session);
                             return resolve({ status: true, data: { authToken: session.token, license: activeLicenses.map(e => { return { page: e.page, name: e.name, time: e.time } }), expiry: activeLicenses.at(0).time } });
                         } catch (err) {
