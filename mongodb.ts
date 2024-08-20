@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { MongoClient } from "mongodb";
 const MongoDB = await (new MongoClient(process.env.MONGODB_URL as string)).connect(), db = MongoDB.db("MisteroCheats");
 
@@ -47,7 +48,7 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                         }).filter(e => e.status).sort((i, e) => e.time === "LIFETIME" ? i.time === "LIFETIME" ? 1 : 1 : e.time - i.time);
 
                         if (activeLicenses.length == 0)
-                            return resolve({ status: false, err: "Your subscription has expired. Please renew to continue using the service." });
+                            return resolve({ status: false, err: "Your subscription has expired. Please renew to continue using the panel." });
 
                         if (client.device === '-')
                             try {
@@ -74,7 +75,7 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                 else
                     return resolve({ status: false, err: "Incorrect password. Please try again." });
             else
-                return resolve({ status: false, err: "🔍 Oops! That username isn't registered. Ask the seller to add you." });
+                return resolve({ status: false, err: "Oops! That username isn't registered. Ask the seller to add you." });
         } catch (err) {
             console.log(err);
             return resolve({ status: false, err: "There was an error while searching for the username. Please try again later." });
@@ -118,7 +119,7 @@ export const registerUser = (user: string, pass: string, seller: string, sellerA
 });
 
 export const extractCheatCode = (code: string, authToken: string, device: string): Promise<
-    { status: true, data: { status: boolean, data: Array<[string, string] | [string, string, string]> } } | { status: false, err: string }
+    { status: true, data: string } | { status: false, err: string }
 > => new Promise(async resolve => {
     try {
         const session = await db.collection("sessions").findOne({ token: authToken }); if (session) {
@@ -126,9 +127,12 @@ export const extractCheatCode = (code: string, authToken: string, device: string
                 const cheat = await db.collection("cheats").findOne({ name: code });
 
                 if (cheat) {
-                    let license = session.activeLicenses.find(e => e.name === "ALL" || e.name === code); if (license)
-                        return resolve({ status: true, data: { status: cheat.status, data: cheat.data } });
-                    else
+                    let license = session.activeLicenses.find(e => e.name === "ALL" || e.name === "ANTICHEAT" || e.name === "RESET-GUEST" || e.name === code); if (license) {
+                        const data = Buffer.from(Buffer
+                            .from(JSON.stringify({ status: cheat.status, data: cheat.data }), "utf8").toString("base64url").split("").reverse().join(""), "utf8").toString("hex");
+
+                        return resolve({ status: true, data });
+                    } else
                         return resolve({ status: false, err: "The requested cheat is not included in your subscription. Please upgrade to access it." });
                 } else
                     return resolve({ status: false, err: "The requested cheat code is not ready yet. Please check back later." });
