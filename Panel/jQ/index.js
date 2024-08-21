@@ -12,6 +12,15 @@ module.exports.FindEmulator = () => {
 
             case "HD-Player.exe":
                 return { pid: th32ProcessID, name: "BlueStacks" };
+
+            case "LdVBoxHeadless.exe":
+                return { pid: th32ProcessID, name: "LD Player" };
+
+            case "MEmuHeadless.exe":
+                return { pid: th32ProcessID, name: "Memu" };
+
+            case "NoxVMHandle.exe":
+                return { pid: th32ProcessID, name: "Nox Player" };
         };
     }).filter(i => i);
 
@@ -100,26 +109,27 @@ module.exports.GetTaskManager = () => {
 
 module.exports.InjectFile = (pid, path) => {
     const { handle } = jQFast.openProcess(pid);
-    return new Promise(resolve => { try { jQFast.injectDll(handle, path); setTimeout(() => resolve(true), 1800); } catch { resolve(false); } });
+    return new Promise(resolve => { try { jQFast.injectDll(handle, path); setTimeout(() => resolve(true), 800); } catch { resolve(false); } });
 };
+
+module.exports.UnloadFile = (pid, module) => {
+    const { handle } = jQFast.openProcess(pid);
+    return new Promise(resolve => { try { jQFast.unloadDll(handle, module); setTimeout(() => resolve(true), 800); } catch { resolve(false); } });
+};
+
 
 const FindInGame = async (handle, scanValue) => new Promise(resolve =>
     jQFast.fastFindPattern(handle, scanValue.split(" ").map(i => i !== "??" ? i : "?").join(" "), resolve));
 
-
 module.exports.AsyncFindValues = (pid, scanValue) => new Promise((resolve, reject) => {
-    const { handle } = jQFast.openProcess(pid);
-    FindInGame(handle, scanValue).then(resolve).catch(reject);
-});
-
-module.exports.AsyncLegitFindValues = (pid, scanValue) => new Promise((resolve, reject) => {
-    const { length } = scanValue.split(" "), { handle } = jQFast.openProcess(pid); FindInGame(handle, scanValue).then(address => {
-        address = address
-            .map(address => ({ address, currentValue: jQFast.readBuffer(handle, address, length) }));
+    const { length } = scanValue.split(" "), { handle } = jQFast.openProcess(pid); FindInGame(handle, scanValue).then(async address => {
+        address = await Promise.all(address
+            .map(async address => ({ address, currentValue: jQFast.readBuffer(handle, address, length) })));
 
         resolve(address);
     }).catch(reject);
 });
+
 
 module.exports.InjectValues = (pid, addresses, replaceValue, repValue) => new Promise(resolve => {
     const { handle } = jQFast.openProcess(pid);
