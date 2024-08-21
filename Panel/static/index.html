@@ -103,16 +103,17 @@
                 </div>
             </menu>
             <menu id="EXTRA" license="true">
-                <div name="BYPASS" style="margin-top: 0px;" license="false" onclick="InjectCheat('BYPASS','BYPASS')">
+                <div name="BYPASS" style="margin-top: 0px;" license="false" unloadable="false"
+                    onclick="InjectCheat('BYPASS','BYPASS')">
                     <span>BYPASS</span>
                     <button></button>
                 </div>
-                <div name="ANTICHEAT" style="margin-top: 0px;" license="true"
+                <div name="ANTICHEAT" style="margin-top: 0px;" license="true" unloadable="false"
                     onclick="InjectCheat('ANTICHEAT','ANTICHEAT')">
                     <span>ANTICHEAT</span>
                     <button></button>
                 </div>
-                <div name="RESET-GUEST" style="margin-top: 0px;" license="true"
+                <div name="RESET-GUEST" style="margin-top: 0px;" license="true" unloadable="false"
                     onclick="InjectCheat('RESET-GUEST','RESET GUEST')">
                     <span>RESET GUEST</span>
                     <button></button>
@@ -132,29 +133,30 @@
                 <page id="AIM" license="false">
                     <div>
                         <menu name="AIMBOT" license="false">
-                            <div name="AIMBOT" license="false" onclick="InjectCheat('AIMBOT','AIMBOT')">
-                                <span>AIMBOT [INGAME]</span>
+                            <div name="AIMBOT" license="false" unloadable="false"
+                                onclick="InjectCheat('AIMBOT','AIMBOT')">
+                                <span>AIMBOT</span>
                                 <div>
                                     <button></button>
                                 </div>
                             </div>
                         </menu>
                         <menu name="SNIPER" license="false">
-                            <div name="SNIPER[SCOPE]" license="false"
+                            <div name="SNIPER[SCOPE]" license="false" unloadable="false"
                                 onclick="InjectCheat('SNIPER[SCOPE]','SNIPER SCOPE')">
                                 <span>SCOPE</span>
                                 <div>
                                     <button></button>
                                 </div>
                             </div>
-                            <div name="SNIPER[NOSCOPE]" license="false"
+                            <div name="SNIPER[NOSCOPE]" license="false" unloadable="false"
                                 onclick="InjectCheat('SNIPER[NOSCOPE]','SNIPER NOSCOPE')">
                                 <span>NO SCOPE</span>
                                 <div>
                                     <button></button>
                                 </div>
                             </div>
-                            <div name="SNIPER[FAST][SWITCH]" license="false"
+                            <div name="SNIPER[FAST][SWITCH]" license="false" unloadable="false"
                                 onclick="InjectCheat('SNIPER[FAST][SWITCH]','SNIPER SWITCH')">
                                 <span>FAST SWITCH</span>
                                 <div>
@@ -165,22 +167,22 @@
                     </div>
                     <div>
                         <menu name="AIMBOT LEGIT" license="false">
-                            <div name="AIMBOT[LOGIN][LEGIT]" license="false">
-                                <span onclick="InjectCheat('AIMBOT[LOGIN][LEGIT]','AIMBOT')">AIMBOT</span>
+                            <div name="AIMBOT-LEGIT" license="false" unloadable="false">
+                                <span onclick="InjectCheat('AIMBOT-LEGIT','AIMBOT')">AIMBOT</span>
                                 <div>
                                     <bind>-</bind>
                                 </div>
                             </div>
                         </menu>
                         <menu name="SNIPER LEGIT" license="false">
-                            <div name="SNIPER[SCOPE][LEGIT]" license="false">
-                                <span onclick="InjectCheat('SNIPER[SCOPE][LEGIT]','SNIPER SCOPE')">SCOPE</span>
+                            <div name="SNIPER[SCOPE]-LEGIT" license="false" unloadable="false">
+                                <span onclick="InjectCheat('SNIPER[SCOPE]-LEGIT','SNIPER SCOPE')">SCOPE</span>
                                 <div>
                                     <bind>-</bind>
                                 </div>
                             </div>
-                            <div name="SNIPER[FAST][SWITCH][LEGIT]" license="false">
-                                <span onclick="InjectCheat('SNIPER[FAST][SWITCH][LEGIT]','SNIPER SWITCH')">FAST
+                            <div name="SNIPER[FAST][SWITCH]-LEGIT" license="false" unloadable="false">
+                                <span onclick="InjectCheat('SNIPER[FAST][SWITCH]-LEGIT','SNIPER SWITCH')">FAST
                                     SWITCH</span>
                                 <div>
                                     <bind>-</bind>
@@ -191,30 +193,32 @@
                 </page>
                 <page id="BRUTAL" license="false">
                     <div>
-                        <menu name="INGAME" license="false">
-                            <div name="SPEED" license="false" onclick="InjectCheat('SPEED','SPEED')">
+                        <menu license="false">
+                            <div name="SPEED" license="false" unloadable="false" onclick="InjectCheat('SPEED','SPEED')">
                                 <span>SPEED</span>
                                 <div>
                                     <button></button>
                                 </div>
                             </div>
-                            <div name="WALL-HACK" license="false">
-                                <span onclick="InjectCheat('WALL-HACK','WALL HACK')">WALL HACK</span>
-                                <div>
-                                    <bind>-</bind>
-                                </div>
-                            </div>
-                        </menu>
-                        <menu license="false">
-                            <div name="CAMERA-HACK" license="false" onclick="InjectCheat('CAMERA-HACK','CAMERA')">
-                                <span>CAMERA</span>
+                            <div name="MAGIC-BULLET" license="false" unloadable="true"
+                                onclick="InjectCheat('MAGIC-BULLET','MAGIC BULLET')">
+                                <span>MAGIC BULLET</span>
                                 <div>
                                     <button></button>
                                 </div>
                             </div>
-                            <div name="MAGIC-BULLET" license="false"
-                                onclick="InjectCheat('MAGIC-BULLET','MAGIC BULLET')">
-                                <span>MAGIC BULLET</span>
+                        </menu>
+                        <menu license="false">
+                            <div name="WALL-HACK" license="false" unloadable="true"
+                                onclick="InjectCheat('WALL-HACK','WALL HACK')">
+                                <span>WALL HACK</span>
+                                <div>
+                                    <button></button>
+                                </div>
+                            </div>
+                            <div name="CAMERA-HACK" license="false" unloadable="false"
+                                onclick="InjectCheat('CAMERA-HACK','CAMERA HACK')">
+                                <span>CAMERA HACK</span>
                                 <div>
                                     <button></button>
                                 </div>
@@ -223,19 +227,22 @@
                     </div>
                     <div>
                         <menu license="false">
-                            <div name="NO-RECOIL" license="false" onclick="InjectCheat('NO-RECOIL','NO RECOIL')">
+                            <div name="NO-RECOIL" license="false" unloadable="false"
+                                onclick="InjectCheat('NO-RECOIL','NO RECOIL')">
                                 <span>NO RECOIL</span>
                                 <div>
                                     <button></button>
                                 </div>
                             </div>
-                            <div name="FAST-RELOAD" license="false" onclick="InjectCheat('FAST-RELOAD','FAST RELOAD')">
+                            <div name="FAST-RELOAD" license="false" unloadable="false"
+                                onclick="InjectCheat('FAST-RELOAD','FAST RELOAD')">
                                 <span>FAST RELOAD</span>
                                 <div>
                                     <button></button>
                                 </div>
                             </div>
-                            <div name="FAST-SWITCH" license="false" onclick="InjectCheat('FAST-SWITCH','FAST SWITCH')">
+                            <div name="FAST-SWITCH" license="false" unloadable="false"
+                                onclick="InjectCheat('FAST-SWITCH','FAST SWITCH')">
                                 <span>FAST SWITCH</span>
                                 <div>
                                     <button></button>
@@ -243,20 +250,21 @@
                             </div>
                         </menu>
                         <menu name="TRACE" license="false">
-                            <div name="AIMFOV" license="false" onclick="InjectCheat('AIMFOV','AIMFOV')">
+                            <div name="AIMFOV" license="false" unloadable="false"
+                                onclick="InjectCheat('AIMFOV','AIMFOV')">
                                 <span>FOV</span>
                                 <div>
                                     <button></button>
                                 </div>
                             </div>
-                            <div name="TRACE[SCOPE]" license="false"
+                            <div name="TRACE[SCOPE]" license="false" unloadable="false"
                                 onclick="InjectCheat('TRACE[SCOPE]','TRACE SCOPE')">
                                 <span>SCOPE</span>
                                 <div>
                                     <button></button>
                                 </div>
                             </div>
-                            <div name="TRACE[SNIPER]" license="false"
+                            <div name="TRACE[SNIPER]" license="false" unloadable="false"
                                 onclick="InjectCheat('TRACE[SNIPER]','TRACE SNIPER')">
                                 <span>SNIPER</span>
                                 <div>
@@ -267,16 +275,7 @@
                     </div>
                 </page>
                 <page id="EXPERIMENTAL" license="false">
-                    <div>
-                        <menu>
-                            <div name="VBADGE" license="false" onclick="InjectCheat('VBADGE','V BADGE')">
-                                <span>V BADGE</span>
-                                <div>
-                                    <button></button>
-                                </div>
-                            </div>
-                        </menu>
-                    </div>
+                    <div></div>
                     <div></div>
                 </page>
             </div>

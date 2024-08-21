@@ -112,11 +112,6 @@ module.exports.InjectFile = (pid, path) => {
     return new Promise(resolve => { try { jQFast.injectDll(handle, path); setTimeout(() => resolve(true), 800); } catch { resolve(false); } });
 };
 
-module.exports.UnloadFile = (pid, module) => {
-    const { handle } = jQFast.openProcess(pid);
-    return new Promise(resolve => { try { jQFast.unloadDll(handle, module); setTimeout(() => resolve(true), 800); } catch { resolve(false); } });
-};
-
 
 const FindInGame = async (handle, scanValue) => new Promise(resolve =>
     jQFast.fastFindPattern(handle, scanValue.split(" ").map(i => i !== "??" ? i : "?").join(" "), resolve));

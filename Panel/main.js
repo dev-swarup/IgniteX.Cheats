@@ -57,8 +57,8 @@ app.once("ready", () => {
                     callback(false);
                 } else
                     return callback(true);
-        } catch (err) {
-            console.log(err); dialog
+        } catch {
+            dialog
                 .showMessageBoxSync({ type: "error", title: " ", message: "Failed to match the checksum. Make sure you have good internet connection.", buttons: [] }); app.exit(1);
         };
     })(nocheck => {
@@ -73,7 +73,7 @@ app.once("ready", () => {
                             ...(authToken ? { "x-token": authToken } : {})
                         }
                     })).json());
-                } catch (err) { console.log(err); resolve({ status: false, err: "Our servers are on maintenance. Keep patience, We will be back soon." }); };
+                } catch { resolve({ status: false, err: "Our servers are on maintenance. Keep patience, We will be back soon." }); };
             }));
 
         ipcMain

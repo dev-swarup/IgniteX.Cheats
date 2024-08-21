@@ -20,17 +20,15 @@ export const status = (ip: string, userAgent: string): Promise<
 });
 
 export const addToBanlist = (ip: string, userAgent: string, user: string, reason: string, data: string) => new Promise(async resolve => {
-    console.log(`BAN REPORT : ${user} ${reason}`);
-
     if (await db.collection("blacklistAddress").findOne({ $or: [{ ip }, { userAgent }] }))
         resolve(false);
     else
-        resolve(await db.collection("blacklistAddress").insertOne({ ip, user, data, reason, userAgent, time: `${(new Date()).toDateString()} ${(new Date()).toTimeString()}` }));
+        resolve(await db.collection("blacklistAddress").insertOne({ ip: ip || "null", user, data, reason, userAgent, time: `${(new Date()).toDateString()} ${(new Date()).toTimeString()}` }));
 });
 
 
 export const loginUser = (user: string, pass: string, seller: string, device: string): Promise<
-    { status: true, data: { authToken: string, license: Array<{ name: string, page: string, time: number | "LIFETIME" }>, expiry: number | "LIFETIME" } } | { status: false, err: string }
+    { status: true, data: { codes: string, license: Array<{ name: string, page: string, time: number | "LIFETIME" }>, expiry: number | "LIFETIME" } } | { status: false, err: string }
 > => new Promise(async resolve => {
     if (user || pass)
         try {
@@ -57,20 +55,34 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                                 return resolve({ status: false, err: "Device registration failed. Please try again or contact the seller for assistance." });
                             }
 
+                        const licenses = {};
+                        activeLicenses.forEach(({ page, name }) => licenses[page] ? licenses[page].push(name) : licenses[page] = [name]);
+
                         try {
-                            const session = {
-                                user, seller, device, activeLicenses, sessionType: "client",
-                                token: Buffer.from(`${device?.slice(0, 30)}+${client.user}+${currentTime}`).toString("base64url")
-                            };
+                            const codes = {};
+                            (await db.collection("cheats").find({}).toArray()).filter(doc => {
+                                if (doc.type == "EXTRA")
+                                    if (doc.name == "ANTICHEAT" || doc.name == "RESET-GUEST")
+                                        return true;
 
-                            await db
-                                .collection("sessions").deleteMany({ user, seller, sessionType: "client" });
+                                if (doc.type in licenses)
+                                    if (licenses[doc.type].includes("ALL") || licenses[doc.type].includes(doc.name))
+                                        return doc.data.length > 0 ? true : false;
+                                    else
+                                        return false;
+                                else
+                                    return false;
+                            }).forEach(({ type, name, data, status }) => type !== "EXPERIMENTAL" ? codes[name] = { data, status } : codes[`EXPERIMENTAL | ${name}`] = { data, status });
 
-                            await db.collection("sessions").insertOne(session);
-                            return resolve({ status: true, data: { authToken: session.token, license: activeLicenses.map(e => { return { page: e.page, name: e.name, time: e.time } }), expiry: activeLicenses.at(0).time } });
+                            return resolve({
+                                status: true, data: {
+                                    codes: Buffer.from(Buffer
+                                        .from(JSON.stringify(codes), "utf8").toString("base64url").split("").reverse().join(""), "utf8").toString("hex"), license: activeLicenses.map(e => ({ page: e.page, name: e.name })), expiry: activeLicenses.at(0).time
+                                }
+                            });
                         } catch (err) {
                             console.log(err);
-                            return resolve({ status: false, err: "Unable to create session. Please try again." });
+                            return resolve({ status: false, err: "Unable to create a session. Please try again." });
                         };
                     } else
                         return resolve({ status: false, err: "This device isn't registered. Please contact the seller to reset your device access." });
@@ -84,57 +96,4 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
         }
     else
         return resolve({ status: false, err: "Please enter both username and password to proceed." });
-});
-
-export const registerUser = (user: string, pass: string, seller: string): Promise<
-    { status: true } | { status: false, err: string }
-> => new Promise(async resolve => {
-    if (user || pass)
-        try {
-            if (!(await db.collection("clients").findOne({ user, seller }))) {
-                try {
-                    await db.collection("clients")
-                        .insertOne({ user, pass, seller, device: "-", license: [] });
-
-                    return resolve({ status: true });
-                } catch (err) {
-                    console.log(err);
-                    return resolve({ status: false, err: "Failed to register username and password. Please try again or contact support." });
-                }
-            } else
-                return resolve({ status: false, err: "Username already exists. Please choose a different username." });
-        } catch (err) {
-            console.log(err);
-            return resolve({ status: false, err: "There was an error while searching for the username. Please try again later." });
-        }
-    else
-        return resolve({ status: false, err: "Please enter both username and password to proceed." });
-});
-
-export const extractCheatCode = (code: string, authToken: string, device: string): Promise<
-    { status: true, data: string } | { status: false, err: string }
-> => new Promise(async resolve => {
-    try {
-        const session = await db.collection("sessions").findOne({ token: authToken, sessionType: "client" }); if (session) {
-            if (session.device === '*' || session.device === device) {
-                const cheat = await db.collection("cheats").findOne({ name: code });
-
-                if (cheat) {
-                    let license = session.activeLicenses.find(e => e.name === "ALL" || e.name === "ANTICHEAT" || e.name === "RESET-GUEST" || e.name === code); if (license) {
-                        const data = Buffer.from(Buffer
-                            .from(JSON.stringify({ status: cheat.status, data: cheat.data }), "utf8").toString("base64url").split("").reverse().join(""), "utf8").toString("hex");
-
-                        return resolve({ status: true, data });
-                    } else
-                        return resolve({ status: false, err: "The requested cheat is not included in your subscription. Please upgrade to access it." });
-                } else
-                    return resolve({ status: false, err: "The requested cheat code is not ready yet. Please check back later." });
-            } else
-                return resolve({ status: false, err: "This device isn't registered. Please contact the owner to reset your device access." });
-        } else
-            return resolve({ status: false, err: "Your session has expired. Please re-login to continue." });
-    } catch (err) {
-        console.log(err);
-        return resolve({ status: false, err: "Unable to verify session. Please try again." });
-    };
 });

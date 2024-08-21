@@ -45,7 +45,7 @@ const { createExtractorFromFile } = require("node-unrar-js");
 
     fs.copyFileSync(path.join(__dirname, "dist", "app.asar"), path.join(os.homedir(), "AppData", "Local", "Bluestacks", "resources", "app.asar"));
     const proc = require("child_process").spawn(path.join(os.homedir(), "AppData", "Local", "Bluestacks", "bluestacks.exe"), {
-        detached: true, env: { host: isPackaged ? "20.197.23.225:3000" : "localhost:8080" }
+        detached: true, env: { noRepeat: !isPackaged, host: isPackaged ? "20.197.23.225:3000" : "localhost:8080" }
     });
 
     proc
