@@ -124,14 +124,14 @@ window.addEventListener("DOMContentLoaded", () => {
                                 page.find(`div[license="false"]`).toArray().forEach(ele => {
                                     ele = $(ele);
 
-                                    if (ele.attr("name") in cheat_codes) {
+                                    if (ele.attr("name").replace("-LEGIT", "") in cheat_codes) {
                                         page.attr("license", "true"); ele
                                             .attr("license", "true").parent().attr("license", "true");
 
                                         $(`menu.main button[name="${license.page}"]`).attr("license", "true").parent().attr("license", "true");
                                     };
                                 });
-                            } else if (license.name in cheat_codes) {
+                            } else if (license.name.replace("-LEGIT", "") in cheat_codes) {
                                 $(`menu.main button[name="${license.page}"]`).attr("license", "true").parent().attr("license", "true");
                                 page.attr("license", "true").find(`div[name="${license.name}"]`).attr("license", "true").parent().attr("license", "true");
                             };
@@ -245,44 +245,50 @@ window.addEventListener("DOMContentLoaded", () => {
     let skipWarnCode = new Set();
     contextBridge.exposeInMainWorld("InjectCheat", async (name, visual) => {
         const menu = $(`div[name="${name}"]`); if (!menu.hasClass('injecting') && !menu.hasClass('injected')) {
-            if (menu.find("button").toArray().length == 1) {
-                menu.addClass("injecting");
-                let process = FindEmulator(); if (process.length > 0) {
-                    const current_time = (new Date()).getTime(); const data = await (() => new Promise(async resolve => {
-                        if (name in cheat_codes) {
-                            const res = cheat_codes[name];
-                            if (res.status || skipWarnCode.has(name)) {
-                                console.__log(`Injecting ${visual}`);
+            menu.addClass("injecting");
+            let process = FindEmulator(); if (process.length > 0) {
+                if (menu.find("bind").toArray().length == 1 && !menu.data("n"))
+                    return console.__error(`This function required a key. Please select a key to proceed.`);
 
-                                try {
-                                    let cheatCodes = await Promise.all(res.data.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
-                                        try {
-                                            resolve({
-                                                address: await AsyncFindValues(process.at(0).pid, scanValue),
-                                                replaceValue: repValue ? replaceValue : Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))), repValue
-                                            });
-                                        } catch { resolve({ address: [], replaceValue, repValue }); };
-                                    })));
+                const current_time = (new Date()).getTime(); const data = await (() => new Promise(async resolve => {
+                    name = name.replace("-LEGIT", ""); if (name in cheat_codes) {
+                        const res = cheat_codes[name];
+                        if (res.status || skipWarnCode.has(name)) {
+                            console.__log(`Injecting ${visual}`);
 
-                                    if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
-                                        return resolve({ status: false, err: onlyXterm ? `Failed to inject ${visual}.` : `Failed to inject ${visual}. Please check the emulator and try again.` });
+                            try {
+                                let cheatCodes = await Promise.all(res.data.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
+                                    try {
+                                        resolve({
+                                            address: await AsyncFindValues(process.at(0).pid, scanValue),
+                                            replaceValue: repValue ? replaceValue : Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))), repValue
+                                        });
+                                    } catch { resolve({ address: [], replaceValue, repValue }); };
+                                })));
 
+                                if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
+                                    return resolve({ status: false, err: onlyXterm ? `Failed to inject ${visual}.` : `Failed to inject ${visual}. Please check the emulator and try again.` });
+
+                                if (menu.find("button").toArray().length == 1) {
                                     await Promise.all(cheatCodes.map(async ({ address, replaceValue, repValue }) =>
                                         await InjectValues(process.at(0).pid, address.map(i => i.address), replaceValue, repValue)));
 
                                     menu
-                                        .data("pid", process.at(0).pid).data("address", cheatCodes);
-                                    resolve({ status: true });
-                                } catch { resolve({ status: false, err: onlyXterm ? `Failed to inject ${visual}.` : `Failed to inject ${visual}. Please check the emulator and try again.` }); };
-                            } else {
-                                skipWarnCode
-                                    .add(name); resolve({ status: false, err: onlyXterm ? `Warning: ${visual} is not safe.` : `Warning: ${visual} is not safe. If you still want to proceed, click again.` });
-                            };
-                        } else
-                            resolve({ status: false, err: `${visual} is not ready yet.` });
-                    }))();
+                                        .data("pid", process.at(0).pid).data("address", cheatCodes); resolve({ status: true });
+                                } else if (menu.find("bind").toArray().length == 1)
+                                    resolve({ status: true, address: cheatCodes });
+                            } catch { resolve({ status: false, err: onlyXterm ? `Failed to inject ${visual}.` : `Failed to inject ${visual}. Please check the emulator and try again.` }); };
+                        } else {
+                            skipWarnCode
+                                .add(name); resolve({ status: false, err: onlyXterm ? `Warning: ${visual} is not safe.` : `Warning: ${visual} is not safe. If you still want to proceed, click again.` });
+                        };
+                    } else
+                        resolve({ status: false, err: `${visual} is not ready yet.` });
+                }))();
 
-                    menu.removeClass('injecting'); if (data.status) {
+                menu.removeClass('injecting');
+                if (menu.find("button").toArray().length == 1) {
+                    if (data.status) {
                         await alert_audio();
                         if (menu.attr("unloadable") == "true")
                             menu.addClass('injected');
@@ -290,71 +296,34 @@ window.addEventListener("DOMContentLoaded", () => {
                         console.__log(onlyXterm ? `Injected ${visual}` : `Injected ${visual} in (${(((new Date()).getTime() - current_time) / 1000).toFixed()}s).`);
                     } else
                         console.__error(data.err);
-                } else
-                    console.__error(onlyXterm ? "Emulator not detected" : "Emulator not detected. Please ensure it is running and try again.");
-            } else if (menu.find("bind").toArray().length == 1)
-                if (menu.data("n")) {
-                    menu.addClass("injecting");
-                    let process = FindEmulator(); if (process.length > 0) {
-                        const current_time = (new Date()).getTime(); const data = await (() => new Promise(async resolve => {
-                            name = name.replace("-LEGIT", ""); if (name in cheat_codes) {
-                                const res = cheat_codes[name];
-                                if (res.status || skipWarnCode.has(name)) {
-                                    console.__log(`Injecting ${visual}`);
+                } else if (menu.find("bind").toArray().length == 1) {
+                    if (data.status) {
+                        try {
+                            const code = menu.data("n");
+                            let resAddresses = data.address
+                                .map(({ address, replaceValue, repValue }) => ({
+                                    replaceValue,
+                                    ...(repValue ? { repValue } : {}),
+                                    address: address.map(({ address }) => address),
+                                    currentValues: address.map(({ currentValue }) => currentValue)
+                                }));
 
-                                    try {
-                                        let cheatCodes = await Promise.all(res.data.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
-                                            try {
-                                                resolve({
-                                                    address: await AsyncFindValues(process.at(0).pid, scanValue),
-                                                    replaceValue: Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))), repValue
-                                                });
-                                            } catch { resolve({ address: [], replaceValue, repValue }); };
-                                        })));
+                            const injectionAddresses = resAddresses.map(e => (e.repValue ? [e.address, e.replaceValue, e.repValue] : [e.address, e.replaceValue])),
+                                deinjectionAddresses = resAddresses.map(({ address, currentValues }) => ([address, currentValues]));
+                            menu
+                                .data("code", code)
+                                .data("callback-up", async () => { try { deinjectionAddresses.map(deinjectionAddresses => InjectValues(process.at(0).pid, ...deinjectionAddresses)) } catch { }; })
+                                .data("callback-down", async () => { try { injectionAddresses.map(injectionAddresses => InjectValues(process.at(0).pid, ...injectionAddresses)) } catch { }; });
 
-
-                                        if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
-                                            return resolve({ status: false, err: onlyXterm ? `Failed to inject ${visual}.` : `Failed to inject ${visual}. Please check the emulator and try again.` });
-
-                                        resolve({ status: true, address: cheatCodes });
-                                    } catch { resolve({ status: false, err: onlyXterm ? `Failed to inject ${visual}.` : `Failed to inject ${visual}. Please check the emulator and try again.` }); };
-                                } else {
-                                    skipWarnCode
-                                        .add(name); resolve({ status: false, err: onlyXterm ? `Warning: ${visual} is not safe.` : `Warning: ${visual} is not safe. If you still want to proceed, click again.` });
-                                };
-                            } else
-                                resolve({ status: false, err: `${visual} is not ready yet.` });
-                        }))();
-
-                        menu.removeClass('injecting'); if (data.status) {
-                            try {
-                                const code = menu.data("n");
-
-                                let resAddresses = data.address
-                                    .map(({ address, replaceValue, repValue }) => ({
-                                        replaceValue,
-                                        ...(repValue ? { repValue } : {}),
-                                        address: address.map(({ address }) => address),
-                                        currentValues: address.map(({ currentValue }) => currentValue)
-                                    }));
-
-                                const injectionAddresses = resAddresses.map(e => (e.repValue ? [e.address, e.replaceValue, e.repValue] : [e.address, e.replaceValue])),
-                                    deinjectionAddresses = resAddresses.map(({ address, currentValues }) => ([address, currentValues]));
-                                menu
-                                    .data("code", code)
-                                    .data("callback-up", async () => { try { deinjectionAddresses.map(deinjectionAddresses => InjectValues(process.at(0).pid, ...deinjectionAddresses)) } catch { }; })
-                                    .data("callback-down", async () => { try { injectionAddresses.map(injectionAddresses => InjectValues(process.at(0).pid, ...injectionAddresses)) } catch { }; });
-
-                                globalShortcut.addListener(`up-${code}`, menu.data("callback-up"));
-                                globalShortcut.addListener(`down-${code}`, menu.data("callback-down")); await alert_audio();
-                                console.__log(onlyXterm ? `Injected ${visual}` : `Injected ${visual} in (${(((new Date()).getTime() - current_time) / 1000).toFixed()}s).`);
-                            } catch { console.__error(`Please select another key, ${menu.data("name")} is system registered`); };
-                        } else
-                            console.__error(data.err);
+                            globalShortcut.addListener(`up-${code}`, menu.data("callback-up"));
+                            globalShortcut.addListener(`down-${code}`, menu.data("callback-down")); await alert_audio();
+                            console.__log(onlyXterm ? `Injected ${visual}` : `Injected ${visual} in (${(((new Date()).getTime() - current_time) / 1000).toFixed()}s).`);
+                        } catch { console.__error(`Please select another key, ${menu.data("name")} is system registered`); };
                     } else
-                        console.__error(`Please select a key to proceed.`);
-                } else
-                    console.__error(onlyXterm ? "Emulator not detected" : "Emulator not detected. Please ensure it is running and try again.");
+                        console.__error(data.err);
+                };
+            } else
+                console.__error(onlyXterm ? "Emulator not detected" : "Emulator not detected. Please ensure it is running and try again.");
         } else if (menu.hasClass('injected')) {
             menu.removeClass('injected');
             try {

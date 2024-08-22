@@ -143,6 +143,9 @@ module.exports.InjectValues = (pid, addresses, replaceValue, repValue) => new Pr
 
 module.exports.globalShortcut = new (require("events").EventEmitter)();
 const keysDown = new Set(), keysPress = {}; jQFast.initEvent(async (name, code, method) => {
+    if (!method)
+        return;
+
     if (method === 256 && keysDown.has(code))
         return null;
 
