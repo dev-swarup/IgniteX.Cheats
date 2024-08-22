@@ -8,7 +8,7 @@ const { ipcRenderer, contextBridge } = require("electron");
 const { FindEmulator, InjectFile, InjectValues, AsyncFindValues, globalShortcut } = require("../../jQ/index.jsc");
 
 let logged, cheat_codes, onlyXterm = false,
-    isStreamer = false, isInternetBlocked = false, alert_audio = () => { isStreamer ? null : (new Audio("alert.wav")).play(); };
+    isStreamer = true, isInternetBlocked = false, alert_audio = () => { isStreamer ? null : (new Audio("alert.wav")).play(); };
 
 window.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener("DOMContentLoaded", () => {
