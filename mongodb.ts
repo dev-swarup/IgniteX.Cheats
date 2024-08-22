@@ -89,7 +89,7 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                 else
                     return resolve({ status: false, err: "Incorrect password. Please try again." });
             else
-                return resolve({ status: false, err: "Oops! That username isn't registered. Ask the seller to add you." });
+                return resolve({ status: false, err: "This username isn't registered. Ask the seller to add you." });
         } catch (err) {
             console.log(err);
             return resolve({ status: false, err: "There was an error while searching for the username. Please try again later." });
