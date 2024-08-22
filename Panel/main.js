@@ -107,8 +107,8 @@ app.once("ready", () => {
                     darkTheme: true,
                     resizable: false,
                     minimizable: true,
-                    skipTaskbar: false,
-                    alwaysOnTop: false,
+                    skipTaskbar: true,
+                    alwaysOnTop: true,
                     maximizable: false,
                     autoHideMenuBar: true,
 
@@ -116,7 +116,7 @@ app.once("ready", () => {
                     webPreferences: { preload: path.join(__dirname, "static", "js", "jQuery.Manager.js"), nodeIntegration: true, devTools: nocheck }
                 });
 
-                MainWindow.setContentProtection(false);
+                MainWindow.setContentProtection(true);
                 await MainWindow.loadFile(path
                     .join(__dirname, "static", "index.html")); MainWindow.show();
 
