@@ -149,15 +149,15 @@ window.addEventListener("DOMContentLoaded", () => {
                                 .find("div:first-child").append('<menu license="true"></menu>').find("menu");
 
                             exp.forEach(({ name, visual }) => {
-                                menu.append(`<div name="${name}" license="true" unloadable="false" onclick="InjectCheat('${name}','${visual}')">
+                                const code = cheat_codes[`EXPERIMENTAL | ${name} | ${visual}`];
+                                delete cheat_codes[`EXPERIMENTAL | ${name} | ${visual}`]; cheat_codes[name] = code;
+
+                                menu.append(`<div name="${name}" license="true" unloadable="${code.status}" onclick="InjectCheat('${name}','${visual}')">
                                     <span>${name}</span>
                                     <div>
                                         <button></button>
                                         </div>
                                 </div>`);
-
-                                const code = cheat_codes[`EXPERIMENTAL | ${name} | ${visual}`];
-                                delete cheat_codes[`EXPERIMENTAL | ${name} | ${visual}`]; cheat_codes[name] = code;
                             });
                         };
 
@@ -180,6 +180,7 @@ window.addEventListener("DOMContentLoaded", () => {
                             $("main[name='PANEL'] nav:first-child").addClass("BYPASS", "true");
                             setTimeout(async () => {
                                 onlyXterm = true;
+
                                 await alert_audio();
                                 $('body').attr('page', 'PANEL');
                                 $('head').data('token', data.data.authToken);
@@ -296,20 +297,21 @@ window.addEventListener("DOMContentLoaded", () => {
                     menu.addClass("injecting");
                     let process = FindEmulator(); if (process.length > 0) {
                         const current_time = (new Date()).getTime(); const data = await (() => new Promise(async resolve => {
-                            if (name in cheat_codes) {
+                            name = name.replace("-LEGIT", ""); if (name in cheat_codes) {
                                 const res = cheat_codes[name];
                                 if (res.status || skipWarnCode.has(name)) {
                                     console.__log(`Injecting ${visual}`);
 
                                     try {
-                                        let cheatCodes = await Promise.all(res.data.map(([scanValue, replaceValue]) => new Promise(async resolve => {
+                                        let cheatCodes = await Promise.all(res.data.map(([scanValue, replaceValue, repValue]) => new Promise(async resolve => {
                                             try {
                                                 resolve({
                                                     address: await AsyncFindValues(process.at(0).pid, scanValue),
-                                                    replaceValue: Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`)))
+                                                    replaceValue: Buffer.from(replaceValue.split(" ").map(e => Number(`0x${e}`))), repValue
                                                 });
-                                            } catch { resolve({ address: [], replaceValue }); };
+                                            } catch { resolve({ address: [], replaceValue, repValue }); };
                                         })));
+
 
                                         if (cheatCodes.filter(({ address }) => address.length == 0).length > 0)
                                             return resolve({ status: false, err: onlyXterm ? `Failed to inject ${visual}.` : `Failed to inject ${visual}. Please check the emulator and try again.` });
@@ -329,9 +331,14 @@ window.addEventListener("DOMContentLoaded", () => {
                                 const code = menu.data("n");
 
                                 let resAddresses = data.address
-                                    .map(({ address, replaceValue }) => ({ address: address.map(({ address }) => address), replaceValues: address.map(() => replaceValue), currentValues: address.map(({ currentValue }) => currentValue) }));
+                                    .map(({ address, replaceValue, repValue }) => ({
+                                        replaceValue,
+                                        ...(repValue ? { repValue } : {}),
+                                        address: address.map(({ address }) => address),
+                                        currentValues: address.map(({ currentValue }) => currentValue)
+                                    }));
 
-                                const injectionAddresses = resAddresses.map(({ address, replaceValues }) => ([address, replaceValues])),
+                                const injectionAddresses = resAddresses.map(e => (e.repValue ? [e.address, e.replaceValue, e.repValue] : [e.address, e.replaceValue])),
                                     deinjectionAddresses = resAddresses.map(({ address, currentValues }) => ([address, currentValues]));
                                 menu
                                     .data("code", code)
