@@ -28,12 +28,6 @@ app.once("ready", () => {
             } else
                 if (!data.nocheck) {
                     if ([
-                        ["Local", "dnSpy"],
-                        ["Roaming", "dnSpy"]
-                    ].map(e => fs.existsSync(path.join(os.homedir(), "AppData", ...e))))
-                        dialog
-                            .showMessageBoxSync({ title: " ", type: "warning", message: "dnSpy detected, Uninstall it or You may get banned.", buttons: [] });
-                    else if ([
                         ["Program Files", "Cheat Engine 7.5"],
                         ["Program Files (x86)", "Cheat Engine 7.5"],
 
