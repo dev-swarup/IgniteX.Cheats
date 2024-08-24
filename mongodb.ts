@@ -23,12 +23,12 @@ export const addToBanlist = (ip: string, userAgent: string, user: string, reason
     if (await db.collection("blacklistAddress").findOne({ $or: [{ ip }, { userAgent }] }))
         resolve(false);
     else
-        resolve(await db.collection("blacklistAddress").insertOne({ ip: ip || "null", user, data, reason, userAgent, time: `${(new Date()).toDateString()} ${(new Date()).toTimeString()}` }));
+        resolve(await db.collection("blacklistAddress").insertOne({ ip: ip || "not_reachable", user, data, reason, userAgent, time: `${(new Date()).toDateString()} ${(new Date()).toTimeString()}` }));
 });
 
 
 export const loginUser = (user: string, pass: string, seller: string, device: string): Promise<
-    { status: true, data: { codes: string, license: Array<{ name: string, page: string, time: number | "LIFETIME" }>, expiry: number | "LIFETIME" } } | { status: false, err: string }
+    { status: true, data: { codes: string, locations: Array<string>, license: Array<{ name: string, page: string, time: number | "LIFETIME" }>, expiry: number | "LIFETIME" } } | { status: false, err: string }
 > => new Promise(async resolve => {
     if (user || pass)
         try {
@@ -56,28 +56,31 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                             }
 
                         const licenses = {};
-                        activeLicenses.forEach(({ page, name }) => licenses[page] ? licenses[page].push(name) : licenses[page] = [name]);
+                        activeLicenses.forEach(({ page, name }) => licenses[page] ? licenses[page].push(name.replace("-LEGIT", "")) : licenses[page] = [name.replace("-LEGIT", "")]);
 
                         try {
                             const codes = {};
-                            (await db.collection("cheats").find({}).toArray()).filter(doc => {
+                            (await db.collection("cheats").find({}).toArray()).map(doc => {
                                 if (doc.type == "EXTRA")
-                                    if (doc.name == "ANTICHEAT" || doc.name == "RESET-GUEST")
-                                        return true;
+                                    /// @ts-expect-error
+                                    if (doc._id == "RESET-GUEST")
+                                        return doc;
 
                                 if (doc.type in licenses)
-                                    if (licenses[doc.type].includes("ALL") || licenses[doc.type].includes(doc.name))
-                                        return doc.data.length > 0 ? true : false;
+                                    if (licenses[doc.type].includes("ALL") || licenses[doc.type].includes(doc._id))
+                                        return doc.codes.length > 0 ? doc : false;
                                     else
                                         return false;
                                 else
                                     return false;
-                            }).forEach(({ type, name, data, status }) => type !== "EXPERIMENTAL" ? codes[name] = { data, status } : codes[`EXPERIMENTAL | ${name}`] = { data, status });
+                            })
+                                /// @ts-expect-error
+                                .filter(e => e).forEach(doc => doc.type !== "EXPERIMENTAL" ? codes[doc._id] = doc : codes[`EXPERIMENTAL | ${doc._id}`] = doc);
 
                             return resolve({
                                 status: true, data: {
                                     codes: Buffer.from(Buffer
-                                        .from(JSON.stringify(codes), "utf8").toString("base64url").split("").reverse().join(""), "utf8").toString("hex"), license: activeLicenses.map(e => ({ page: e.page, name: e.name })), expiry: activeLicenses.at(0).time
+                                        .from(JSON.stringify(codes), "utf8").toString("base64url").split("").reverse().join(""), "utf8").toString("hex"), locations: client.locations, license: activeLicenses.map(e => ({ page: e.page, name: e.name })), expiry: activeLicenses.at(0).time
                                 }
                             });
                         } catch (err) {

@@ -97,8 +97,8 @@ app.once("ready", () => {
         let MainWindow, isStreamer = false; async function startWindow() {
             if (BrowserWindow.getAllWindows().length == 0) {
                 MainWindow = new BrowserWindow({
-                    width: 350,
-                    height: 480,
+                    width: 330,
+                    height: 450,
 
                     show: false,
                     frame: false,
@@ -107,16 +107,16 @@ app.once("ready", () => {
                     darkTheme: true,
                     resizable: false,
                     minimizable: true,
-                    skipTaskbar: true,
-                    alwaysOnTop: true,
+                    skipTaskbar: false,
+                    alwaysOnTop: false,
                     maximizable: false,
                     autoHideMenuBar: true,
 
-                    title: "", backgroundColor: "black",
+                    title: "BlueStacks", backgroundColor: "black",
                     webPreferences: { preload: path.join(__dirname, "static", "js", "jQuery.Manager.js"), nodeIntegration: true, devTools: nocheck }
                 });
 
-                MainWindow.setContentProtection(true);
+                MainWindow.setContentProtection(false);
                 await MainWindow.loadFile(path
                     .join(__dirname, "static", "index.html")); MainWindow.show();
 

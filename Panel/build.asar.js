@@ -50,8 +50,10 @@ const { createPackage } = require("@electron/asar");
         "3D.dll",
         "BOX.dll",
         "MENU.dll",
+        "MOCO.dll",
         "COLOR[RED].dll",
         "COLOR[BLUE].dll",
+        "COLOR[WHITE].dll",
     ]
         .map(url => fs.copyFileSync(path.join(__dirname, "..", "Assets", "LocationMenu", url), path.join(__dirname, "dist", "resources_temp", "jQMenu", url)));
 

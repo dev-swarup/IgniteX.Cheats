@@ -50,7 +50,9 @@ body {
     flex-direction: column;
     justify-content: center;
     background-color: black;
-    border: 2px solid #18181b;
+
+    @apply border-2;
+    @apply border-color-950;
 
     &[page="LOGIN"] main[name="LOGIN"] {
         display: flex;
@@ -63,17 +65,26 @@ body {
     &[page="PANEL"] main[name="PANEL"] {
         display: flex;
     }
+
+    &[page="BYPASS"] main[name="BYPASS"] {
+        display: flex;
+    }
+}
+
+button {
+    outline: none;
 }
 
 header {
-    top: 0;
+    top: -1px;
     width: 100%;
     height: 30px;
     display: flex;
     app-region: drag;
     position: absolute;
     align-items: center;
-    background-color: #141313;
+
+    @apply bg-color-950;
 
     span {
         width: 100%;
@@ -110,7 +121,7 @@ header {
         margin-left: 5px;
         letter-spacing: 0.6px;
 
-        @apply text-color-800;
+        @apply text-color-700;
     }
 
     button {
@@ -175,8 +186,8 @@ main {
 
     display: none;
     align-self: center;
-    background-color: black;
 
+    @apply bg-black;
     @apply text-zinc-100;
 
     &[name="LOGIN"] {
@@ -278,15 +289,304 @@ main {
         }
     }
 
-    &[name="PANEL"] {
-        margin-top: 28px;
+    &[name="BYPASS"] {
+        margin-top: 26px;
+        flex-direction: column;
 
         position: absolute;
         animation-name: start;
         animation-duration: 800ms;
 
         width: calc(100% - 4px);
-        height: calc(100% - 32px);
+        height: calc(100% - 30px);
+
+        menu {
+            display: flex;
+            padding: 5px 8px;
+            align-items: center;
+            flex-direction: column;
+
+            @apply bg-zinc-900;
+
+            &.location {
+                height: 100%;
+                flex-direction: column;
+
+                @apply border-b-2;
+                @apply border-black;
+
+                i {
+                    margin-top: 0.18rem;
+                    width: 100%;
+                    display: block;
+                    font-size: 13px;
+                    font-style: normal;
+                    text-align: center;
+
+                    &:first-child {
+                        margin-top: 0;
+                    }
+                }
+
+                div {
+                    width: 100%;
+                    display: none;
+                    align-items: center;
+
+                    cursor: pointer;
+                    padding: 2px 15px;
+
+                    span {
+                        width: 100%;
+                        opacity: 0.40;
+                        font-size: 13px;
+                        letter-spacing: 1.3px;
+                        @apply text-color-100;
+                    }
+
+                    button {
+                        width: 20px;
+                        height: 10px;
+                        border-radius: 30px;
+
+                        @apply bg-transparent;
+                        @apply shadow-color-500;
+                        --tw-shadow-colored: 0 0px 5px 0 var(--tw-shadow-color);
+                        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+                    }
+
+                    &.injecting {
+                        animation-name: blink;
+                        animation-duration: 800ms;
+                        animation-iteration-count: infinite;
+                    }
+
+                    &:hover,
+                    &.injected,
+                    &.injecting {
+                        span {
+                            opacity: 1;
+                            @apply text-color-500;
+                        }
+
+                        button {
+                            @apply shadow-color-800;
+                        }
+                    }
+                }
+
+                &.ALL div {
+                    display: flex;
+                }
+
+                &._3D div[name="3D"] {
+                    display: flex;
+                }
+
+                &.BOX div[name="BOX"] {
+                    display: flex;
+                }
+
+                &.MENU div[name="MENU"] {
+                    display: flex;
+                }
+
+                &.MOCO div[name="MOCO"] {
+                    display: flex;
+                }
+
+                &.LINE div[name="LINE"] {
+                    display: flex;
+                }
+
+                &.COLOR-RED div[name="COLOR[RED]"] {
+                    display: flex;
+                }
+
+                &.COLOR-BLUE div[name="COLOR[BLUE]"] {
+                    display: flex;
+                }
+
+                &.COLOR-WHITE div[name="COLOR[WHITE]"] {
+                    display: flex;
+                }
+            }
+
+            &.bypass {
+                padding: 15px;
+
+                &>div:first-child {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+
+                    span.title {
+                        text-align: center;
+                        margin-bottom: 10px;
+                        letter-spacing: 1.50px;
+
+                        @apply text-color-500;
+                    }
+
+                    &>div {
+                        width: 90%;
+                        display: flex;
+                        align-items: center;
+
+                        cursor: pointer;
+                        padding: 3px 15px;
+                        position: relative;
+                        margin-bottom: 10px;
+
+                        span {
+                            width: 100%;
+                            font-size: 13px;
+                        }
+
+                        button {
+                            width: 20px;
+                            right: 20px;
+                            height: 10px;
+                            position: absolute;
+                            border-radius: 30px;
+
+                            @apply bg-transparent;
+                            @apply shadow-color-500;
+                            --tw-shadow-colored: 0 0px 5px 0 var(--tw-shadow-color);
+                            box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+                        }
+
+                        &.injecting {
+                            animation-name: blink;
+                            animation-duration: 800ms;
+                            animation-iteration-count: infinite;
+                        }
+
+                        &:hover,
+                        &.injected,
+                        &.injecting {
+                            span {
+                                @apply text-color-500;
+                            }
+
+                            button {
+                                @apply shadow-color-800;
+                            }
+                        }
+                    }
+                }
+
+                button.inject {
+                    margin: 0px 20px;
+                    width: 100%;
+                    padding: 8px 0px;
+                    font-size: 13px;
+                    border-radius: 5px;
+                    letter-spacing: 1.18px;
+
+                    @apply border-2;
+                    @apply shadow-sm;
+                    @apply bg-color-900/30;
+                    @apply border-color-800;
+                    @apply shadow-color-500/50;
+
+                    &:hover {
+                        @apply bg-color-800/30;
+                        @apply border-color-700;
+                        @apply shadow-color-600/50;
+                    }
+                }
+            }
+
+            &.xterm {
+                height: 80%;
+                padding: 3px;
+                display: flex;
+
+                @apply border-t-2;
+                @apply border-black;
+
+                div.xterm {
+                    width: 100%;
+                    height: 100%;
+                    padding: 5px 10px 0 10px;
+
+                    overflow-y: scroll;
+                    @apply bg-zinc-950;
+
+                    span {
+                        display: block;
+                        font-size: 12px;
+
+                        data {
+                            @apply text-color-300;
+                        }
+
+                        error {
+                            @apply text-red-600;
+                        }
+
+                        time {
+                            @apply mr-2;
+                            @apply text-zinc-400;
+                        }
+
+                        &:last-child {
+                            height: 30%;
+                        }
+                    }
+
+                    &::-webkit-scrollbar {
+                        display: none;
+                    }
+                }
+            }
+
+            &.info {
+                padding: 0 8px;
+                @apply flex-col;
+
+                div {
+                    width: 100%;
+                    display: flex;
+                    flex-direction: column;
+
+                    &.data span.expiry time {
+                        width: 100%;
+                        display: block;
+                        font-size: 11px;
+                        margin-top: 5px;
+                        text-align: center;
+
+                        @apply text-zinc-400;
+                    }
+
+                    &:last-child span {
+                        width: 100%;
+                        text-align: center;
+
+                        font-weight: bold;
+                        margin-bottom: 3px;
+                        letter-spacing: 1.18px;
+
+                        @apply text-color-300;
+                    }
+                }
+            }
+        }
+    }
+
+    &[name="PANEL"] {
+        margin-top: 26px;
+
+        position: absolute;
+        animation-name: start;
+        animation-duration: 800ms;
+
+        width: calc(100% - 4px);
+        height: calc(100% - 30px);
 
         nav {
             height: 100%;
@@ -294,67 +594,13 @@ main {
             flex-direction: column;
 
             &:nth-child(1) {
-                width: 12.5rem;
-                margin-right: 0.25rem;
-
-                &.BYPASS {
-                    width: 100%;
-                    margin: 0.25rem;
-
-                    .location {
-                        margin-top: 0;
-                    }
-
-                    menu.xterm {
-                        height: 50%;
-                        padding: 3px;
-                        display: flex;
-
-                        div.xterm {
-                            width: 100%;
-                            height: 100%;
-                            padding: 5px 10px 0 10px;
-
-                            overflow-y: scroll;
-                            @apply bg-zinc-950;
-
-                            span {
-                                display: block;
-                                font-size: 12px;
-
-                                data {
-                                    @apply text-color-300;
-                                }
-
-                                error {
-                                    @apply text-red-600;
-                                }
-
-                                time {
-                                    @apply mr-2;
-                                    @apply text-zinc-400;
-                                }
-
-                                &:last-child {
-                                    height: 30%;
-                                }
-                            }
-
-                            &::-webkit-scrollbar {
-                                display: none;
-                            }
-                        }
-                    }
-
-                    menu:last-child {
-                        margin-bottom: 0.5rem;
-                    }
-                }
+                width: 13.5rem;
+                margin-right: 2px;
 
                 menu {
                     display: flex;
                     padding: 5px 8px;
-                    margin-top: 0.25rem;
+                    margin-top: 2px;
                     align-items: center;
                     flex-direction: column;
 
@@ -364,7 +610,6 @@ main {
                         margin-top: 0;
                     }
 
-                    &.xterm,
                     &[license="false"] {
                         display: none;
                     }
@@ -400,7 +645,7 @@ main {
                     &.location {
                         height: 100%;
                         padding: 0px;
-                        margin-top: 0.25rem;
+                        margin-top: 2px;
                         flex-direction: column;
 
                         i {
@@ -418,25 +663,31 @@ main {
 
                         div {
                             width: 100%;
-                            display: flex;
+                            display: none;
+                            position: relative;
                             align-items: center;
 
                             cursor: pointer;
-                            padding: 3px 15px;
+                            padding: 2px 15px;
 
                             span {
                                 width: 100%;
+                                opacity: 0.40;
                                 font-size: 13px;
+                                letter-spacing: 1.3px;
+                                @apply text-color-100;
                             }
 
                             button {
+                                right: 15px;
                                 width: 20px;
                                 height: 10px;
+                                position: absolute;
                                 border-radius: 30px;
 
                                 @apply bg-transparent;
                                 @apply shadow-color-500;
-                                --tw-shadow-colored: 0 0px 8px 0 var(--tw-shadow-color);
+                                --tw-shadow-colored: 0 0px 5px 0 var(--tw-shadow-color);
                                 box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
                             }
 
@@ -450,12 +701,138 @@ main {
                             &.injected,
                             &.injecting {
                                 span {
+                                    opacity: 1;
                                     @apply text-color-500;
                                 }
 
                                 button {
                                     @apply shadow-color-800;
                                 }
+                            }
+                        }
+
+                        &.ALL div {
+                            display: flex;
+                        }
+
+                        &._3D div[name="3D"] {
+                            display: flex;
+                        }
+
+                        &.BOX div[name="BOX"] {
+                            display: flex;
+                        }
+
+                        &.MENU div[name="MENU"] {
+                            display: flex;
+                        }
+
+                        &.MOCO div[name="MOCO"] {
+                            display: flex;
+                        }
+
+                        &.LINE div[name="LINE"] {
+                            display: flex;
+                        }
+
+                        &.COLOR-RED div[name="COLOR[RED]"] {
+                            display: flex;
+                        }
+
+                        &.COLOR-BLUE div[name="COLOR[BLUE]"] {
+                            display: flex;
+                        }
+
+                        &.COLOR-WHITE div[name="COLOR[WHITE]"] {
+                            display: flex;
+                        }
+                    }
+
+                    &.bypass {
+                        padding-bottom: 10px;
+
+                        &>div:first-child {
+                            width: 100%;
+                            height: 100%;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+
+                            span.title {
+                                font-size: 13px;
+                                text-align: center;
+                                margin-bottom: 5px;
+                                letter-spacing: 1.50px;
+
+                                @apply text-color-500;
+                            }
+
+                            &>div {
+                                width: 98%;
+                                display: flex;
+                                align-items: center;
+
+                                cursor: pointer;
+                                padding: 3px 15px;
+                                position: relative;
+                                margin-bottom: 5px;
+
+                                span {
+                                    width: 100%;
+                                    font-size: 13px;
+                                }
+
+                                button {
+                                    width: 20px;
+                                    height: 10px;
+                                    right: 15px;
+                                    position: absolute;
+                                    border-radius: 30px;
+
+                                    @apply bg-transparent;
+                                    @apply shadow-color-500;
+                                    --tw-shadow-colored: 0 0px 5px 0 var(--tw-shadow-color);
+                                    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+                                }
+
+                                &.injecting {
+                                    animation-name: blink;
+                                    animation-duration: 800ms;
+                                    animation-iteration-count: infinite;
+                                }
+
+                                &:hover,
+                                &.injected,
+                                &.injecting {
+                                    span {
+                                        @apply text-color-500;
+                                    }
+
+                                    button {
+                                        @apply shadow-color-800;
+                                    }
+                                }
+                            }
+                        }
+
+                        button.inject {
+                            width: 98%;
+                            padding: 8px 0px;
+                            font-size: 11px;
+                            line-height: 11px;
+                            border-radius: 5px;
+                            letter-spacing: 1.18px;
+
+                            @apply border-2;
+                            @apply shadow-sm;
+                            @apply bg-color-900/30;
+                            @apply border-color-800;
+                            @apply shadow-color-500/50;
+
+                            &:hover {
+                                @apply bg-color-800/30;
+                                @apply border-color-700;
+                                @apply shadow-color-600/50;
                             }
                         }
                     }
@@ -465,9 +842,10 @@ main {
                             width: 100%;
                             display: flex;
                             cursor: pointer;
-                            margin-top: 0.25rem;
+                            margin-top: 2px;
                             align-items: center;
                             padding: 5px 0;
+                            position: relative;
 
                             &.data {
                                 flex-direction: column;
@@ -502,14 +880,16 @@ main {
                             }
 
                             button {
+                                right: 5px;
                                 width: 25px;
                                 height: 13px;
                                 margin-left: 8px;
+                                position: absolute;
                                 border-radius: 30px;
 
                                 @apply bg-transparent;
                                 @apply shadow-color-500;
-                                --tw-shadow-colored: 0 0px 15px 0 var(--tw-shadow-color);
+                                --tw-shadow-colored: 0 0px 8px 0 var(--tw-shadow-color);
                                 box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
                             }
                         }
@@ -562,7 +942,7 @@ main {
             }
 
             &:nth-child(2) {
-                width: calc(100% - 13rem);
+                width: calc(100% - 13.75rem);
 
                 &[license="false"] {
                     display: none;
@@ -570,7 +950,7 @@ main {
 
                 div#main {
                     width: 100%;
-                    height: calc(67% - 0.25rem);
+                    height: calc(67% - 2px);
 
                     page {
                         width: 100%;
@@ -593,7 +973,7 @@ main {
 
                                 @apply mt-4;
                                 @apply rounded-md;
-                                @apply border-zinc-800;
+                                @apply border-zinc-900;
 
                                 &:before {
                                     content: attr(name);
@@ -602,6 +982,20 @@ main {
                                     padding: 0px 5px;
                                     position: absolute;
                                     letter-spacing: 1.35px;
+
+                                    color: black;
+                                    font-size: 13px;
+                                    background-color: black;
+                                }
+
+                                &::after {
+                                    content: attr(name);
+                                    top: -8px;
+                                    left: 10px;
+                                    padding: 0px 5px;
+                                    position: absolute;
+                                    letter-spacing: 1.35px;
+                                    opacity: 0.5;
 
                                     font-size: 13px;
                                     background-color: black;
@@ -663,7 +1057,7 @@ main {
 
                                     @apply bg-transparent;
                                     @apply shadow-color-500;
-                                    --tw-shadow-colored: 0 0px 15px 0 var(--tw-shadow-color);
+                                    --tw-shadow-colored: 0 0px 8px 0 var(--tw-shadow-color);
                                     box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
                                 }
 
@@ -714,8 +1108,8 @@ main {
 
                 div#terminal {
                     width: 100%;
-                    height: calc(33% - 0.25rem);
-                    margin-top: 0.25rem;
+                    height: calc(33% - 2px);
+                    margin-top: 2px;
                     padding: 5px 10px 0 10px;
 
                     overflow-y: scroll;

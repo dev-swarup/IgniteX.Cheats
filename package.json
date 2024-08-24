@@ -1,26 +1,20 @@
 {
-    "version": "v1.8.0",
+    "version": "v1.9.0",
     "scripts": {
         "start": "bun --watch index.ts",
-        "start:serve": "pm2 start -i $(nproc) --name MainServer --interpreter bun --max-memory-restart 300MB index.ts",
-
-        "build:scss": "sass --no-source-map Assets/Seller/main.scss Assets/Seller/main.temp.css",
-        "build:scss:watch": "sass --watch --no-source-map Assets/Seller/main.scss Assets/Seller/main.temp.css",
-        
-        "build:tailwindcss": "tailwindcss -m -i Assets/Seller/main.temp.css -o  Assets/Seller/main.css",
-        "build:tailwindcss:watch": "tailwindcss --watch -m -i Assets/Seller/main.temp.css -o Assets/Seller/main.css"
+        "start:serve": "pm2 start -i $(nproc) --name MainServer --interpreter bun --max-memory-restart 300MB index.ts"
     },
     "dependencies": {
         "pm2": "~5.4.2",
         "sass": "~1.77.8",
         "elysia": "~1.0.27",
-        "mongodb": "^6.8.0",
+        "mongodb": "~6.8.0",
         "elysia-ip": "~1.0.7",
-        "tailwindcss": "~3.4.7",
+        "tailwindcss": "~3.4.10",
         "elysia-rate-limit": "~4.1.0"
     },
     "devDependencies": {
-        "@types/bun": "~1.0.6",
-        "@types/node": "~20.10.0"
+        "@types/bun": "~1.0.12",
+        "@types/node": "~20.10.8"
     }
 }
