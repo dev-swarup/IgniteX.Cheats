@@ -1,15 +1,7 @@
 {
-    "SIFO.X": {
-        "theme": "rose",
-        "title": "SIFO X CHEAT"
-    },
-    "Mistero.Cheats": {
+    "Mistero.Gr!t": {
         "theme": "teal",
-        "title": "MISTERO CHEATS"
+        "title": "Mistero X Gr!t"
     },
-    "Espada.Gr!t": {
-        "theme": "emerald",
-        "title": "Espada X Gr!t"
-    },
-    "currentBuildFor": "Mistero.Cheats"
+    "currentBuildFor": "Mistero.Gr!t"
 }
