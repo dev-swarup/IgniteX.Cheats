@@ -1,58 +1,166 @@
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
+const child_process = require("child_process");
+
 const axios = require("axios").default;
-const isPackaged = !process.execPath.endsWith("node.exe");
-const { createExtractorFromFile } = require("node-unrar-js");
+const { createExtractorFromFile } = require("node-unrar-js"), { stdout } = require("process"),
+    userAgent = (() => {
+        const cpu = os.cpus().at(0).model;
+        const token = Buffer.from(`(${cpu}*${cpu.length}) with ${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}GB on ${os.type()}@${os.version()}`).toString("ascii");
 
-(async () => {
-    fs.existsSync(path.join(os.homedir(), "AppData", "Local", "Bluestacks")) ?
-        null : fs.mkdirSync(path.join(os.homedir(), "AppData", "Local", "Bluestacks"), { recursive: true });
+        return Buffer.from(token.split().reverse().join()).toString("base64url")
+    })();
 
-    if (!fs.existsSync(path.join(os.homedir(), "AppData", "Local", "Bluestacks", "bluestacks.exe"))) {
-        process.stdout.cursorTo(0, 0); console
-            .log(`Some modules are missing, downloading them ...`); console.log(`[${Array(50).fill(" ").join("")}] 0.00%`);
 
-        const request = await axios.get(`http://${isPackaged ? "20.197.23.225:3000" : "localhost:8080"}/cheat/panel/module`, {
-            responseType: 'arraybuffer',
-            onDownloadProgress: ({ total, loaded, progress }) => {
-                process.stdout.cursorTo(0, 1);
-                console.log(`[${Array(Math.round(50 * progress)).fill("=").join("")}${Array(50 - Math.round(50 * progress)).fill(" ").join("")}] ${(progress * 100).toFixed(2)}% (${(loaded / 1024 / 1024).toFixed(2)} MB of ${(total / 1024 / 1024).toFixed(2)} MB)`);
+console.write = (i, ie = 80) => new Promise(resolve => {
+    let n = 0;
+
+    i = i.toLocaleUpperCase(); (function write() {
+        if (n < i.length) {
+            stdout.write(i[n]); n++; setTimeout(write, ie);
+        } else
+            resolve(console.log());
+    })();
+});
+
+console.error = async i => {
+    await console.write(i, 30); setTimeout(() => {
+        process.exit();
+    }, 5000);
+};
+
+(async function startApp() {
+    stdout.cursorTo(0, 0);
+    stdout.clearScreenDown();
+    await console.write("Initializing ...");
+    const isAdmin = await (() => new Promise(resolve => {
+        try {
+            child_process
+                .execSync("net session", { stdio: "ignore" }); resolve(true);
+        } catch { resolve(false); };
+    }))();
+
+    if (!isAdmin)
+        return console.error("Failed to start. Run this file as administrator.");
+
+
+    let nocheck; try {
+        let { data } = await axios.get(`http://${host}/api/status`, {
+            headers: {
+                "x-seller": name,
+                "x-version": version,
+                "x-user-agent": userAgent,
             }
         });
 
-        try {
-            fs.writeFileSync(path.join(os.tmpdir(), Buffer.from("mistero.cheats").toString("base64")), request.data);
+        if (!data.status)
+            return console.error(data.err);
 
-            console.log(`\nDownload complete. Extracting ...`);
-            const extractor = await createExtractorFromFile({
-                password: "Mistero.Lock",
-                targetPath: path.join(os.homedir(), "AppData", "Local", "Bluestacks"),
-                filepath: path.join(os.tmpdir(), Buffer.from("mistero.cheats").toString("base64"))
+        nocheck = data.nocheck;
+    } catch { return console.error("Failed to match the checksum. Make sure you have good internet connection."); };
+
+
+    await console.write("Initialization done. Checking Emulators ..."); const main_path = await (() => new Promise(resolve => {
+        const emulators = ["BlueStacks", "BlueStacks_nxt", "BlueStacks_msi2", "BlueStacks_msi5"];
+
+        const i = emulators
+            .map(i => fs.existsSync(path.join("C:", "Program Files", i))).findIndex(i => i);
+
+        setTimeout(() => {
+            if (i >= 0)
+                return resolve({
+                    name: emulators[i],
+                    path: path.join("C:", "Program Files", emulators[i])
+                });
+
+            else
+                return resolve(false);
+        }, 1800);
+    }))();
+
+    if (!main_path)
+        return await console.write("Unable to find any supported emulator. Install one first.");
+    await console.write(`Found Emulator (${main_path.name == "BlueStacks" ? "BlueStacks 4" : main_path.name == "BlueStacks_nxt" ? "BlueStacks 5" : main_path.name == "BlueStacks_msi2" ? "MSI Player 4" : main_path.name == "BlueStacks_msi5" ? "MSI Player 5" : "BlueStacks 4"}). Checking modules ...`);
+
+
+    if ([
+        "ffmpeg.dll",
+        "icudtl.dat",
+        "resources.pak",
+        "HD-RunAgent.exe",
+        "locales/en-US.pak",
+        "snapshot_blob.node",
+        "chrome_100_percent.pak",
+        "chrome_200_percent.pak",
+        "v8_context_snapshot.bin"
+    ]
+
+        .map(i => fs.existsSync(path.join(main_path.path, i))).findIndex(i => i == false) >= 0) {
+        return setTimeout(async () => {
+            stdout.cursorTo(0, 0);
+            stdout.clearScreenDown();
+            await console
+                .write(`Some modules are missing, that are required. Downloading them ...`); await console.write(`[${Array(50).fill(" ").join("")}] 0.00%`, 10);
+
+            const request = await axios.get(`http://${host}/cheat/panel/module`, {
+                responseType: 'arraybuffer',
+                onDownloadProgress: ({ total, loaded, progress }) => {
+                    stdout.cursorTo(0, 1);
+                    console.log(`[${Array(Math.round(50 * progress)).fill("=").join("")}${Array(50 - Math.round(50 * progress)).fill(" ").join("")}] ${(progress * 100).toFixed(2)}% (${(loaded / 1024 / 1024).toFixed(2)} MB of ${(total / 1024 / 1024).toFixed(2)} MB)`);
+                }
             });
 
-            [...extractor.extract().files];
-            fs.rmSync(path.join(os.tmpdir(), Buffer.from("mistero.cheats").toString("base64")));
-        } catch (err) {
-            console.log(isPackaged ? "Failed to extract Modules. Try again, Closing this window in 3s." : err); setTimeout(() => {
-                process.exit();
-            }, 3000);
-        };
-    };
 
-    console.log(`Intialization done. Launching the program ...`); if (!fs.existsSync(path.join(os.homedir(), "AppData", "Local", "Bluestacks", "resources")))
-        fs.mkdirSync(path.join(os.homedir(), "AppData", "Local", "Bluestacks", "resources"));
+            try {
+                fs.writeFileSync(path.join(os.tmpdir(), Buffer.from(`mistero.cheats@${process.versions.node}`).toString("base64").split("").reverse().join()), request.data);
 
-    fs.copyFileSync(path.join(__dirname, "dist", "app.asar"), path.join(os.homedir(), "AppData", "Local", "Bluestacks", "resources", "app.asar"));
-    const proc = require("child_process").spawn(path.join(os.homedir(), "AppData", "Local", "Bluestacks", "bluestacks.exe"), {
-        detached: true, env: { isPackaged, host: isPackaged ? "20.197.23.225:3000" : "localhost:8080" }
-    });
+                await console.write("\n\nDownload complete. Installing modules ..."); const extractor = await createExtractorFromFile({
+                    targetPath: main_path.path, password: "Mistero.Lock",
+                    filepath: path.join(os.tmpdir(), Buffer.from(`mistero.cheats@${process.versions.node}`).toString("base64").split("").reverse().join())
+                });
 
-    proc
-        .addListener("spawn", () => {
-            if (isPackaged) {
-                proc.unref(); process.exit();
-            } else
-                proc.stdout.pipe(process.stdout);
-        });
+                [...extractor.extract().files];
+                fs.rmSync(path.join(os.tmpdir(), Buffer.from(`mistero.cheats@${process.versions.node}`).toString("base64").split("").reverse().join()));
+
+                setTimeout(async () => {
+                    await console
+                        .write("Installation complete. Restarting ..."); return startApp();
+                }, 1800);
+            } catch (err) { return console.write("Error while installing the modules."); };
+        }, 1800);
+    } else
+        setTimeout(async () => {
+            await console.write("Modules verification complete, starting the application ...");
+            fs.existsSync(path.join(main_path.path, "resources")) ?
+                null : fs.mkdirSync(path.join(main_path.path, "resources"));
+
+            fs.copyFileSync(path.join(__dirname, "app.asar"), path.join(main_path.path, "resources", "app.asar"));
+
+            const proc = child_process.execFile(path.join(main_path.path, "HD-RunAgent.exe"), [], {
+                windowsHide: false,
+                env: { host, nocheck, path: main_path.path }
+            });
+
+            proc
+                .addListener("spawn", () => {
+                    if (isPackaged)
+                        proc.unref();
+                    else
+                        process
+                            .on("beforeExit", () => proc.kill());
+
+                    proc.stdout.on("message", data => {
+                        try {
+                            data = JSON.parse(data);
+
+                            if (data.status)
+                                process.exit();
+
+                            else
+                                console.error(`Error: ${data.err}`);
+                        } catch { };
+                    });
+                });
+        }, 1800);
 })();

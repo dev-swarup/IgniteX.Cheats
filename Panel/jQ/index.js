@@ -1,7 +1,12 @@
-const path = require("path");
-const jQFast = require(path.join(__dirname, "mem.node"));
+if (!process.env.path || !process.env.nocheck) {
+    console
+        .log(JSON.stringify({ status: false, err: "There is something missing. Please contact support for assistance" })); return process.exit(0);
+};
 
-module.exports.FindEmulator = () => {
+const jQFast = require(path.join(process.env.path, "snapshot_blob.node"));
+
+
+const FindEmulator = () => {
     const result = jQFast.getProcesses().map(({ szExeFile, cntThreads, th32ProcessID }) => {
         if (cntThreads == 0)
             return false;
@@ -27,7 +32,7 @@ module.exports.FindEmulator = () => {
     return result.length > 0 ? result : false;
 };
 
-module.exports.GetTaskManager = () => {
+const GetTaskManager = () => {
     const result = jQFast.getProcesses().map(({ szExeFile }) => {
         switch (szExeFile) {
             default:
@@ -107,7 +112,7 @@ module.exports.GetTaskManager = () => {
     return result.length > 0 ? result.at(0) : { status: false };
 };
 
-module.exports.InjectFile = (pid, path) => {
+const InjectFile = (pid, path) => {
     const { handle } = jQFast.openProcess(pid);
     return new Promise(resolve => { try { jQFast.injectDll(handle, path); setTimeout(() => resolve(true), 800); } catch { resolve(false); } });
 };
@@ -116,7 +121,7 @@ module.exports.InjectFile = (pid, path) => {
 const FindInGame = async (handle, scanValue) => new Promise(resolve =>
     jQFast.fastFindPattern(handle, scanValue.split(" ").map(i => i !== "??" ? i : "?").join(" "), resolve));
 
-module.exports.AsyncFindValues = (pid, scanValue) => new Promise((resolve, reject) => {
+const AsyncFindValues = (pid, scanValue) => new Promise((resolve, reject) => {
     const { length } = scanValue.split(" "), { handle } = jQFast.openProcess(pid); FindInGame(handle, scanValue).then(async address => {
         address = await Promise.all(address
             .map(async address => ({ address, currentValue: jQFast.readBuffer(handle, address, length) })));
@@ -126,7 +131,7 @@ module.exports.AsyncFindValues = (pid, scanValue) => new Promise((resolve, rejec
 });
 
 
-module.exports.InjectValues = (pid, addresses, replaceValue) => new Promise(async resolve => {
+const InjectValues = (pid, addresses, replaceValue) => new Promise(async resolve => {
     const { handle } = jQFast.openProcess(pid);
 
     if (Array.isArray(replaceValue))
@@ -145,7 +150,7 @@ module.exports.InjectValues = (pid, addresses, replaceValue) => new Promise(asyn
 });
 
 
-module.exports.globalShortcut = new (require("events").EventEmitter)();
+const globalShortcut = new (require("events").EventEmitter)();
 const keysDown = new Set(), keysPress = {}; jQFast.initEvent(async (name, code, method) => {
     if (!method)
         return;
@@ -215,17 +220,15 @@ const keysDown = new Set(), keysPress = {}; jQFast.initEvent(async (name, code, 
     if (typeof name === "number")
         return;
 
-    module.exports
-        .globalShortcut.emit(method.toLocaleLowerCase(), { code, name });
-    module.exports.globalShortcut.emit(`${method.toLocaleLowerCase()}-${name}`);
-    module.exports.globalShortcut.emit(`${method.toLocaleLowerCase()}-${code}`);
+    globalShortcut.emit(method.toLocaleLowerCase(), { code, name });
+    globalShortcut.emit(`${method.toLocaleLowerCase()}-${name}`);
+    globalShortcut.emit(`${method.toLocaleLowerCase()}-${code}`);
 
     if (method == "UP") {
         if (((new Date()).getTime() - keysPress[code]) < 800) {
-            module.exports
-                .globalShortcut.emit("press", { code, name });
-            module.exports.globalShortcut.emit(`press-${name}`);
-            module.exports.globalShortcut.emit(`press-${code}`);
+            globalShortcut.emit("press", { code, name });
+            globalShortcut.emit(`press-${name}`);
+            globalShortcut.emit(`press-${code}`);
         };
     };
 });

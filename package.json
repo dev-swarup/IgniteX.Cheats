@@ -1,5 +1,5 @@
 {
-    "version": "v1.9.0",
+    "version": "v1.10.0",
     "scripts": {
         "start": "bun --watch index.ts",
         "start:serve": "pm2 start -i $(nproc) --name MainServer --interpreter bun --max-memory-restart 300MB index.ts"

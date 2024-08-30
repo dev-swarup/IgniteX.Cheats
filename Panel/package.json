@@ -1,9 +1,9 @@
 {
     "main": "main.js",
-    "version": "v1.9.0",
+    "version": "v1.10.0",
     "scripts": {
         "build": "npm run build:scss && node build.js",
-        "start": "npm run build:scss && npm run build:tailwindcss && node build.asar.js && node index.js",
+        "start": "npm run build:scss && npm run build:tailwindcss && node build.asar.js && node dist/index.js",
         
         "build:scss": "sass --no-source-map static/main.scss static/main.temp.css",
         "build:scss:watch": "sass --watch --no-source-map static/main.scss static/main.temp.css",
@@ -22,19 +22,7 @@
         "nodemon": "~3.1.4",
         "electron": "~31.3.1",
         "tailwindcss": "~3.4.7",
-        "@electron/asar": "~3.2.10"
-    },
-    "bin": "index.js",
-    "pkg": {
-        "targets": [
-            "latest-win-x64"
-        ],
-        "assets": [
-            "dist/app.asar",
-            "node_modules/bytenode/**/*"
-        ],
-        "scripts": [
-            "node_modules/axios/**/*.*js"
-        ]
+        "@electron/asar": "~3.2.10",
+        "javascript-obfuscator": "~4.1.1"
     }
 }

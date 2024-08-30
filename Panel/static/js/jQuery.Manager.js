@@ -1,19 +1,14 @@
-require("bytenode");
-const os = require("os");
-const fs = require("fs");
-const path = require("path");
-const { execSync } = require("child_process");
-const { title, version } = require("../../package.json");
-const { ipcRenderer, contextBridge } = require("electron");
-const { FindEmulator, InjectFile, InjectValues, AsyncFindValues, globalShortcut } = require("../../jQ/index.jsc");
-
 let logged, cheat_codes, onlyXterm = false,
-    isStreamer = false, isInternetBlocked = false, alert_audio = () => { isStreamer ? null : (new Audio("alert.wav")).play(); };
+    isStreamer = false, isInternetBlocked = false, alert_audio = () => { isStreamer ? null : (new Audio(`data:audio/wav;base64,${alert_wav}`)).play(); };
 
 window.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener("DOMContentLoaded", () => {
     const jQuery = require("./jQuery.js"), $ = selector =>
-        jQuery(typeof selector !== "string" ? selector : document.querySelectorAll(selector));
+        jQuery(typeof selector !== "string" ? selector : document.querySelectorAll(selector)); document.documentElement.innerHTML = Buffer.from(index, "base64").toString("utf8");
+
+    $('head style[type="text/css"]').html(`@font-face{font-family:Cascadia;src:url(data:font/truetype;charset=utf-8;base64,${cascadia_code}) format("truetype");}${Buffer.from(main_css, "base64").toString("utf8")}`);
+    $(".icon").attr("src", `data:image/png;base64, ${logo}`);
+
 
 
     $("header span.title").html(`${title}<version>[${version}]</version>`);
@@ -112,7 +107,7 @@ window.addEventListener("DOMContentLoaded", () => {
                     .html(''); span.addClass('hidden'); svg.removeClass('hidden');
 
                 try {
-                    const data = await ipcRenderer.invoke("WantAxios", `/client/login?user=${user}&pass=${pass}`); if (data.status) {
+                    const data = await ipcRenderer.invoke("HandleAxios", `/client/login?user=${user}&pass=${pass}`); if (data.status) {
                         $('span.expiry').html(`<time>${data.data.expiry == "LIFETIME" ? "LIFETIME" : `${GetCurrentTime(data.data.expiry)} ${GetDate(data.data.expiry)}`}</time>`);
 
                         cheat_codes = JSON.parse(Buffer.from(Buffer
@@ -278,7 +273,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                     return resolve({ status: false, err: status[0].err });
 
                                 status = cheatCodes.filter(({ address }) => address.length == 0); if (status.length > 0)
-                                    return resolve({ status: false, err: `Failed to inject ${visual}. [DUMP ERROR].` });
+                                    return resolve({ status: false, err: `Failed to inject ${visual}. [DUMP ERROR]` });
 
                                 if (menu.find("button").toArray().length >= 1) {
                                     await Promise.all(cheatCodes.map(async ({ address, replaceValue }) =>

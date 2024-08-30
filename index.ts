@@ -35,7 +35,7 @@ app.use(ip()).use(rateLimit({
 
                 case 1:
                 case -1:
-                    return { status: false, err: "You're using an older version. Please update to the latest version for the best experience." };
+                    return { status: false, err: "You're using an older version. Please update to the latest version." };
             }
         else
             return { status: true };
@@ -50,7 +50,7 @@ app.use(ip()).use(rateLimit({
 
                 case 1:
                 case -1:
-                    return { status: false, err: "You're using an older version. Please update to the latest version for the best experience." };
+                    return { status: false, err: "You're using an older version. Please update to the latest version." };
             }
         else
             return { status: true };
@@ -62,7 +62,7 @@ app.use(ip()).use(rateLimit({
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 1:
                 case -1:
-                    return Response.json({ status: false, err: "You're using an older version. Please update to the latest version for the best experience." });
+                    return Response.json({ status: false, err: "You're using an older version. Please update to the latest version." });
 
                 case 0:
                     const stat = await status(ip, headers["x-user-agent"] as string);
