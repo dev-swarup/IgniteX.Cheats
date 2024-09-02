@@ -1,72 +1,78 @@
-const fs = require("fs");
-const path = require("path");
-const resellers = require("../reseller.config.json");
-const { obfuscate } = require("javascript-obfuscator");
+const fs = require("fs"), path = {
+    ...require("path"),
+    ...{ load: (...paths) => path.join(__dirname, ...paths) }
+}, compileCode = async i => Buffer.from(require("javascript-obfuscator").obfuscate(i, { compact: true, deadCodeInjection: true, target: "node" }).getObfuscatedCode(), "utf8");
 
-const { execSync } = require("child_process"),
-    { createPackage } = require("@electron/asar"), { version } = JSON.parse(fs.readFileSync(path.join(__dirname, "package.json"), "utf8"));
+const { execSync } = require("child_process");
+const { createPackage } = require("@electron/asar");
 
-const isPackaged = process.argv.includes("--build");
+const { version } = require(path.load("package.json"));
+const { currentBuildFor } = require(path.load("..", "reseller.config.json"));
 
-(async () => {
-    if (fs.existsSync(path.join(__dirname, "dist")))
-        fs.rmSync(path.join(__dirname, "dist"), { recursive: true });
-    fs.mkdirSync(path.join(__dirname, "dist", "resources_temp", "node_modules"), { recursive: true });
+const isBuildForUser = process.argv.includes("--build"); (async () => {
+    fs.existsSync(path.load("dist")) ?
+        fs.rmSync(path.load("dist"), { recursive: true }) : null;
+
+    fs.mkdirSync(path.load("dist", "resources"), { recursive: true });
+    fs.copyFileSync(path.load("static", "js", "jQuery.js"), path.load("dist", "resources", "jQuery.js"));
+    const commonCode = `const name = "${currentBuildFor}", title = "${require(path.load("..", "reseller.config.json"))[currentBuildFor].title}", host = "${isBuildForUser ? "20.197.23.225:3000" : "localhost:8080"}", version = "${version}", isBuilt = ${isBuildForUser}`;
 
     await Promise.all([
-        (async () => {
-            let startApp = `const host = "${isPackaged ? "20.197.23.225:3000" : "localhost:8080"}", name = "${resellers.currentBuildFor}", version = "${version}", isPackaged = ${isPackaged};\n${fs.readFileSync(path.join(__dirname, "index.js"), "utf-8")}`;
-
-            fs.writeFileSync(path.join(__dirname, "dist", "index.js"), obfuscate(startApp, { compact: false, deadCodeInjection: true }).getObfuscatedCode());
-        })(),
+        (async () =>
+            fs.writeFileSync(path.load("dist", "index.js"), await compileCode(`${commonCode};\n\n${fs.readFileSync(path.load("index.js"), "utf-8")}`)))(),
 
         (async () => {
-            let mainApp = fs.readFileSync(path.join(__dirname, "main.js"), "utf-8");
-            let mainLoadApp = fs.readFileSync(path.join(__dirname, "static", "js", "jQuery.Manager.js"), "utf-8");
+            const mainApp = fs.readFileSync(path.load("main.js"), "utf-8");
+            const mainLoaderApp = fs.readFileSync(path.load("static", "js", "jQuery.Loader.js"), "utf-8");
+            const mainWindowView = Buffer.from(Buffer.from(`<html>
+<head>
+    <title></title>
+    <style type="text/css">
+        @font-face {
+            font-family: "CascadiaCode";
+            src: url(data:font/truetype;charset=utf-8;base64,${fs.readFileSync(path.load("static", "CascadiaCode.TTF"), "base64")});
+        }
+
+        ${fs.readFileSync(path.load("static", "main.css"), "utf8")}
+    </style>
+</head>
+
+${fs.readFileSync(path.load("static", "index.html"), "utf8")}
+
+</html>`, "utf8").toString("hex").split("").reverse().join(""), "utf8").toString("base64url");
 
             let jQMenu = {};["3D", "BOX", "MOCO", "COLOR[RED]", "COLOR[BLUE]", "COLOR[WHITE]"]
-                .forEach(name => jQMenu[name] = fs.readFileSync(path.join(__dirname, "..", "Assets", "LocationMenu", `${name}.dll`), "base64"));
+                .map(name => jQMenu[name] = Buffer.from(fs.readFileSync(fs.existsSync(path.load("..", "Assets", "LocationMenu", name, `${currentBuildFor}.dll`)) ?
+                    path.load("..", "Assets", "LocationMenu", name, `${currentBuildFor}.dll`) : path.load("..", "Assets", "LocationMenu", `${name}.dll`), "hex").split("").reverse().join(""), "utf8").toString("base64url"));
 
-            const [alert, index, main_css, cascadia_code] = ["alert.wav", "index.html", "main.css", "CascadiaCode.TTF"].map(file => Buffer.from(fs.readFileSync(path.join(__dirname, "static", file)), "utf8").toString("base64")),
 
-                logo = Buffer.from(fs.readFileSync(path.join(__dirname, "static", "icons", `${resellers.currentBuildFor}.png`))).toString("base64");
+            fs.writeFileSync(path.load("dist", "main.js"), await compileCode(`${commonCode}, jQMenu = "${Buffer.from(JSON.stringify(jQMenu), "utf8").toString("base64url")}", mainWindowView = "${mainWindowView}";
+const os = require("os");
+const fs = require("fs"), path = {
+    ...require("path"),
+    ...{ load: (...paths) => path.join(process.env.path, ...paths) }
+};
 
-            fs.writeFileSync(path.join(__dirname, "dist", "main.js"), obfuscate(`const os = require("os");
-const fs = require("fs");
-const path = require("path");
 const { execSync } = require("child_process");
-const { app, BrowserWindow, ipcMain, ipcRenderer, dialog, contextBridge } = require("electron");\n\n            
-const host = "${isPackaged ? "20.197.23.225:3000" : "localhost:8080"}", devTools = ${!isPackaged ? true : false};        
-const name = "${resellers.currentBuildFor}", title = "${resellers[resellers.currentBuildFor].title}", version = "${version}", jQMenu = ${JSON.stringify(jQMenu)};\n\n
-${fs.readFileSync(path.join(__dirname, "jQ", "index.js"))}\nif("window" in global && "document" in global)\n(async () => {\n${`const logo = "${logo}", alert_wav="${alert}", index = "${index}", main_css = "${main_css}", cascadia_code = "${cascadia_code}";\n${mainLoadApp}`}\n})();\nelse {\n(async () => {\n${mainApp}\n})();\n};`, { compact: false, deadCodeInjection: true }).getObfuscatedCode());
+const { app, BrowserWindow, ipcMain, ipcRenderer, dialog, contextBridge } = require("electron");
 
-            execSync("bytenode --compress -c dist/main.js -e -ep bluestacks.exe");
+${fs.readFileSync(path.load("jQ", "index.js"), "utf8")}
+\n\n(("window" in global && "document" in global) ? async () => {\n${mainLoaderApp}\n}: async () => {\n${mainApp}\n})();`));
+
+            execSync(`bytenode --compress -c dist/main.js -e -ep bluestacks.exe`);
         })()
     ]);
 
-    fs.copyFileSync(path.join(__dirname, "dist", "main.jsc"), path.join(__dirname, "dist", "resources_temp", "main.jsc"));
-    fs.copyFileSync(path.join(__dirname, "static", "js", "jQuery.js"), path.join(__dirname, "dist", "resources_temp", "jQuery.js"));
+    fs.mkdirSync(path.load("dist", "node_modules"));
+    ["axios", "mime-db", "asynckit", "form-data", "mime-types", "node-unrar-js", "proxy-from-env", "delayed-stream", "combined-stream", "follow-redirects"]
+        .map(module => fs.cpSync(path.load("node_modules", module), path.load("dist", "node_modules", module), { recursive: true }));
 
-    fs.mkdirSync(path.join(__dirname, "dist", "node_modules"));
-    [
-        "axios",
-        "mime-db",
-        "asynckit",
-        "bytenode",
-        "form-data",
-        "mime-types",
-        "node-unrar-js",
-        "proxy-from-env",
-        "delayed-stream",
-        "combined-stream",
-        "follow-redirects",
-    ]
+    fs.mkdirSync(path.load("dist", "resources", "node_modules"));
+    fs.cpSync(path.load("node_modules", "bytenode"), path.load("dist", "resources", "node_modules", "bytenode"), { recursive: true });
 
-        .forEach(module => fs.cpSync(path.join(__dirname, "node_modules", module), path.join(__dirname, "dist", "node_modules", module), { recursive: true }));
-    fs.cpSync(path.join(__dirname, "node_modules", "bytenode"), path.join(__dirname, "dist", "resources_temp", "node_modules", "bytenode"), { recursive: true });
-    fs.writeFileSync(path.join(__dirname, "dist", "package.json"), JSON.stringify({
-        version, name: resellers.currentBuildFor,
-
+    fs.copyFileSync(path.load("dist", "main.jsc"), path.load("dist", "resources", "main.jsc"));
+    fs.writeFileSync(path.load("dist", "package.json"), JSON.stringify({
+        version, name: currentBuildFor,
         bin: "index.js",
         main: "index.js",
         pkg: {
@@ -80,7 +86,8 @@ ${fs.readFileSync(path.join(__dirname, "jQ", "index.js"))}\nif("window" in globa
         }
     }));
 
-    fs.writeFileSync(path.join(__dirname, "dist", "resources_temp", "package.json"), JSON.stringify({ main: "main.js" }));
-    fs.writeFileSync(path.join(__dirname, "dist", "resources_temp", "main.js"), `require("bytenode");\nrequire("./main.jsc");`);
-    await createPackage(path.join(__dirname, "dist", "resources_temp"), path.join(__dirname, "dist", "app.asar"));
+    fs.writeFileSync(path.load("dist", "resources", "package.json"),
+        JSON.stringify({ main: "main.js" })); fs.writeFileSync(path.load("dist", "resources", "main.js"), `require("bytenode");\nrequire("./main.jsc");`);
+
+    await createPackage(path.load("dist", "resources"), path.load("dist", "app.asar"));
 })();
