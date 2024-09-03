@@ -29,7 +29,7 @@ const isBuildForUser = process.argv.includes("--build"); (async () => {
     <title></title>
     <style type="text/css">
         @font-face {
-            font-family: "CascadiaCode";
+            font-family: Cascadia;
             src: url(data:font/truetype;charset=utf-8;base64,${fs.readFileSync(path.load("static", "CascadiaCode.TTF"), "base64")});
         }
 
@@ -46,7 +46,7 @@ ${fs.readFileSync(path.load("static", "index.html"), "utf8")}
                     path.load("..", "Assets", "LocationMenu", name, `${currentBuildFor}.dll`) : path.load("..", "Assets", "LocationMenu", `${name}.dll`), "hex").split("").reverse().join(""), "utf8").toString("base64url"));
 
 
-            fs.writeFileSync(path.load("dist", "main.js"), await compileCode(`${commonCode}, jQMenu = "${Buffer.from(JSON.stringify(jQMenu), "utf8").toString("base64url")}", mainWindowView = "${mainWindowView}";
+            fs.writeFileSync(path.load("dist", "main.js"), await compileCode(`${commonCode}, jQMenu = "${Buffer.from(JSON.stringify(jQMenu), "utf8").toString("base64url")}", mainWindowView = "${mainWindowView}", logo = "${Buffer.from(fs.readFileSync(path.load("static", "icons", `${currentBuildFor}.png`), "hex").split("").reverse().join(""), "utf8").toString("base64url")}";
 const os = require("os");
 const fs = require("fs"), path = {
     ...require("path"),
