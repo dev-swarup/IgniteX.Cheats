@@ -1,13 +1,13 @@
-const MongoClient = (await (new ((await import("mongodb")).MongoClient)(process.env.MONGODB_URL as string)).connect())
-    .addListener("close", async () => setTimeout(async () => await MongoClient.connect(), 1000)), db = MongoClient.db("Ignite X Cheats");
+const MongoClient = (await (new ((await import("mongodb")).MongoClient)(process.env.MONGODB_URL as string))
+    .connect()).addListener("close", async () => setTimeout(async () => await MongoClient.connect(), 1000)), db = MongoClient.db("MisteroCheats");
 
 const cheats = db.collection("cheats");
 const clients = db.collection("clients");
 const whitelistedAddress = db.collection("whitelistedAddress");
 const blacklistedAddress = db.collection("blacklistedAddress");
 
-export { db };
-export const userAgent = (cpu_model: string, cpu_cores: number, totalmem: number, version: string) => {
+export { clients, cheats };
+export const userAgent = (cpu_model: string, cpu_cores: string, totalmem: string, version: string) => {
     return Buffer.from(Buffer.from(Buffer.from(JSON.stringify({ cpu_model, cpu_cores, totalmem, version }), "utf8")
         .toString("base64url").split(" ").reverse().join("~"), "utf8").toString("binary").split(" ").reverse().join("~"), "utf8").toString("base64url");
 };
@@ -17,8 +17,8 @@ export const statusCheck = (ip: string, userAgent: string): Promise<{ status: tr
         resolve({ status: true, whitelisted: true });
 
     else
-        if (await whitelistedAddress.findOne({ $or: [{ $or: [{ ip: "*" }, { ip }] }, { $or: [{ userAgent: "*" }, { userAgent }] }] }))
-            resolve({ status: false, err: "You have been banned from the server. Please contact support if you believe this is an error." });
+        if (await blacklistedAddress.findOne({ $or: [{ $or: [{ ip: "*" }, { ip }] }, { $or: [{ userAgent: "*" }, { userAgent }] }] }))
+            resolve({ status: false, err: "Your device is banned." });
 
         else
             resolve({ status: true, whitelisted: false });
@@ -26,12 +26,12 @@ export const statusCheck = (ip: string, userAgent: string): Promise<{ status: tr
 
 export const addThisUserToBlacklist = (ip: string, userAgent: string, user: string, reason: string, data: string) => new Promise(async resolve => {
     if (await blacklistedAddress.findOne({ $and: [{ $or: [{ ip: "*" }, { ip }] }, { $or: [{ userAgent: "*" }, { userAgent }] }] }))
-        resolve({ status: false, err: "You have been banned from the server. Please contact support if you believe this is an error." });
+        resolve({ status: false, err: "Your device is banned." });
 
     else {
         await blacklistedAddress.insertOne({ ip: ip || "*", user, data, reason, userAgent, time: `${(new Date()).toDateString()} ${(new Date()).toTimeString()}` });
 
-        resolve(true)
+        resolve({ status: true });
     };
 });
 
@@ -50,14 +50,14 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                     }).filter(e => e.status).sort((i, e) => e.time === "LIFETIME" ? i.time === "LIFETIME" ? 1 : 1 : e.time - i.time);
 
                     if (activeLicenses.length == 0)
-                        return resolve({ status: false, err: "Your subscription has expired. Please renew to continue using the panel." });
+                        return resolve({ status: false, err: "Subscription expired. Renew to continue." });
 
                     if (client.device === "-")
                         try {
                             await clients.findOneAndReplace({ _id: client._id }, { ...client, device });
                         } catch (err) {
                             console.log(err);
-                            return resolve({ status: false, err: "Device registration failed. Please try again or contact the seller for assistance." });
+                            return resolve({ status: false, err: "Device Registration failed. Try again or contact seller." });
                         }
 
                     const licenses = {};
@@ -90,20 +90,16 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                         });
                     } catch (err) {
                         console.log(err);
-                        return resolve({ status: false, err: "Unable to create a session. Please try again." });
+                        return resolve({ status: false, err: "Unable to create session. Try again." });
                     };
                 } else
-                    return resolve({
-                        status: false, err: "This device isn't registered.Please contact the seller to reset your device access."
-                    });
+                    return resolve({ status: false, err: "Device not registered. Contact seller to reset access." });
             else
-                return resolve({ status: false, err: "Incorrect password. Please try again." });
+                return resolve({ status: false, err: "Wrong password. Try again." });
         else
-            return resolve({
-                status: false, err: "This username isn't registered.Ask the seller to add you."
-            });
+            return resolve({ status: false, err: "Username not registered. Ask seller to add you." });
     } catch (err) {
         console.log(err);
-        return resolve({ status: false, err: "There was an error while searching for the username. Please try again later." });
+        return resolve({ status: false, err: "Error in searching username. Try again later." });
     };
 });
