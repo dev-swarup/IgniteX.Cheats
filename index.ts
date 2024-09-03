@@ -74,41 +74,37 @@ app.use(ip()).use(rateLimit({
             return { status: false, err: "Something's off with your request. Use the correct version and try again." };
     }))
 
-    .get('/client/module', async () => Bun.file(path.join(__dirname, "Panel", "Mistero.rar"))).ws("/client/panelStatusUpdate", {
-        idleTimeout: 580,
-        backpressureLimit: 1024 * 1024,
-        closeOnBackpressureLimit: true,
-        beforeHandle: async ({ ip, query: data, headers, request }) => {
-            if ("x-version" in headers && "x-seller" in headers && "x-user-agent" in headers && data.user && data.activeLicenses)
-                switch (Bun.semver.order(headers['x-version'] as string, version)) {
-                    case 1:
-                    case -1:
-                        return new Response("", { statusText: "Unauthorized" });
+    .get('/client/module', async () => Bun.file(path.join(__dirname, "Panel", "Mistero.rar")));
 
-                    case 0:
-                        /// @ts-expect-error
-                        const stat = await statusCheck(ip, userAgent(...(JSON.parse(headers["x-user-agent"]))));
+app.use(ip()).get("/api/client/panelStatusUpdate", async ({ ip, request, headers, query: data }) => {
+    if ("sec-websocket-protocol" in headers && data.user && data.activeLicenses) {
+        const [seller, clientVersion, user_agent] = JSON.parse(headers["sec-websocket-protocol"] as string);
+        switch (Bun.semver.order(clientVersion, version)) {
+            case 1:
+            case -1:
+                return new Response(null, { status: 401 });
 
-                        /// @ts-expect-error
-                        return (stat.status && await clients.findOne({ user: data.user, seller: headers["x-seller"], device: userAgent(...(JSON.parse(headers["x-user-agent"]))) })) ? app.server?.upgrade(request) : new Response("", { statusText: "Unauthorized" });
-                }
-            else
-                return new Response("", { statusText: "Unauthorized" });
-        },
+            case 0:
+                const device = JSON.parse(Buffer.from(user_agent, "base64url").toString("utf8")), stat = await statusCheck(ip, device);
+                (stat.status && await clients.findOne({ user: data.user, device, seller })) ? app.server?.upgrade(request) : new Response(null, { status: 401 });
+        }
+    } else
+        return new Response(null, { status: 401 });
+}).ws("/api/client/panelStatusUpdate", {
+    backpressureLimit: 1024 * 1024,
+    closeOnBackpressureLimit: true,
+    open: async ({ data: { query: data }, subscribe }) => {
+        subscribe(`ping@30s`); try {
+            JSON.parse(data
+                .activeLicenses as string).map(i => subscribe(`cheat@${i}`));;
+        } catch { };
+    }
+});
 
-        open: async ({ data: { query: data }, subscribe }) => {
-            try {
-                JSON.parse(data
-                    .activeLicenses as string).map(i => subscribe(`cheat@${i}`)); subscribe(`ping@3s`);
-            } catch { };
-        },
-    });
-
-setInterval(async () => app.server?.publish("ping@3s", `["ping"]`), 3000);
-app.listen({ reusePort: true, hostname: '0.0.0.0', port: process.env.PORT }, () => console.log(`[${process.env.PORT}] Listening ...`)); cheats.watch().on("change", async ({ _id, operationType }) => (operationType == "insert" || operationType == "update") ? (async () => {
-
+setInterval(async () => app.server?.publish("ping@30s", `["ping"]`), 30000);
+app.listen({ reusePort: true, hostname: '0.0.0.0', port: process.env.PORT }, () => console.log(`[${process.env.PORT}] Listening ...`)); cheats.watch().on("change", async (i) => (i.operationType == "insert" || i.operationType == "update") ? (async () => {
     /// @ts-expect-error
-    const { codes, status } = await cheats.findOne({ _id }); app.server?.publish(`cheat@${_id}`, JSON.stringify([
-        "update", { status, code: Buffer.from(Buffer.from(JSON.stringify(codes), "utf8").toString("base64url").split("").reverse().join("~"), "utf8").toString("hex") }
+    const { _id, codes, status } = await cheats.findOne({ _id: i.documentKey._id }); app.server?.publish(`cheat@${_id}`, JSON.stringify([
+        "update", { status, name: _id, code: Buffer.from(Buffer.from(JSON.stringify(codes), "utf8").toString("base64url").split("").reverse().join("~"), "utf8").toString("hex") }
     ]));
 })() : null);
