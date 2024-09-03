@@ -134,7 +134,7 @@ console.write = (i, ie = 80) => new Promise(resolve => {
                             .unref(); process.exit();
 
                     } else
-                        console.error(`${data.err}`);
+                        console.write(`${data.err}`, 30);
                 } catch { };
             });
 
