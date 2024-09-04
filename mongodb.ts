@@ -23,15 +23,22 @@ export const statusCheck = (ip: string, userAgent: string): Promise<{ status: tr
         else
             resolve({ status: true, whitelisted: false });
 });
-
-export const addThisUserToBlacklist = (ip: string, userAgent: string, user: string, reason: string, data: string) => new Promise(async resolve => {
+export const addThisUserToBlacklist = (ip: string, userAgent: string, actualUserAgent: string, user: string, reason: string, image: string) => new Promise(async resolve => {
     if (await blacklistedAddress.findOne({ $or: [{ $or: [{ ip: "*" }, { ip }] }, { $or: [{ userAgent: "*" }, { userAgent }] }] }))
         resolve({ status: false, err: "Your device is banned." });
 
     else {
-        await blacklistedAddress.insertOne({ ip: ip || "*", user, data, reason, userAgent, time: `${(new Date()).toDateString()} ${(new Date()).toTimeString()}` });
+        await blacklistedAddress.insertOne({ ip: ip || "*", user, reason, userAgent, device: actualUserAgent, time: `${(new Date()).toDateString()} ${(new Date()).toTimeString()}` });
 
-        resolve({ status: true });
+        try {
+            const data = new FormData();
+            const [cpuModel, cpuThread, ram] = JSON.parse(actualUserAgent);
+
+            data.append('file', new Blob([Uint8Array.from(atob(image), c => c.charCodeAt(0))], { type: 'image/png' }), "image.png");
+            data.append('content', `### ${"`"} USERNAME ${"`"}\t${"```"}${user}${"```"}\n### ${"`"} BAN REASON ${"`"}\t${"```"}${reason}${"```"}\n\n### ${"`"} PUBLIC IP ${"`"}\t${"```"}${ip || "-"}${"```"}\n\n\n### ${"`"} DEVICE INFO ${"`"} ${"```"}${ram} RAM${"```"}\n### ${"```"}${cpuModel.replaceAll("  ", "").replaceAll("  ", "")}${"```"}`);
+
+            await fetch(process.env.DISCORD_HOOK as string, { body: data, method: 'POST', });
+        } catch (err) { console.log(err); }; resolve({ status: true });
     };
 });
 
@@ -73,7 +80,7 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                         (await cheats.find({}).toArray()).map(doc => {
                             if (doc.type == "EXTRA")
                                 /// @ts-expect-error
-                                if (doc._id == "RESET-GUEST")
+                                if (doc._id == "RESET-GUEST" || doc._id == "CRASH-EMULATOR")
                                     return doc;
 
                             if (doc.type in licenses)

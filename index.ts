@@ -41,12 +41,12 @@ app.use(ip()).use(rateLimit({
             return { status: true };
     })
 
-    .post("/status/update", async ({ ip, headers, query: data }) => {
+    .post("/status/update", async ({ ip, headers, query: data, body }) => {
         if ("x-version" in headers && "x-user-agent" in headers)
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 0:
                     /// @ts-expect-error
-                    return await addThisUserToBlacklist(ip, userAgent(...(JSON.parse(headers["x-user-agent"]))), data.user, data.reason, headers["x-blacklist-data"]);
+                    return await addThisUserToBlacklist(ip, userAgent(...(JSON.parse(headers["x-user-agent"]))), headers["x-user-agent"], data.user, data.reason, body);
 
                 case 1:
                 case -1:

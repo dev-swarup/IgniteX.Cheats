@@ -1,7 +1,7 @@
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
-const { execFile, execSync } = require("child_process"), { get } = require("axios").default, { createExtractorFromFile } = require("node-unrar-js"), userAgent = (() => {
+const { spawn, execSync } = require("child_process"), { get } = require("axios").default, { createExtractorFromFile } = require("node-unrar-js"), userAgent = (() => {
     const cpu = os.cpus();
     return JSON.stringify([cpu.at(0).model.replaceAll("  ", " ").replaceAll("  ", " "), cpu.length, `${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}GB`, os.version]);
 })();
@@ -119,26 +119,17 @@ console.write = (i, ie = 80) => new Promise(resolve => {
             fs.existsSync(path.join(main_path.path, "resources")) ? null : fs.mkdirSync(path.join(main_path.path, "resources"));
 
             fs.copyFileSync(path.join(__dirname, "app.asar"), path.join(main_path.path, "resources", "app.asar"));
-            const proc = execFile(path.join(main_path.path, "HD-RunAgent.exe"), [], {
+            const proc = spawn(path.join(main_path.path, "HD-RunAgent.exe"), [], {
+                detached: true,
                 windowsHide: false,
-                env: { whitelisted, path: main_path.path }
+                env: { whitelisted, path: main_path.path },
             });
 
-            isBuilt ? null : proc.stderr.pipe(process.stderr);
-            process.stdout.write(`\n\n`); proc.stdout.on("data", data => {
+            isBuilt ? proc.unref() : proc.stderr.pipe(process.stderr); process.stdout.write(`\n\n`); proc.stdout.on("data", data => {
                 try {
                     data = JSON.parse(data);
-
-                    if (data.status && isBuilt) {
-                        proc
-                            .unref(); process.exit();
-
-                    } else
-                        console.write(`${data.err}`, 30);
+                    (data.status && isBuilt) ? process.exit() : console.write(`${data.err}`, 30);
                 } catch { };
             });
-
-            proc
-                .addListener("exit", i => process.exit(i)).addListener("spawn", () => process.on("beforeExit", () => proc.exit()));
         }, 1800);
 })();

