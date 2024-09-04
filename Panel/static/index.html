@@ -1,35 +1,4 @@
-<head>
-    <title></title>
-    <style type="text/css"></style>
-</head>
-
 <body page="LOGIN">
-    <header>
-        <div>
-            <button class="stream inactive" onclick="ToggleMode()">
-                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0 0 32 32">
-                    <path d="M 6.1015625 6.1015625 C 3.5675625 8.6345625 2 12.134 2 16 C 2 19.866 3.5675625 23.365437 6.1015625 25.898438 L 7.5195312 24.480469 C 5.3465312 22.307469 4 19.308 4 16 C 4 12.692 5.3465312 9.6925313 7.5195312 7.5195312 L 6.1015625 6.1015625 z M 25.898438 6.1015625 L 24.480469 7.5195312 C 26.653469 9.6925312 28 12.692 28 16 C 28 19.308 26.653469 22.307469 24.480469 24.480469 L 25.898438 25.898438 C 28.432437 23.365437 30 19.866 30 16 C 30 12.134 28.432437 8.6345625 25.898438 6.1015625 z M 9.6367188 9.6367188 C 8.0077188 11.265719 7 13.515 7 16 C 7 18.485 8.0077187 20.734281 9.6367188 22.363281 L 11.052734 20.947266 C 9.7847344 19.680266 9 17.93 9 16 C 9 14.07 9.7847344 12.319734 11.052734 11.052734 L 9.6367188 9.6367188 z M 22.363281 9.6367188 L 20.947266 11.052734 C 22.215266 12.319734 23 14.07 23 16 C 23 17.93 22.215266 19.680266 20.947266 20.947266 L 22.363281 22.363281 C 23.992281 20.734281 25 18.485 25 16 C 25 13.515 23.992281 11.265719 22.363281 9.6367188 z M 16 12 A 4 4 0 0 0 16 20 A 4 4 0 0 0 16 12 z">
-                    </path>
-                </svg>
-            </button>
-        </div>
-
-        <span class="title"></span>
-
-        <div>
-            <button class="minimize" onclick="Minimize()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-                    <path d="M432 256c0 17.7-14.3 32-32 32L48 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l352 0c17.7 0 32 14.3 32 32z" />
-                </svg>
-            </button>
-            <button class="close" onclick="HandleClose()">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
-                    <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z" />
-                </svg>
-            </button>
-        </div>
-    </header>
-
     <main name="LOGIN">
         <nav>
             <img class="icon" draggable="false">
@@ -56,45 +25,6 @@
             </menu>
         </nav>
     </main>
-    <main name="BYPASS">
-        <menu class="location">
-            <i>Location Menu</i>
-            <div name="3D" onclick="InjectMenu('3D','3D')">
-                <span>3D</span>
-                <button></button>
-            </div>
-            <div name="BOX" onclick="InjectMenu('BOX','ESP BOX')">
-                <span>ESP BOX</span>
-                <button></button>
-            </div>
-            <div name="MENU" onclick="InjectMenu('MENU','CHAMS MENU')">
-                <span>CHAMS MENU</span>
-                <button></button>
-            </div>
-        </menu>
-        <menu class="bypass">
-            <div>
-                <span class="title">EMULATOR BYPASS</span>
-                <div class="internet" onclick="ToggleInternet()">
-                    <span>Internet</span>
-                    <button></button>
-                </div>
-            </div>
-            <div name="BYPASS" class="flex w-full">
-                <div class="flex w-full">
-                    <button class="inject" onclick="InjectCheat('BYPASS','BYPASS')">INJECT</button>
-                </div>
-            </div>
-        </menu>
-        <menu class="xterm">
-            <div class="xterm"></div>
-        </menu>
-        <menu class="info">
-            <div class="data">
-                <span class="expiry">-</span>
-            </div>
-        </menu>
-    </main>
     <main name="PANEL">
         <nav>
             <menu class="main" license="false">
@@ -109,8 +39,8 @@
                     <span>3D</span>
                     <button></button>
                 </div>
-                <div name="BOX" onclick="InjectMenu('BOX','ESP BOX')">
-                    <span>ESP BOX</span>
+                <div name="BOX" onclick="InjectMenu('BOX','BOX')">
+                    <span>BOX</span>
                     <button></button>
                 </div>
                 <div name="MOCO" onclick="InjectMenu('MOCO','ESP MOCO')">
@@ -135,7 +65,7 @@
                     <button></button>
                 </div>
             </menu>
-            <menu id="BYPASS" class="bypass" license="false">
+            <menu id="BYPASS" name="BYPASS" class="bypass" license="false">
                 <div license="false">
                     <span class="title">EMULATOR BYPASS</span>
                     <div class="internet" onclick="ToggleInternet()">
@@ -144,38 +74,71 @@
                     </div>
                 </div>
                 <div name="BYPASS" class="flex w-full">
-                    <div class="flex w-full" style="justify-content: center;">
-                        <button class="inject" onclick="InjectCheat('BYPASS','BYPASS')">INJECT</button>
+                    <div class="flex w-full" style="justify-content: center; margin: 0px 5px;">
+                        <button class="inject" onclick="InjectCheat('BYPASS','BYPASS')">INJECT [LOGIN]</button>
                     </div>
-                </div>
-            </menu>
-            <menu id="EXTRA" license="true">
-                <div name="RESET-GUEST" style="margin-top: 0px;" license="true" onclick="InjectCheat('RESET-GUEST','RESET GUEST')">
-                    <span>RESET GUEST</span>
-                    <div>
-                        <button></button>
-                    </div>
-                </div>
-            </menu>
-            <menu class="info">
-                <div class="data">
-                    <span class="expiry">-</span>
                 </div>
             </menu>
         </nav>
         <nav license="false">
             <div id="main" page="AIM">
+                <page id="USER">
+                    <div class="values">
+                        <div class="option user">
+                            <span class="name">USER</span>
+                            <span class="value">-</span>
+                        </div>
+                        <div class="option expiry">
+                            <span class="name">EXPIRY</span>
+                            <span class="value">-</span>
+                        </div>
+                    </div>
+                    <div class="settings">
+                        <div class="option internet" onclick="ToggleInternet()">
+                            <span class="name">INTERNET</span>
+                            <div>
+                                <button></button>
+                            </div>
+                        </div>
+                        <div class="option streamer" onclick="ToggleStreamer()">
+                            <span class="name">STREAMER MODE</span>
+                            <div>
+                                <button></button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings">
+                        <div name="RESET-GUEST" class="option" onclick="InjectCheat('RESET-GUEST','RESET GUEST')">
+                            <span class="name">RESET GUEST</span>
+                            <div>
+                                <button></button>
+                            </div>
+                        </div>
+                        <div name="CRASH-EMULATOR" class="option" onclick="InjectCheat('CRASH-EMULATOR','CRASH THE EMULATOR')">
+                            <span class="name">CRASH THE EMULATOR</span>
+                            <div>
+                                <button></button>
+                            </div>
+                        </div>
+                    </div>
+                </page>
                 <page id="AIM" license="false">
                     <div>
                         <menu name="AIMBOT" license="false">
-                            <div name="AIMBOT" license="false" onclick="InjectCheat('AIMBOT','AIMBOT')">
-                                <span>AIMBOT</span>
+                            <div name="AIMBOT[v1]" license="false" onclick="InjectCheat('AIMBOT[v1]','AIMBOT v1')">
+                                <span>AIMBOT<sub>v1</sub></span>
                                 <div>
                                     <button></button>
                                 </div>
                             </div>
-                            <div name="AIMBOT-DRAG" license="false" onclick="InjectCheat('AIMBOT-DRAG','AIMBOT DRAG')">
-                                <span>AIMBOT DRAG</span>
+                            <div name="AIMBOT[v2]" license="false" onclick="InjectCheat('AIMBOT[v1]','AIMBOT v2')">
+                                <span>AIMBOT<sub>v2</sub></span>
+                                <div>
+                                    <button></button>
+                                </div>
+                            </div>
+                            <div name="AIMBOT[v3]" license="false" onclick="InjectCheat('AIMBOT[v3]','AIMBOT v3')">
+                                <span>AIMBOT<sub>v3</sub></span>
                                 <div>
                                     <button></button>
                                 </div>
@@ -204,14 +167,20 @@
                     </div>
                     <div>
                         <menu name="AIMBOT LEGIT" license="false">
-                            <div name="AIMBOT-LEGIT" license="false">
-                                <span onclick="InjectCheat('AIMBOT-LEGIT','AIMBOT')">AIMBOT</span>
+                            <div name="AIMBOT[v1]-LEGIT" license="false">
+                                <span onclick="InjectCheat('AIMBOT[v1]-LEGIT','AIMBOT v1')">AIMBOT<sub>v1</sub></span>
                                 <div>
                                     <bind>-</bind>
                                 </div>
                             </div>
-                            <div name="AIMBOT-DRAG-LEGIT" license="false">
-                                <span onclick="InjectCheat('AIMBOT-DRAG-LEGIT','AIMBOT DRAG')">AIMBOT DRAG</span>
+                            <div name="AIMBOT[v2]-LEGIT" license="false">
+                                <span onclick="InjectCheat('AIMBOT[v1]-LEGIT','AIMBOT v2')">AIMBOT<sub>v2</sub></span>
+                                <div>
+                                    <bind>-</bind>
+                                </div>
+                            </div>
+                            <div name="AIMBOT[v3]-LEGIT" license="false">
+                                <span onclick="InjectCheat('AIMBOT[v3]-LEGIT','AIMBOT v3')">AIMBOT<sub>v3</sub></span>
                                 <div>
                                     <bind>-</bind>
                                 </div>
@@ -225,8 +194,7 @@
                                 </div>
                             </div>
                             <div name="SNIPER[FAST][SWITCH]-LEGIT" license="false">
-                                <span onclick="InjectCheat('SNIPER[FAST][SWITCH]-LEGIT','SNIPER SWITCH')">FAST
-                                    SWITCH</span>
+                                <span onclick="InjectCheat('SNIPER[FAST][SWITCH]-LEGIT','SNIPER SWITCH')">FAST SWITCH</span>
                                 <div>
                                     <bind>-</bind>
                                 </div>
@@ -264,8 +232,6 @@
                                 </div>
                             </div>
                         </menu>
-                    </div>
-                    <div>
                         <menu license="false">
                             <div name="NO-RECOIL" license="false" onclick="InjectCheat('NO-RECOIL','NO RECOIL')">
                                 <span>NO RECOIL</span>
@@ -286,6 +252,8 @@
                                 </div>
                             </div>
                         </menu>
+                    </div>
+                    <div>
                         <menu name="TRACE" license="false">
                             <div name="AIMFOV" license="false" onclick="InjectCheat('AIMFOV','AIMFOV')">
                                 <span>FOV</span>
@@ -306,6 +274,20 @@
                                 </div>
                             </div>
                         </menu>
+                        <menu name="EXTREME" license="false">
+                            <div name="FAKE-LAG" license="false">
+                                <span onclick="InjectCheat('FAKE-LAG','FAKE LAG')">FAKE LAG</span>
+                                <div>
+                                    <bind>-</bind>
+                                </div>
+                            </div>
+                            <div name="GHOST-HACK" license="false">
+                                <span onclick="InjectCheat('GHOST-HACK','GHOST HACK')">GHOST HACK</span>
+                                <div>
+                                    <bind>-</bind>
+                                </div>
+                            </div>
+                        </menu>
                     </div>
                 </page>
                 <page id="EXPERIMENTAL" license="false">
@@ -315,6 +297,11 @@
             </div>
 
             <div id="terminal"></div>
+            <button name="USER" onclick="SetPage('USER')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m-9 8c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4m9.886-3.54c.18-.613 1.048-.613 1.229 0l.043.148a.64.64 0 0 0 .921.382l.136-.074c.561-.306 1.175.308.87.869l-.075.136a.64.64 0 0 0 .382.92l.149.045c.612.18.612 1.048 0 1.229l-.15.043a.64.64 0 0 0-.38.921l.074.136c.305.561-.309 1.175-.87.87l-.136-.075a.64.64 0 0 0-.92.382l-.045.149c-.18.612-1.048.612-1.229 0l-.043-.15a.64.64 0 0 0-.921-.38l-.136.074c-.561.305-1.175-.309-.87-.87l.075-.136a.64.64 0 0 0-.382-.92l-.148-.045c-.613-.18-.613-1.048 0-1.229l.148-.043a.64.64 0 0 0 .382-.921l-.074-.136c-.306-.561.308-1.175.869-.87l.136.075a.64.64 0 0 0 .92-.382zM14 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0" />
+                </svg>
+            </button>
         </nav>
     </main>
 </body>

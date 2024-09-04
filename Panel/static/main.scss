@@ -1,231 +1,252 @@
 @tailwind base;
+@tailwind variants;
 @tailwind utilities;
 @tailwind components;
 
-@keyframes start {
-    0% {
-        opacity: 0;
+@layer base {
+    .drag {
+        -webkit-app-region: drag;
     }
 
-    18% {
-        opacity: 0;
+    .nodrag {
+        -webkit-app-region: no-drag;
     }
 
-    to {
-        opacity: 1;
+    .side-row {
+        display: flex;
+        flex-direction: row
+    }
+
+    .side-col {
+        display: flex;
+        flex-direction: column;
     }
 }
 
-@keyframes blink {
-    0% {
-        opacity: 1;
-    }
+bind,
+input,
+button {
+    @apply nodrag;
 
-    50% {
-        opacity: 0;
-    }
-
-    100% {
-        opacity: 1;
+    &:focus {
+        outline: none;
     }
 }
 
 html {
-    user-select: none;
-    -webkit-user-select: none;
+    @apply select-none;
+}
+
+sub {
+    top: -5px;
+    left: 5px;
+    opacity: 0.5;
+    font-size: 90%;
+    font-weight: bold;
 }
 
 body {
-    width: 100vw;
-    height: 100vh;
-
-    display: flex;
-    overflow: hidden;
     font-family: Cascadia;
-    flex-direction: column;
-    justify-content: center;
-    background-color: black;
+    @apply drag side-row justify-center overflow-hidden;
+    @apply w-screen h-screen border-2 border-solid border-color-600;
 
-    @apply border-2;
-    @apply border-color-950;
-
-    &[page="LOGIN"] main[name="LOGIN"] {
-        display: flex;
+    &.move {
+        opacity: 0.80;
     }
 
-    &[page="LOGIN"] header>div:first-child {
-        display: none;
+    &.streamer {
+        @apply border-lime-600;
+
+        main {
+            &[name="LOGIN"] {
+                menu {
+                    input {
+                        @apply text-lime-300;
+                    }
+
+                    div button {
+                        &:hover span {
+                            @apply text-lime-500;
+                        }
+
+                        svg {
+                            @apply fill-lime-300;
+                        }
+
+                        span {
+                            @apply text-lime-300;
+                        }
+                    }
+                }
+            }
+
+            &[name="PANEL"] {
+                nav {
+                    &:nth-child(1) menu {
+                        &.main button {
+
+                            &:hover,
+                            &.selected {
+                                @apply text-lime-500;
+                            }
+                        }
+
+                        &.location div {
+                            button {
+                                @apply shadow-lime-500;
+                            }
+
+                            &:hover,
+                            &.injected,
+                            &.injecting {
+                                span {
+                                    @apply text-lime-500;
+                                }
+
+                                button {
+                                    @apply bg-lime-800;
+                                }
+                            }
+                        }
+
+                        &.bypass div:first-child {
+                            span.title {
+                                @apply text-lime-500;
+                            }
+
+                            &>div {
+                                button {
+                                    @apply shadow-lime-500;
+                                }
+
+                                &:hover,
+                                &.injected,
+                                &.injecting {
+                                    span {
+                                        @apply text-lime-500;
+                                    }
+
+                                    button {
+                                        @apply bg-lime-800;
+                                    }
+                                }
+                            }
+
+                            button.inject {
+                                @apply bg-lime-900/30 shadow-lime-500/50;
+
+                                &:hover {
+                                    @apply bg-lime-800/30 shadow-lime-600/50;
+                                }
+                            }
+                        }
+                    }
+
+                    &:nth-child(2) div#main page {
+                        &#USER {
+                            &>div div.option span.value {
+                                @apply text-lime-500;
+                            }
+
+                            div.settings div.option {
+                                div button {
+                                    @apply shadow-lime-500;
+                                }
+
+                                &:hover,
+                                &.injected {
+                                    span.name {
+                                        @apply text-lime-800;
+                                    }
+
+                                    div button {
+                                        @apply bg-lime-800;
+                                    }
+                                }
+                            }
+                        }
+
+                        &>div menu {
+                            div {
+
+                                &:hover,
+                                &.injected,
+                                &.injecting {
+                                    span {
+                                        @apply text-lime-500;
+                                    }
+
+                                    button {
+                                        @apply bg-lime-800;
+                                    }
+
+                                    bind.added {
+                                        @apply bg-lime-950;
+                                    }
+                                }
+                            }
+
+                            button {
+                                @apply shadow-lime-500;
+                            }
+                        }
+                    }
+                }
+
+                div#terminal span data {
+                    @apply text-lime-300;
+                }
+
+                button[name="USER"] {
+
+                    &:hover,
+                    &.selected {
+                        svg {
+                            @apply fill-lime-500;
+                        }
+                    }
+                }
+            }
+        }
     }
 
+    &[page="LOGIN"] main[name="LOGIN"],
     &[page="PANEL"] main[name="PANEL"] {
-        display: flex;
+        @apply flex;
     }
 
-    &[page="BYPASS"] main[name="BYPASS"] {
-        display: flex;
-    }
-}
-
-button {
-    outline: none;
-}
-
-header {
-    top: -1px;
-    width: 100%;
-    height: 30px;
-    display: flex;
-    app-region: drag;
-    position: absolute;
-    align-items: center;
-
-    @apply bg-color-950;
-
-    span {
-        width: 100%;
-        display: block;
-        text-align: center;
-
-        font-size: 13px;
-        letter-spacing: 1.10px;
-
-        @apply text-color-300;
-    }
-
-    div {
-        display: flex;
-        position: absolute;
-        flex-direction: row;
-
-        &:first-child {
-            justify-content: flex-start;
-
-            button {
-                margin-right: 5px;
-            }
-        }
-
-        &:last-child {
-            right: 3px;
-            justify-content: flex-end;
-        }
-    }
-
-    version {
-        font-size: 12px;
-        margin-left: 5px;
-        letter-spacing: 0.6px;
-
-        @apply text-color-700;
-    }
-
-    button {
-        app-region: no-drag;
-        margin-left: 5px;
-        margin-right: 5px;
-
-        svg {
-            width: 20px;
-            height: 20px;
-
-            @apply fill-color-300;
-        }
-
-        &:hover svg {
-            @apply fill-color-500;
-        }
-
-        &.close:hover svg {
-            @apply fill-red-800;
-        }
-
-        &.minimize svg {
-            width: 13px;
-        }
-
-        &.stream,
-        &.internet {
-            position: relative;
-
-            &::after {
-                content: " ";
-                position: absolute;
-                border-radius: 5px;
-
-                width: 8px;
-                right: -2px;
-                height: 8px;
-                bottom: 0px;
-            }
-
-            &.active::after {
-                @apply bg-green-500;
-            }
-
-            &.inactive::after {
-                @apply bg-red-500;
-            }
-        }
-
-        &.internet svg {
-            width: 17px;
-            height: 17px;
-            margin-top: -3px;
-        }
+    &[page="PANEL"] nav:first-child menu.main[license="false"]+menu.location {
+        @apply mt-0;
     }
 }
 
 main {
-    width: 100%;
-    height: 100%;
-
-    display: none;
-    align-self: center;
-
-    @apply bg-black;
-    @apply text-zinc-100;
+    @apply w-full h-full hidden self-center bg-black text-white;
 
     &[name="LOGIN"] {
-        align-items: center;
-        justify-content: center;
+        @apply items-center justify-center;
 
         nav {
             width: 95%;
-            display: flex;
-            flex-direction: column;
-
-            @apply h-fit;
-            @apply rounded-md;
-            @apply text-zinc-100;
+            @apply h-fit flex flex-col justify-center;
 
             img.icon {
                 width: 130px;
-                align-self: center;
-
-                @apply mt-10;
+                @apply self-center;
             }
 
             menu {
-                @apply mt-1;
-                width: 100%;
-                height: 100%;
+                @apply w-full h-full mt-1;
 
                 input {
-                    margin: 5px 30px;
+                    margin: 5px 25px;
                     padding: 8px 10px;
 
                     font-size: 13px;
-                    letter-spacing: 1.18px;
+                    letter-spacing: 1.8px;
 
-                    width: calc(100% - 60px);
-
-                    @apply rounded-sm;
-                    @apply bg-zinc-800;
-                    @apply text-color-300;
-
-                    &:focus {
-                        outline: none;
-                    }
+                    width: -webkit-fill-available;
+                    @apply rounded-sm bg-zinc-900 text-color-300;
 
                     &:first-child {
                         margin-top: 18px;
@@ -233,340 +254,47 @@ main {
 
                     &[type="password"]::-ms-clear,
                     &[type="password"]::-ms-reveal {
-                        display: none;
+                        @apply hidden;
                     }
                 }
 
                 div {
-                    display: flex;
-                    align-items: center;
-                    flex-direction: column;
+                    @apply relative side-col items-center;
 
                     button {
+                        height: 30px;
                         padding: 5px 18px;
-                        margin-bottom: 18px;
+                        margin-bottom: 10px;
                         letter-spacing: 1.3px;
-
-                        @apply mt-3;
-                        @apply w-fit;
-                        @apply rounded-sm;
-                        @apply bg-zinc-900;
-
-                        span {
-                            @apply text-white;
-                        }
+                        @apply w-fit mt-3 rounded-sm bg-zinc-900;
 
                         &:hover {
-                            @apply bg-zinc-700;
+                            @apply bg-zinc-800;
 
                             span {
-                                @apply text-color-300;
+                                @apply text-color-500;
                             }
                         }
 
                         & svg {
                             @apply fill-color-300;
                         }
-                    }
-
-                    span {
-                        width: 100%;
-                        height: 20px;
-                        font-size: 13px;
-                        margin-top: 5px;
-                        text-align: center;
-                        margin-bottom: 18px;
-
-                        @apply text-red-300;
-                    }
-                }
-            }
-        }
-    }
-
-    &[name="BYPASS"] {
-        margin-top: 26px;
-        flex-direction: column;
-
-        position: absolute;
-        animation-name: start;
-        animation-duration: 800ms;
-
-        width: calc(100% - 4px);
-        height: calc(100% - 30px);
-
-        menu {
-            display: flex;
-            padding: 5px 8px;
-            align-items: center;
-            flex-direction: column;
-
-            @apply bg-zinc-900;
-
-            &.location {
-                height: 100%;
-                flex-direction: column;
-
-                @apply border-b-2;
-                @apply border-black;
-
-                i {
-                    margin-top: 0.18rem;
-                    width: 100%;
-                    display: block;
-                    font-size: 13px;
-                    font-style: normal;
-                    text-align: center;
-
-                    &:first-child {
-                        margin-top: 0;
-                    }
-                }
-
-                div {
-                    width: 100%;
-                    display: none;
-                    align-items: center;
-
-                    cursor: pointer;
-                    padding: 2px 15px;
-
-                    span {
-                        width: 100%;
-                        opacity: 0.40;
-                        font-size: 13px;
-                        letter-spacing: 1.3px;
-                        @apply text-color-100;
-                    }
-
-                    button {
-                        width: 20px;
-                        height: 10px;
-                        border-radius: 30px;
-
-                        @apply bg-transparent;
-                        @apply shadow-color-500;
-                        --tw-shadow-colored: 0 0px 5px 0 var(--tw-shadow-color);
-                        box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-                    }
-
-                    &.injecting {
-                        animation-name: blink;
-                        animation-duration: 800ms;
-                        animation-iteration-count: infinite;
-                    }
-
-                    &:hover,
-                    &.injected,
-                    &.injecting {
-                        span {
-                            opacity: 1;
-                            @apply text-color-500;
-                        }
-
-                        button {
-                            @apply shadow-color-800;
-                        }
-                    }
-                }
-
-                &.ALL div {
-                    display: flex;
-                }
-
-                &._3D div[name="3D"] {
-                    display: flex;
-                }
-
-                &.BOX div[name="BOX"] {
-                    display: flex;
-                }
-
-                &.MENU div[name="MENU"] {
-                    display: flex;
-                }
-
-                &.MOCO div[name="MOCO"] {
-                    display: flex;
-                }
-
-                &.LINE div[name="LINE"] {
-                    display: flex;
-                }
-
-                &.COLOR-RED div[name="COLOR[RED]"] {
-                    display: flex;
-                }
-
-                &.COLOR-BLUE div[name="COLOR[BLUE]"] {
-                    display: flex;
-                }
-
-                &.COLOR-WHITE div[name="COLOR[WHITE]"] {
-                    display: flex;
-                }
-            }
-
-            &.bypass {
-                padding: 15px;
-
-                &>div:first-child {
-                    width: 100%;
-                    height: 100%;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-
-                    span.title {
-                        text-align: center;
-                        margin-bottom: 10px;
-                        letter-spacing: 1.50px;
-
-                        @apply text-color-500;
-                    }
-
-                    &>div {
-                        width: 90%;
-                        display: flex;
-                        align-items: center;
-
-                        cursor: pointer;
-                        padding: 3px 15px;
-                        position: relative;
-                        margin-bottom: 10px;
 
                         span {
-                            width: 100%;
-                            font-size: 13px;
-                        }
-
-                        button {
-                            width: 20px;
-                            right: 20px;
-                            height: 10px;
-                            position: absolute;
-                            border-radius: 30px;
-
-                            @apply bg-transparent;
-                            @apply shadow-color-500;
-                            --tw-shadow-colored: 0 0px 5px 0 var(--tw-shadow-color);
-                            box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-                        }
-
-                        &.injecting {
-                            animation-name: blink;
-                            animation-duration: 800ms;
-                            animation-iteration-count: infinite;
-                        }
-
-                        &:hover,
-                        &.injected,
-                        &.injecting {
-                            span {
-                                @apply text-color-500;
-                            }
-
-                            button {
-                                @apply shadow-color-800;
-                            }
-                        }
-                    }
-                }
-
-                button.inject {
-                    margin: 0px 20px;
-                    width: 100%;
-                    padding: 8px 0px;
-                    font-size: 13px;
-                    border-radius: 5px;
-                    letter-spacing: 1.18px;
-
-                    @apply border-2;
-                    @apply shadow-sm;
-                    @apply bg-color-900/30;
-                    @apply border-color-800;
-                    @apply shadow-color-500/50;
-
-                    &:hover {
-                        @apply bg-color-800/30;
-                        @apply border-color-700;
-                        @apply shadow-color-600/50;
-                    }
-                }
-            }
-
-            &.xterm {
-                height: 80%;
-                padding: 3px;
-                display: flex;
-
-                @apply border-t-2;
-                @apply border-black;
-
-                div.xterm {
-                    width: 100%;
-                    height: 100%;
-                    padding: 5px 10px 0 10px;
-
-                    overflow-y: scroll;
-                    @apply bg-zinc-950;
-
-                    span {
-                        display: block;
-                        font-size: 12px;
-
-                        data {
                             @apply text-color-300;
                         }
-
-                        error {
-                            @apply text-red-600;
-                        }
-
-                        time {
-                            @apply mr-2;
-                            @apply text-zinc-400;
-                        }
-
-                        &:last-child {
-                            height: 30%;
-                        }
                     }
 
-                    &::-webkit-scrollbar {
-                        display: none;
-                    }
-                }
-            }
+                    span {
+                        width: 95%;
+                        height: 20px;
+                        font-size: 13px;
+                        @apply text-center text-red-800;
 
-            &.info {
-                padding: 0 8px;
-                @apply flex-col;
-
-                div {
-                    width: 100%;
-                    display: flex;
-                    flex-direction: column;
-
-                    &.data span.expiry time {
-                        width: 100%;
-                        display: block;
-                        font-size: 11px;
-                        margin-top: 5px;
-                        text-align: center;
-
-                        @apply text-zinc-400;
-                    }
-
-                    &:last-child span {
-                        width: 100%;
-                        text-align: center;
-
-                        font-weight: bold;
-                        margin-bottom: 3px;
-                        letter-spacing: 1.18px;
-
-                        @apply text-color-300;
+                        &.status {
+                            top: 50px;
+                            @apply absolute;
+                        }
                     }
                 }
             }
@@ -574,172 +302,108 @@ main {
     }
 
     &[name="PANEL"] {
-        margin-top: 26px;
-
-        position: absolute;
-        animation-name: start;
-        animation-duration: 800ms;
-
-        width: calc(100% - 4px);
-        height: calc(100% - 30px);
+        @apply w-full h-full;
 
         nav {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
+            @apply h-full side-col;
 
             &:nth-child(1) {
                 width: 13.5rem;
                 margin-right: 2px;
 
                 menu {
-                    display: flex;
                     padding: 5px 8px;
-                    margin-top: 2px;
                     align-items: center;
-                    flex-direction: column;
-
-                    @apply bg-zinc-900;
+                    @apply mt-0.5 side-col items-center bg-zinc-900;
 
                     &:first-child {
-                        margin-top: 0;
+                        @apply mt-0;
                     }
 
                     &[license="false"] {
-                        display: none;
+                        @apply hidden;
                     }
 
                     &.main {
-                        padding: 0;
-                        flex-direction: column;
+                        @apply p-0;
 
                         button {
-                            width: 100%;
                             font-size: 15px;
-
-                            margin: 1px 0;
-                            padding: 5px 0px;
                             letter-spacing: 1.3px;
+                            @apply w-full mt-0.5 py-1.5;
 
                             &:hover,
                             &.selected {
-                                @apply bg-zinc-800;
-                                @apply text-color-500;
+                                @apply bg-zinc-800 text-color-500;
                             }
 
                             &:first-child {
-                                margin-top: 0;
+                                @apply mt-0;
                             }
 
                             &[license="false"] {
-                                display: none;
+                                @apply hidden;
                             }
                         }
                     }
 
                     &.location {
-                        height: 100%;
-                        padding: 0px;
-                        margin-top: 2px;
-                        flex-direction: column;
+                        @apply h-full p-0 mt-0.5;
 
                         i {
-                            margin-top: 0.18rem;
-                            width: 100%;
-                            display: block;
                             font-size: 13px;
                             font-style: normal;
-                            text-align: center;
+                            margin-top: 0.18rem;
+                            @apply w-full block text-center;
 
                             &:first-child {
-                                margin-top: 0;
+                                @apply mt-0 text-white/80;
                             }
                         }
 
                         div {
-                            width: 100%;
-                            display: none;
-                            position: relative;
-                            align-items: center;
-
-                            cursor: pointer;
                             padding: 2px 15px;
+                            @apply w-full hidden relative items-center cursor-pointer;
 
                             span {
-                                width: 100%;
-                                opacity: 0.40;
                                 font-size: 13px;
                                 letter-spacing: 1.3px;
-                                @apply text-color-100;
+                                @apply w-full nodrag text-white/60;
                             }
 
                             button {
                                 right: 15px;
                                 width: 20px;
                                 height: 10px;
-                                position: absolute;
                                 border-radius: 30px;
 
-                                @apply bg-transparent;
-                                @apply shadow-color-500;
-                                --tw-shadow-colored: 0 0px 5px 0 var(--tw-shadow-color);
+                                @apply absolute bg-transparent shadow-color-500;
+                                --tw-shadow-colored: 0 0px 3px 0 var(--tw-shadow-color);
                                 box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-                            }
-
-                            &.injecting {
-                                animation-name: blink;
-                                animation-duration: 800ms;
-                                animation-iteration-count: infinite;
                             }
 
                             &:hover,
                             &.injected,
                             &.injecting {
                                 span {
-                                    opacity: 1;
                                     @apply text-color-500;
                                 }
 
                                 button {
-                                    @apply shadow-color-800;
+                                    @apply bg-color-800;
                                 }
                             }
                         }
 
-                        &.ALL div {
-                            display: flex;
-                        }
-
-                        &._3D div[name="3D"] {
-                            display: flex;
-                        }
-
-                        &.BOX div[name="BOX"] {
-                            display: flex;
-                        }
-
-                        &.MENU div[name="MENU"] {
-                            display: flex;
-                        }
-
-                        &.MOCO div[name="MOCO"] {
-                            display: flex;
-                        }
-
-                        &.LINE div[name="LINE"] {
-                            display: flex;
-                        }
-
-                        &.COLOR-RED div[name="COLOR[RED]"] {
-                            display: flex;
-                        }
-
-                        &.COLOR-BLUE div[name="COLOR[BLUE]"] {
-                            display: flex;
-                        }
-
+                        &.ALL div,
+                        &._3D div[name="3D"],
+                        &.BOX div[name="BOX"],
+                        &.MENU div[name="MENU"],
+                        &.MOCO div[name="MOCO"],
+                        &.COLOR-RED div[name="COLOR[RED]"],
+                        &.COLOR-BLUE div[name="COLOR[BLUE]"],
                         &.COLOR-WHITE div[name="COLOR[WHITE]"] {
-                            display: flex;
+                            @apply flex;
                         }
                     }
 
@@ -747,53 +411,58 @@ main {
                         padding-bottom: 10px;
 
                         &>div:first-child {
-                            width: 100%;
-                            height: 100%;
-                            display: flex;
-                            flex-direction: column;
-                            align-items: center;
+                            @apply w-full h-full side-col items-center;
 
                             span.title {
                                 font-size: 13px;
-                                text-align: center;
                                 margin-bottom: 5px;
                                 letter-spacing: 1.50px;
+                                @apply relative text-center text-color-500;
 
-                                @apply text-color-500;
+                                &::before,
+                                &::after {
+                                    top: 0;
+                                    width: 6px;
+                                    right: -12px;
+
+                                    height: 6px;
+                                    content: "";
+                                    @apply block absolute rounded-full;
+                                }
+
+                                &::after {
+                                    opacity: 0.8;
+                                }
+
+                                &::before {
+                                    top: -1px;
+                                    width: 8px;
+                                    right: -13px;
+                                    height: 8px;
+                                    @apply animate-ping;
+                                }
                             }
 
                             &>div {
                                 width: 95%;
-                                display: flex;
-                                align-items: center;
-
-                                cursor: pointer;
                                 padding: 3px 15px;
-                                position: relative;
                                 margin-bottom: 5px;
+                                @apply flex relative items-center cursor-pointer;
 
                                 span {
-                                    width: 100%;
                                     font-size: 13px;
+                                    @apply w-full nodrag text-white/60;
                                 }
 
                                 button {
                                     width: 20px;
-                                    height: 10px;
                                     right: 15px;
-                                    position: absolute;
+                                    height: 10px;
                                     border-radius: 30px;
 
-                                    @apply bg-transparent;
-                                    @apply shadow-color-500;
-                                    --tw-shadow-colored: 0 0px 5px 0 var(--tw-shadow-color);
+                                    @apply absolute bg-transparent shadow-color-500;
+                                    --tw-shadow-colored: 0 0px 3px 0 var(--tw-shadow-color);
                                     box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-                                }
-
-                                &.injecting {
-                                    animation-name: blink;
-                                    animation-duration: 800ms;
-                                    animation-iteration-count: infinite;
                                 }
 
                                 &:hover,
@@ -804,7 +473,7 @@ main {
                                     }
 
                                     button {
-                                        @apply shadow-color-800;
+                                        @apply bg-color-800;
                                     }
                                 }
                             }
@@ -812,124 +481,43 @@ main {
 
                         button.inject {
                             width: 98%;
+                            margin: 5px 0px;
                             padding: 8px 0px;
                             font-size: 11px;
                             line-height: 11px;
-                            border-radius: 5px;
+                            border-radius: 25px;
                             letter-spacing: 1.18px;
 
-                            @apply border-2;
-                            @apply shadow-sm;
-                            @apply bg-color-900/30;
-                            @apply border-color-800;
-                            @apply shadow-color-500/50;
+                            @apply bg-color-900/30 shadow-color-500/50;
+                            --tw-shadow-colored: 0 0px 8px 0 var(--tw-shadow-color);
+                            box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 
                             &:hover {
-                                @apply bg-color-800/30;
-                                @apply border-color-700;
-                                @apply shadow-color-600/50;
+                                @apply bg-color-800/30 shadow-color-600/50;
                             }
                         }
-                    }
 
-                    &#EXTRA {
-                        div {
-                            width: 100%;
-                            display: flex;
-                            cursor: pointer;
-                            margin-top: 2px;
-                            align-items: center;
-                            padding: 5px 0;
-                            position: relative;
+                        &.injecting div span.title {
 
-                            &.data {
-                                flex-direction: column;
-                            }
-
-                            &[license="false"] {
-                                display: none;
-                            }
-
-                            span {
-                                width: 100%;
-                                font-size: 12px;
-                                letter-spacing: 1.3px;
-                            }
-
-                            &:hover,
-                            &.injected,
-                            &.injecting {
-                                span {
-                                    @apply text-color-500;
-                                }
-
-                                button {
-                                    @apply shadow-color-800;
-                                }
-                            }
-
-                            &.injecting {
-                                animation-name: blink;
-                                animation-duration: 800ms;
-                                animation-iteration-count: infinite;
-                            }
-
-                            button {
-                                right: 5px;
-                                width: 25px;
-                                height: 13px;
-                                margin-left: 8px;
-                                position: absolute;
-                                border-radius: 30px;
-
-                                @apply bg-transparent;
-                                @apply shadow-color-500;
-                                --tw-shadow-colored: 0 0px 8px 0 var(--tw-shadow-color);
-                                box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+                            &::before,
+                            &::after {
+                                @apply bg-lime-500 !important;
                             }
                         }
-                    }
 
-                    &.info {
-                        padding: 0 8px;
-                        @apply flex-col;
+                        &[status="risk"] div span.title {
 
-                        div {
-                            width: 100%;
-                            display: flex;
-                            flex-direction: column;
-
-                            span {
-                                font-size: 13px;
-
-                                err {
-                                    @apply text-red-600;
-                                }
-
-                                data {
-                                    @apply text-color-300;
-                                }
+                            &::before,
+                            &::after {
+                                @apply bg-red-500;
                             }
+                        }
 
-                            &.data span.expiry time {
-                                width: 100%;
-                                display: block;
-                                font-size: 11px;
-                                margin-top: 5px;
-                                text-align: center;
+                        &[status="warn"] div span.title {
 
-                                @apply text-zinc-400;
-                            }
-
-                            &:last-child span {
-                                width: 100%;
-                                text-align: center;
-
-                                font-weight: bold;
-                                margin-bottom: 3px;
-                                letter-spacing: 1.18px;
-
-                                @apply text-color-300;
+                            &::before,
+                            &::after {
+                                @apply bg-orange-500;
                             }
                         }
                     }
@@ -940,85 +528,166 @@ main {
                 width: calc(100% - 13.75rem);
 
                 &[license="false"] {
-                    display: none;
+                    @apply hidden;
                 }
 
                 div#main {
-                    width: 100%;
+                    @apply w-full p-2;
                     height: calc(67% - 2px);
 
                     page {
-                        width: 100%;
-                        height: 100%;
-                        display: none;
+                        @apply w-full h-full hidden;
 
                         &[license="false"] {
-                            display: none;
+                            @apply hidden;
+                        }
+
+                        &#USER {
+                            width: 380px;
+                            flex-direction: column;
+
+                            &>div {
+                                @apply px-4;
+
+                                div.option {
+                                    @apply side-row mt-3;
+
+                                    span {
+                                        font-size: 13px;
+                                        letter-spacing: 1.8px;
+
+                                        &.name {
+                                            @apply w-full text-white/80;
+                                        }
+
+                                        &.value {
+                                            @apply text-color-500;
+                                        }
+                                    }
+                                }
+                            }
+
+                            div.values {
+                                div.option {
+                                    @apply relative;
+
+                                    span.name {
+                                        @apply w-fit;
+                                    }
+
+                                    span.value {
+                                        @apply w-fit absolute right-0;
+                                    }
+                                }
+                            }
+
+                            div.settings {
+                                @apply border-t-2 border-t-zinc-800;
+
+                                div.option {
+                                    @apply nodrag cursor-pointer;
+
+                                    div {
+                                        button {
+                                            width: 25px;
+                                            height: 13px;
+
+                                            @apply ml-2 rounded-full bg-transparent shadow-color-500;
+                                            --tw-shadow-colored: 0 0px 3px 0 var(--tw-shadow-color);
+                                            box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+
+
+                                        }
+                                    }
+
+                                    &:hover,
+                                    &.injected {
+                                        span.name {
+                                            @apply text-color-800;
+                                        }
+
+                                        div button {
+                                            @apply bg-color-800;
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         &>div {
-                            width: 100%;
-                            height: 100%;
-                            padding: 8px;
+                            @apply w-full h-full p-2;
 
                             menu {
-                                border: 0.8px solid;
+                                border: 0.8px;
                                 padding: 10px 8px;
-                                position: relative;
-
-                                @apply mt-4;
-                                @apply rounded-md;
-                                @apply border-zinc-900;
+                                @apply relative mt-4 rounded-md border-solid border-zinc-800/80;
 
                                 &:before {
                                     content: attr(name);
                                     top: -8px;
                                     left: 10px;
                                     padding: 0px 5px;
-                                    position: absolute;
                                     letter-spacing: 1.35px;
 
-                                    color: black;
                                     font-size: 13px;
-                                    background-color: black;
+                                    @apply text-black bg-black absolute;
                                 }
 
                                 &::after {
                                     content: attr(name);
                                     top: -8px;
                                     left: 10px;
+                                    opacity: 0.30;
                                     padding: 0px 5px;
-                                    position: absolute;
-                                    letter-spacing: 1.35px;
-                                    opacity: 0.5;
+                                    letter-spacing: 1.8px;
 
                                     font-size: 13px;
-                                    background-color: black;
+                                    @apply bg-black absolute;
                                 }
 
                                 &[license="false"] {
-                                    display: none;
+                                    @apply hidden;
                                 }
 
                                 &:first-child {
-                                    margin-top: 0;
+                                    @apply mt-0;
                                 }
 
                                 div {
-                                    display: flex;
-                                    padding: 3px 0;
-                                    cursor: pointer;
-                                    align-items: center;
+                                    padding: 5px 0;
+                                    @apply w-full nodrag flex items-center justify-end cursor-pointer;
 
                                     &[license="false"] {
-                                        display: none;
+                                        @apply hidden;
                                     }
 
                                     span {
-                                        width: 100%;
                                         font-size: 12px;
-                                        padding-left: 8px;
                                         letter-spacing: 1.3px;
+                                        @apply relative nodrag pl-2;
+
+                                        &::before,
+                                        &::after {
+                                            top: 0;
+                                            width: 6px;
+                                            right: -18px;
+
+                                            height: 6px;
+                                            content: "";
+                                            @apply block absolute rounded-full;
+                                        }
+
+                                        &::after {
+                                            opacity: 0.8;
+                                        }
+
+                                        &::before {
+                                            top: -2px;
+                                            width: 10px;
+                                            right: -20px;
+                                            height: 10px;
+                                            @apply animate-ping;
+                                        }
                                     }
 
                                     &:hover,
@@ -1029,7 +698,7 @@ main {
                                         }
 
                                         button {
-                                            @apply shadow-color-800;
+                                            @apply bg-color-800;
                                         }
 
                                         bind.added {
@@ -1037,33 +706,45 @@ main {
                                         }
                                     }
 
-                                    &.injecting {
-                                        animation-name: blink;
-                                        animation-duration: 800ms;
-                                        animation-iteration-count: infinite;
+                                    &.injecting span {
+
+                                        &::before,
+                                        &::after {
+                                            @apply bg-lime-500 !important;
+                                        }
+                                    }
+
+                                    &[status="risk"] span {
+
+                                        &::before,
+                                        &::after {
+                                            @apply bg-red-500;
+                                        }
+                                    }
+
+                                    &[status="warn"] span {
+
+                                        &::before,
+                                        &::after {
+                                            @apply bg-orange-500;
+                                        }
                                     }
                                 }
 
                                 button {
                                     width: 25px;
                                     height: 13px;
-                                    margin-left: 8px;
-                                    border-radius: 30px;
 
-                                    @apply bg-transparent;
-                                    @apply shadow-color-500;
-                                    --tw-shadow-colored: 0 0px 8px 0 var(--tw-shadow-color);
+                                    @apply ml-2 rounded-full bg-transparent shadow-color-500;
+                                    --tw-shadow-colored: 0 0px 3px 0 var(--tw-shadow-color);
                                     box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
                                 }
 
                                 bind {
-                                    padding: 0 8px;
-                                    cursor: pointer;
                                     margin-left: 5px;
                                     line-height: 13px;
                                     border-radius: 3px;
-
-                                    @apply bg-zinc-800;
+                                    @apply px-2 text-center cursor-pointer bg-zinc-800;
 
                                     &.added {
                                         padding: 3px 8px;
@@ -1076,64 +757,70 @@ main {
                         }
                     }
 
-                    &[page="AIM"] {
-                        page#AIM {
-                            display: flex;
-                        }
+                    &[page="AIM"] page#AIM,
+                    &[page="USER"] page#USER,
+                    &[page="BRUTAL"] page#BRUTAL,
+                    &[page="EXPERIMENTAL"] page#EXPERIMENTAL {
+                        @apply flex;
                     }
 
-                    &[page="BRUTAL"] {
-                        page#BRUTAL {
-                            display: flex;
-                        }
-                    }
-
-                    &[page="EXPERIMENTAL"] {
-                        page#EXPERIMENTAL {
-                            display: flex;
-
-                            &>div {
-                                &:nth-child(1) {
-                                    width: 150%;
-                                }
-                            }
+                    page#EXPERIMENTAL &>div {
+                        &:nth-child(1) {
+                            width: 150%;
                         }
                     }
                 }
+            }
 
-                div#terminal {
-                    width: 100%;
-                    height: calc(33% - 2px);
-                    margin-top: 2px;
-                    padding: 5px 10px 0 10px;
+            div#terminal {
+                height: calc(33% - 2px);
+                padding: 5px 10px 0 10px;
+                @apply w-full mt-0.5 overflow-y-scroll bg-zinc-950;
 
-                    overflow-y: scroll;
-                    @apply bg-zinc-950;
+                span {
+                    @apply block;
+                    font-size: 12px;
 
-                    span {
-                        display: block;
-                        font-size: 12px;
-
-                        data {
-                            @apply text-color-300;
-                        }
-
-                        error {
-                            @apply text-red-600;
-                        }
-
-                        time {
-                            @apply mr-2;
-                            @apply text-zinc-400;
-                        }
-
-                        &:last-child {
-                            height: 30%;
-                        }
+                    data {
+                        @apply text-color-300;
                     }
 
-                    &::-webkit-scrollbar {
-                        display: none;
+                    error {
+                        @apply text-red-600;
+                    }
+
+                    time {
+                        @apply mr-2 text-zinc-400;
+                    }
+
+                    &:last-child {
+                        height: 30%;
+                    }
+                }
+
+                &::-webkit-scrollbar {
+                    @apply hidden;
+                }
+            }
+
+            button[name="USER"] {
+                right: 10px;
+                bottom: 12px;
+                padding: 5px;
+                border-radius: 5px;
+
+                @apply absolute bg-zinc-900;
+
+                svg {
+                    @apply fill-zinc-500;
+                }
+
+                &:hover,
+                &.selected {
+                    @apply bg-zinc-800;
+
+                    svg {
+                        @apply fill-color-500;
                     }
                 }
             }

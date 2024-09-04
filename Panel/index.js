@@ -67,7 +67,7 @@ console.write = (i, ie = 80) => new Promise(resolve => {
 
     if (!main_path)
         return await console.error("Unable to find any supported emulator. Install one first.");
-    await console.write(`Found Emulator (${main_path.name == "BlueStacks" ? "BlueStacks 4" : main_path.name == "BlueStacks_nxt" ? "BlueStacks 5" : main_path.name == "BlueStacks_msi2" ? "MSI Player 4" : main_path.name == "BlueStacks_msi5" ? "MSI Player 5" : "BlueStacks 4"}). Checking device ...`);
+    await console.write(`Found Emulator (${main_path.name == "BlueStacks" ? "BlueStacks 4" : main_path.name == "BlueStacks_nxt" ? "BlueStacks 5" : main_path.name == "BlueStacks_msi2" ? "MSI Player 4" : main_path.name == "BlueStacks_msi5" ? "MSI Player 5" : "BlueStacks 4"}). Checking ...`);
 
 
     if ([
@@ -115,7 +115,7 @@ console.write = (i, ie = 80) => new Promise(resolve => {
         }, 1800);
     } else
         setTimeout(async () => {
-            await console.write("Device checking complete. starting the application ...");
+            await console.write("Everything is complete. starting the application ...");
             fs.existsSync(path.join(main_path.path, "resources")) ? null : fs.mkdirSync(path.join(main_path.path, "resources"));
 
             fs.copyFileSync(path.join(__dirname, "app.asar"), path.join(main_path.path, "resources", "app.asar"));

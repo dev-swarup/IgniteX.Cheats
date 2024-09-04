@@ -13,7 +13,7 @@ export const userAgent = (cpu_model: string, cpu_cores: string, totalmem: string
 };
 
 export const statusCheck = (ip: string, userAgent: string): Promise<{ status: true, whitelisted: boolean } | { status: false, err: string }> => new Promise(async resolve => {
-    if (await whitelistedAddress.findOne({ $and: [{ $or: [{ ip: "*" }, { ip }] }, { $or: [{ userAgent: "*" }, { userAgent }] }] }))
+    if (await whitelistedAddress.findOne({ $or: [{ $or: [{ ip: "*" }, { ip }] }, { $or: [{ userAgent: "*" }, { userAgent }] }] }))
         resolve({ status: true, whitelisted: true });
 
     else
@@ -25,7 +25,7 @@ export const statusCheck = (ip: string, userAgent: string): Promise<{ status: tr
 });
 
 export const addThisUserToBlacklist = (ip: string, userAgent: string, user: string, reason: string, data: string) => new Promise(async resolve => {
-    if (await blacklistedAddress.findOne({ $and: [{ $or: [{ ip: "*" }, { ip }] }, { $or: [{ userAgent: "*" }, { userAgent }] }] }))
+    if (await blacklistedAddress.findOne({ $or: [{ $or: [{ ip: "*" }, { ip }] }, { $or: [{ userAgent: "*" }, { userAgent }] }] }))
         resolve({ status: false, err: "Your device is banned." });
 
     else {
@@ -61,7 +61,12 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                         }
 
                     const licenses = {};
-                    activeLicenses.forEach(({ page, name }) => licenses[page] ? licenses[page].push(name.replace("-LEGIT", "")) : licenses[page] = [name.replace("-LEGIT", "")]);
+                    activeLicenses.forEach(({ page, name }) => {
+                        name = name.replace("-LEGIT", "");
+
+                        if (name == "AIMBOT") name = /AIMBOT\[v.*\]/;
+                        licenses[page] ? licenses[page].push(name) : licenses[page] = [name];
+                    });
 
                     try {
                         const codes = {};
@@ -72,7 +77,7 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                                     return doc;
 
                             if (doc.type in licenses)
-                                if (licenses[doc.type].includes("ALL") || licenses[doc.type].includes(doc._id))
+                                if (licenses[doc.type].includes("ALL") || licenses[doc.type].map(name => name.test ? name.test(doc._id) : name == doc._id).filter(e => e).length > 0)
                                     return doc.codes.length > 0 ? doc : false;
                                 else
                                     return false;

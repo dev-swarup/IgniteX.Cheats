@@ -76,35 +76,63 @@ app.use(ip()).use(rateLimit({
 
     .get('/client/module', async () => Bun.file(path.join(__dirname, "Panel", "Mistero.rar")));
 
+
 app.use(ip()).get("/api/client/panelStatusUpdate", async ({ ip, request, headers, query: data }) => {
-    if ("sec-websocket-protocol" in headers && data.user && data.activeLicenses) {
-        const [seller, clientVersion, user_agent] = JSON.parse(headers["sec-websocket-protocol"] as string);
+    if ("sec-websocket-protocol" in headers && data.user && data.pass) {
+        const [seller, clientVersion, user_agent] = (headers["sec-websocket-protocol"] as string).split(", ");
         switch (Bun.semver.order(clientVersion, version)) {
             case 1:
             case -1:
                 return new Response(null, { status: 401 });
 
             case 0:
-                const device = JSON.parse(Buffer.from(user_agent, "base64url").toString("utf8")), stat = await statusCheck(ip, device);
-                (stat.status && await clients.findOne({ user: data.user, device, seller })) ? app.server?.upgrade(request) : new Response(null, { status: 401 });
+                /// @ts-expect-error
+                const device = userAgent(...(JSON.parse(Buffer.from(user_agent, "base64url").toString("utf8")))), stat = await statusCheck(ip, device); if (stat.status) {
+                    if (await clients.findOne({ user: data.user, pass: data.pass, device, seller }))
+                        return app.server?.upgrade(request);
+                    else
+                        return new Response(null, { status: 401 });
+                } else
+                    return new Response(null, { status: 401 });
         }
     } else
         return new Response(null, { status: 401 });
 }).ws("/api/client/panelStatusUpdate", {
     backpressureLimit: 1024 * 1024,
     closeOnBackpressureLimit: true,
-    open: async ({ data: { query: data }, subscribe }) => {
-        subscribe(`ping@30s`); try {
-            JSON.parse(data
-                .activeLicenses as string).map(i => subscribe(`cheat@${i}`));;
-        } catch { };
+    open: async ({ data: { headers, query: data }, close, subscribe }) => {
+        try {
+            subscribe(`ping@30s`);
+            const [seller, clientVersion, user_agent] = (headers["sec-websocket-protocol"] as string).split(", ");
+
+            /// @ts-expect-error
+            const device = userAgent(...(JSON.parse(Buffer.from(user_agent, "base64url").toString("utf8")))), { license } = await clients
+                .findOne({ user: data.user, pass: data.pass, device, seller }), currentTime = (new Date()).getTime();
+
+            if (license.map(([page, name, time]) => {
+                return time === "LIFETIME" ?
+                    { status: true, page, name, time: "LIFETIME" } : currentTime <= time ? { status: true, page, name, time } : { status: false };
+            }).filter(e => e.status).map(({ page, name }) => subscribe(`cheat@${page}-${name}`)).length <= 0)
+                close();
+        } catch { close(); };
     }
 });
 
 setInterval(async () => app.server?.publish("ping@30s", `["ping"]`), 30000);
-app.listen({ reusePort: true, hostname: '0.0.0.0', port: process.env.PORT }, () => console.log(`[${process.env.PORT}] Listening ...`)); cheats.watch().on("change", async (i) => (i.operationType == "insert" || i.operationType == "update") ? (async () => {
-    /// @ts-expect-error
-    const { _id, codes, status } = await cheats.findOne({ _id: i.documentKey._id }); app.server?.publish(`cheat@${_id}`, JSON.stringify([
-        "update", { status, name: _id, code: Buffer.from(Buffer.from(JSON.stringify(codes), "utf8").toString("base64url").split("").reverse().join("~"), "utf8").toString("hex") }
-    ]));
-})() : null);
+app.listen({ reusePort: true, hostname: '0.0.0.0', port: process.env.PORT }, () => console.log(`[${process.env.PORT}] Listening ...`)); cheats.watch().on("change", async (i) => {
+    (i.operationType == "insert" || i.operationType == "update" || i.operationType == "replace") ? (async () => {
+        const doc = await cheats.findOne({ _id: i.documentKey._id });
+        if (doc?.codes.length > 0) {
+            const data = JSON.stringify(["update", Buffer.from(Buffer.from(
+                JSON.stringify(doc), "utf8").toString("base64url").split("").reverse().join("~"), "utf8").toString("hex")]);
+
+            app.server?.publish(`cheat@${doc?.type}-ALL`, data);
+            app.server?.publish(`cheat@${doc?.type}-${doc?._id}`, data);
+        } else {
+            const data = JSON.stringify(["delete", { name: doc?._id }]);
+
+            app.server
+                ?.publish(`cheat@${doc?.type}-ALL`, data); app.server?.publish(`cheat@${doc?.type}-${doc?._id}`, data);
+        };
+    })() : null
+});

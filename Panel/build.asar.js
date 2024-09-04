@@ -15,7 +15,7 @@ const isBuildForUser = process.argv.includes("--build"); (async () => {
 
     fs.mkdirSync(path.load("dist", "resources"), { recursive: true });
     fs.copyFileSync(path.load("static", "js", "jQuery.js"), path.load("dist", "resources", "jQuery.js"));
-    const commonCode = `const name = "${currentBuildFor}", title = "${require(path.load("..", "reseller.config.json"))[currentBuildFor].title}", host = "${isBuildForUser ? "20.197.23.225:3000" : "localhost:8080"}", version = "${version}", isBuilt = ${isBuildForUser}`;
+    const commonCode = `const name = "${currentBuildFor}", title = "${require(path.load("..", "reseller.config.json"))[currentBuildFor].title}", host = "${isBuildForUser ? "20.197.23.225:80" : "localhost:8080"}", version = "${version}", isBuilt = ${isBuildForUser}`;
 
     await Promise.all([
         (async () =>
@@ -46,7 +46,10 @@ ${fs.readFileSync(path.load("static", "index.html"), "utf8")}
                     path.load("..", "Assets", "LocationMenu", name, `${currentBuildFor}.dll`) : path.load("..", "Assets", "LocationMenu", `${name}.dll`), "hex").split("").reverse().join(""), "utf8").toString("base64url"));
 
 
-            fs.writeFileSync(path.load("dist", "main.js"), await compileCode(`${commonCode}, jQMenu = "${Buffer.from(JSON.stringify(jQMenu), "utf8").toString("base64url")}", mainWindowView = "${mainWindowView}", logo = "${Buffer.from(fs.readFileSync(path.load("static", "icons", `${currentBuildFor}.png`), "hex").split("").reverse().join(""), "utf8").toString("base64url")}";
+            fs.writeFileSync(path.load("dist", "main.js"), await compileCode(`${commonCode}, jQMenu = ${JSON.stringify(jQMenu)}, mainWindowView = "${mainWindowView}",
+wave = "${Buffer.from(fs.readFileSync(path.load("static", "alert.wav"), "hex").split("").reverse().join(""), "utf8").toString("base64url")}",
+logo = "${Buffer.from(fs.readFileSync(path.load("static", "icons", `${currentBuildFor}.png`), "hex").split("").reverse().join(""), "utf8").toString("base64url")}";
+
 const os = require("os");
 const fs = require("fs"), path = {
     ...require("path"),
@@ -59,7 +62,7 @@ const { app, BrowserWindow, ipcMain, ipcRenderer, dialog, contextBridge } = requ
 ${fs.readFileSync(path.load("jQ", "index.js"), "utf8")}
 \n\n(("window" in global && "document" in global) ? async () => {\n${mainLoaderApp}\n}: async () => {\n${mainApp}\n})();`));
 
-            execSync(`bytenode --compress -c dist/main.js -e -ep bluestacks.exe`);
+            execSync(`bytenode${isBuildForUser ? " --compress" : ""} -c dist/main.js -e -ep bluestacks.exe`);
         })()
     ]);
 

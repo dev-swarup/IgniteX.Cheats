@@ -6,7 +6,7 @@
         "start": "npm run build:scss && npm run build:tailwindcss && node build.asar.js && node dist/index.js",
         
         "build:scss": "sass --no-source-map static/main.scss static/main.temp.css",
-        "build:tailwindcss": "tailwindcss -i static/main.temp.css -o static/main.css"
+        "build:tailwindcss": "tailwindcss -c tailwind.config.js -i static/main.temp.css -o static/main.css"
     },
     "dependencies": {
         "bytenode": "~1.5.6",

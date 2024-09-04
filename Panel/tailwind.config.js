@@ -3,6 +3,7 @@ const resellers = require("../reseller.config.json");
 
 module.exports = {
     content: [
+        "static/*.css",
         "static/index.html"
     ],
     theme: {
@@ -11,6 +12,5 @@ module.exports = {
                 color: colors[resellers[resellers.currentBuildFor].theme]
             }
         }
-    },
-    plugins: [],
+    }
 };
