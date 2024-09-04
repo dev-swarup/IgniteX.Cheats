@@ -2,7 +2,7 @@
     "version": "v1.10.0",
     "scripts": {
         "start": "bun --watch index.ts",
-        "start:serve": "pm2 start -i $(nproc) --name MainServer --interpreter bun --max-memory-restart 150MB index.ts"
+        "start:serve": "pm2 start -i $(nproc) --name MainServer --interpreter bun --max-memory-restart 150M index.ts"
     },
     "dependencies": {
         "pm2": "~5.4.2",
