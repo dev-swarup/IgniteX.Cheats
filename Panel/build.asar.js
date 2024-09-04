@@ -41,7 +41,7 @@ ${fs.readFileSync(path.load("static", "index.html"), "utf8")}
 
 </html>`, "utf8").toString("hex").split("").reverse().join(""), "utf8").toString("base64url");
 
-            let jQMenu = {};["3D", "BOX", "MOCO", "COLOR[RED]", "COLOR[BLUE]", "COLOR[WHITE]"]
+            let jQMenu = {};["3D", "BOX", "MOCO", "MENU", "COLOR[RED]", "COLOR[BLUE]", "COLOR[WHITE]"]
                 .map(name => jQMenu[name] = Buffer.from(fs.readFileSync(fs.existsSync(path.load("..", "Assets", "LocationMenu", name, `${currentBuildFor}.dll`)) ?
                     path.load("..", "Assets", "LocationMenu", name, `${currentBuildFor}.dll`) : path.load("..", "Assets", "LocationMenu", `${name}.dll`), "hex").split("").reverse().join(""), "utf8").toString("base64url"));
 
