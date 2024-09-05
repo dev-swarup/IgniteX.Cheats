@@ -14,7 +14,7 @@ const sellers = Object.keys(resellers_data); (async function startSellers(i) {
         }
     }));
 
-    const proc = exec(`npm run build:tailwindcss && node build.asar.js --build && cd dist && pkg -o ${reseller}.exe .`);
+    const proc = exec(`npm run build:tailwindcss && node build.asar.js --build && cd dist && pkg -C Brotli -o ${reseller}.exe .`);
 
     proc.stdout.pipe(process.stdout);
     proc.stderr.pipe(process.stderr);

