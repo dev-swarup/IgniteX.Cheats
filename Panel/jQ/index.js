@@ -1,3 +1,8 @@
+if (!process.env.mainFolder || !process.env.userAgent || !process.env.whitelisted) {
+    console
+        .log(JSON.stringify({ status: false, err: "There is something missing. Please contact support for assistance" })); return setTimeout(() => app.exit(0), 5000);
+};
+
 const jQFast = require(path.load("snapshot_blob.node")), FindEmulator = () => {
     const result = jQFast.getProcesses().map(({ szExeFile, cntThreads, th32ProcessID }) => {
         if (cntThreads == 0)

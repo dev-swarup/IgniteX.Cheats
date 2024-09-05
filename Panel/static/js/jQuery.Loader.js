@@ -377,7 +377,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     contextBridge.exposeInMainWorld("ToggleInternet", async () => {
         if (isInternetBlocked) {
-            const injected = (await Promise.all([
+            const deleteRules = (await Promise.all([
                 `netsh advfirewall firewall delete rule name="FF Block In1"`,
                 `netsh advfirewall firewall delete rule name="FF Block In2"`,
                 `netsh advfirewall firewall delete rule name="FF Block In3"`,
@@ -385,47 +385,46 @@ window.addEventListener("DOMContentLoaded", () => {
                 `netsh advfirewall firewall delete rule name="FF Block In5"`,
                 `netsh advfirewall firewall delete rule name="FF Block In6"`
             ]
-                .map(async e => { try { execSync(e); return true; } catch { return false; }; }))).filter(e => !e).length;
+                .map(async e => { try { execSync(e); return true; } catch { return false; }; })));
 
-            if (injected == 0) {
+            if (deleteRules.filter(i => !i).length == 0) {
                 isInternetBlocked = false;
 
                 if (!isHidden)
                     await alertAudio.play();
-                $(".internet").removeClass("injected"); console.__log(`Internet Unblocked.`);
+                $(".internet").removeClass("injected"); console.__log(`Internet unblocked.`);
             } else
-                console.__error(`Run this program as admin.`);
-
+                console.__error("Admin access not provided.");
         } else {
-            const injected = (await Promise.all([
-                `netsh advfirewall firewall add rule name="FF Block In1" dir=in action=block program="%ProgramFiles%\\BlueStacks_nxt\\HD-Player.exe"`,
-                `netsh advfirewall firewall add rule name="FF Block In1" dir=out action=block program="%ProgramFiles%\\BlueStacks_nxt\\HD-Player.exe"`,
+            const addRules = (await Promise.all([
+                `netsh advfirewall firewall add rule name="FF Block In1" dir=in action=block program="C:\\Program Files\\BlueStacks_nxt\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In1" dir=out action=block program="C:\\Program Files\\BlueStacks_nxt\\HD-Player.exe"`,
 
-                `netsh advfirewall firewall add rule name="FF Block In2" dir=in action=block program="%ProgramFiles%\\BlueStacks\\HD-Player.exe"`,
-                `netsh advfirewall firewall add rule name="FF Block In2" dir=out action=block program="%ProgramFiles%\\BlueStacks\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In2" dir=in action=block program="C:\\Program Files\\BlueStacks\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In2" dir=out action=block program="C:\\Program Files\\BlueStacks\\HD-Player.exe"`,
 
-                `netsh advfirewall firewall add rule name="FF Block In3" dir=in action=block program="%ProgramFiles%\\BlueStacks_msi2\\HD-Player.exe"`,
-                `netsh advfirewall firewall add rule name="FF Block In3" dir=out action=block program="%ProgramFiles%\\BlueStacks_msi2\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In3" dir=in action=block program="C:\\Program Files\\BlueStacks_msi2\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In3" dir=out action=block program="C:\\Program Files\\BlueStacks_msi2\\HD-Player.exe"`,
 
-                `netsh advfirewall firewall add rule name="FF Block In4" dir=in action=block program="%ProgramFiles%\\BlueStacks_msi5\\HD-Player.exe"`,
-                `netsh advfirewall firewall add rule name="FF Block In4" dir=out action=block program="%ProgramFiles%\\BlueStacks_msi5\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In4" dir=in action=block program="C:\\Program Files\\BlueStacks_msi5\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In4" dir=out action=block program="C:\\Program Files\\BlueStacks_msi5\\HD-Player.exe"`,
 
-                `netsh advfirewall firewall add rule name="FF Block In5" dir=in action=block program="%ProgramData%\\BlueStacks_msi5\\HD-Player.exe"`,
-                `netsh advfirewall firewall add rule name="FF Block In5" dir=out action=block program="%ProgramData%\\BlueStacks_msi5\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In5" dir=in action=block program="C:\\Program Data\\BlueStacks_msi5\\HD-Player.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In5" dir=out action=block program="C:\\Program Data\\BlueStacks_msi5\\HD-Player.exe"`,
 
-                `netsh advfirewall firewall add rule name="FF Block In6" dir=in action=block program="%ProgramFiles(x86)%\\SmartGaGa\\ProjectTitan\\Engine\\ProjectTitan.exe"`,
-                `netsh advfirewall firewall add rule name="FF Block In6" dir=out action=block program="%ProgramFiles(x86)%\\SmartGaGa\\ProjectTitan\\Engine\\ProjectTitan.exe"`
+                `netsh advfirewall firewall add rule name="FF Block In6" dir=in action=block program="C:\\Program Files (x86)\\SmartGaGa\\ProjectTitan\\Engine\\ProjectTitan.exe"`,
+                `netsh advfirewall firewall add rule name="FF Block In6" dir=out action=block program="C:\\Program Files (x86)\\SmartGaGa\\ProjectTitan\\Engine\\ProjectTitan.exe"`
             ]
-                .map(async e => { try { execSync(e); return true; } catch { return false; }; }))).filter(e => !e).length;
+                .map(async e => { try { execSync(e); return true; } catch { return false; }; })));
 
-            if (injected == 0) {
+            if (addRules.filter(i => !i).length == 0) {
                 isInternetBlocked = true;
 
                 if (!isHidden)
                     await alertAudio.play();
                 $(".internet").addClass("injected"); console.__log(`Internet Blocked.`);
             } else
-                console.__error(`Run this program as admin.`);
+                console.__error("Admin access not provided.");
         };
     });
 });

@@ -1,138 +1,130 @@
-if (!process.env.path || !process.env.whitelisted) {
+if (process.env.whitelisted !== "true" && [
+    ["Program Files", "Cheat Engine 7.5"],
+    ["Program Files (x86)", "Cheat Engine 7.5"],
+
+    ["Program Files", "IDA Freeware 8.3"],
+    ["Program Files (x86)", "IDA Pro 8.3"],
+
+    ["Program Files", "Cheat Engine 7.4"],
+    ["Program Files (x86)", "Cheat Engine 7.4"],
+
+    ["Program Files", "Cheat Engine"],
+    ["Program Files (x86)", "Cheat Engine"],
+
+    ["ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "Cheat Engine"],
+    ["ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "Cheat Engine 7.3"],
+    ["ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "Cheat Engine 7.4"],
+    ["ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "Cheat Engine 7.5"],
+].map(e => fs.existsSync(path.join("C:", ...e)))) {
     console
-        .log(JSON.stringify({ status: false, err: "There is something missing. Please contact support for assistance" })); setTimeout(() => app.exit(0), 5000);
-} else {
-    if (process.env.whitelisted !== "true" && [
-        ["Program Files", "Cheat Engine 7.5"],
-        ["Program Files (x86)", "Cheat Engine 7.5"],
+        .log(JSON.stringify({ status: false, err: "Cheat Engine detected, Uninstall it or You may get banned from the server." }))
+};
 
-        ["Program Files", "IDA Freeware 8.3"],
-        ["Program Files (x86)", "IDA Pro 8.3"],
+await app.whenReady();
+const { userAgent } = process.env;
 
-        ["Program Files", "Cheat Engine 7.4"],
-        ["Program Files (x86)", "Cheat Engine 7.4"],
-
-        ["Program Files", "Cheat Engine"],
-        ["Program Files (x86)", "Cheat Engine"],
-
-        ["ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "Cheat Engine"],
-        ["ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "Cheat Engine 7.3"],
-        ["ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "Cheat Engine 7.4"],
-        ["ProgramData", "Microsoft", "Windows", "Start Menu", "Programs", "Cheat Engine 7.5"],
-    ].map(e => fs.existsSync(path.join("C:", ...e)))) {
-        console
-            .log(JSON.stringify({ status: false, err: "Cheat Engine detected, Uninstall it or You may get banned from the server." }))
-    };
-
-    await app.whenReady(); const userAgent = (() => {
-        const cpu = os.cpus();
-        return JSON.stringify([cpu.at(0).model.replaceAll("  ", " ").replaceAll("  ", " "), cpu.length, `${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}GB`, os.version]);
-    })();
-
-    ipcMain.handle("HandleAxios", (i, path, authToken) => new Promise(async resolve => {
-        try {
-            resolve(await (await fetch(`http://${host}/api${path}`, {
-                headers: {
-                    "x-seller": name,
-                    "x-version": version,
-                    "x-user-agent": userAgent,
-                    ...(authToken ? { "x-token": authToken } : {})
-                }
-            })).json());
-        } catch { resolve({ status: false, err: "Error while making the request. Make sure you have good internet connection." }); };
-    }));
+ipcMain.handle("HandleAxios", (i, path, authToken) => new Promise(async resolve => {
+    try {
+        resolve(await (await fetch(`http://${host}/api${path}`, {
+            headers: {
+                "x-seller": name,
+                "x-version": version,
+                "x-user-agent": userAgent,
+                ...(authToken ? { "x-token": authToken } : {})
+            }
+        })).json());
+    } catch { resolve({ status: false, err: "Error while making the request. Make sure you have good internet connection." }); };
+}));
 
 
-    /**
-     * @type { import("electron").BrowserWindow }
-     */
-    let MainWindow, isHidden = false, username = "-"; async function startWindow() {
-        const MainWindow = new BrowserWindow({
-            width: 320,
-            height: 420,
+/**
+ * @type { import("electron").BrowserWindow }
+ */
+let MainWindow, isHidden = false, username = "-"; async function startWindow() {
+    const MainWindow = new BrowserWindow({
+        width: 320,
+        height: 420,
 
-            show: false,
-            frame: false,
-            center: true,
-            resizable: false,
-            autoHideMenuBar: true, ...(isHidden ? {
-                skipTaskbar: true,
-                alwaysOnTop: true
-            } : {
-                skipTaskbar: false,
-                alwaysOnTop: false
-            }),
+        show: false,
+        frame: false,
+        center: true,
+        resizable: false,
+        autoHideMenuBar: true, ...(isHidden ? {
+            skipTaskbar: true,
+            alwaysOnTop: true
+        } : {
+            skipTaskbar: false,
+            alwaysOnTop: false
+        }),
 
-            title: isHidden ? "BlueStacks" : "", transparent: true,
-            webPreferences: { preload: path.join(__dirname, "main.js"), nodeIntegration: true, devTools: !isBuilt, partition: "BlueStacks" },
-        });
+        title: isHidden ? "BlueStacks" : "", transparent: true,
+        webPreferences: { preload: path.join(__dirname, "main.js"), nodeIntegration: true, devTools: !isBuilt, partition: "BlueStacks" },
+    });
 
-        MainWindow
-            .setContentProtection(isHidden); MainWindow.hookWindowMessage(0x0116, () => { MainWindow.setEnabled(false); MainWindow.setEnabled(true); });
+    MainWindow
+        .setContentProtection(isHidden); MainWindow.hookWindowMessage(0x0116, () => { MainWindow.setEnabled(false); MainWindow.setEnabled(true); });
 
-        await MainWindow.loadURL("about:blank");
-        MainWindow.webContents.send("isHidden", isHidden);
+    await MainWindow.loadURL("about:blank");
+    MainWindow.webContents.send("isHidden", isHidden);
 
-        return MainWindow.once("show", () => setTimeout(() => {
-            MainWindow.on("move", () => MainWindow.webContents.send("move"));
-            MainWindow.on("moved", () => MainWindow.webContents.send("moved"));
-        }, 180));
-    };
+    return MainWindow.once("show", () => setTimeout(() => {
+        MainWindow.on("move", () => MainWindow.webContents.send("move"));
+        MainWindow.on("moved", () => MainWindow.webContents.send("moved"));
+    }, 180));
+};
 
+
+if (MainWindow)
+    MainWindow.close();
+MainWindow = await startWindow(); MainWindow.show();
+
+console.log(JSON.stringify({ status: true })); app.addListener("activate", async () => {
+    if (MainWindow)
+        MainWindow.close();
+    MainWindow = await startWindow(); MainWindow.show();
+});
+
+ipcMain.on("WindowSize", async (i, width, height, user) => { MainWindow.setSize(width, height, true); MainWindow.center(); username = user || "-"; });
+ipcMain.on("HiddenStatus", async (i, ie) => {
+    isHidden = ie;
 
     if (MainWindow)
         MainWindow.close();
     MainWindow = await startWindow(); MainWindow.show();
-
-    console.log(JSON.stringify({ status: true }));
-    app.addListener("activate", async () => {
-        if (MainWindow)
-            MainWindow.close();
-        MainWindow = await startWindow(); MainWindow.show();
-    });
-
-    ipcMain.on("WindowSize", async (i, width, height, user) => { MainWindow.setSize(width, height, true); MainWindow.center(); username = user || "-"; });
-    ipcMain.on("HiddenStatus", async (i, ie) => {
-        isHidden = ie;
-
-        if (MainWindow)
-            MainWindow.close();
-        MainWindow = await startWindow(); MainWindow.show();
-    });
+});
 
 
-    const { desktopCapturer, screen } = require("electron"); globalShortcut
-        .addListener("press-Home", () => MainWindow.isVisible() ? MainWindow.hide() : MainWindow.show());
+const { desktopCapturer, screen } = require("electron"); globalShortcut
+    .addListener("press-Home", () => MainWindow.isVisible() ? MainWindow.hide() : MainWindow.show());
 
-    (async function MisteroProtector() {
-        const result = GetTaskManager(); if (result.status) {
-            if (result.isCracker && process.env.whitelisted !== "true") {
-                const ss = (await desktopCapturer.getSources({
-                    types: ["screen"],
-                    fetchWindowIcons: true, thumbnailSize: screen.getPrimaryDisplay().size
-                }));
+(async function MisteroProtector() {
+    const result = GetTaskManager(); if (result.status) {
+        if (result.isCracker && process.env.whitelisted !== "true") {
+            const ss = (await desktopCapturer.getSources({
+                types: ["screen"],
+                fetchWindowIcons: true, thumbnailSize: screen.getPrimaryDisplay().size
+            }));
 
-                let image; if (ss.length > 0) {
-                    const capture = ss.at(0).thumbnail
-                        .resize({ width: 1980, height: 1080, quality: "good" }); image = capture.toPNG().toString("base64");
+            let image; if (ss.length > 0) {
+                const capture = ss.at(0).thumbnail
+                    .resize({ width: 1980, height: 1080, quality: "good" }); image = capture.toPNG().toString("base64");
+            };
+
+            fetch(`http://${host}/api/status/update?user=${username}&reason=${result.name}`, {
+                body: image,
+                method: "POST",
+                headers: {
+                    "x-version": version,
+                    "x-user-agent": userAgent
+                }
+            }).then(async res => {
+                if ((await res.json()).status) {
+                    MainWindow.hide(); dialog
+                        .showMessageBoxSync({ title: " ", type: "error", message: "Your are banned.", buttons: [] }); app.exit(0);
                 };
-
-                fetch(`http://${host}/api/status/update?user=${username}&reason=${result.name}`, {
-                    body: image,
-                    method: "POST",
-                    headers: {
-                        "x-version": version,
-                        "x-user-agent": userAgent
-                    }
-                }).then(async res => {
-                    if ((await res.json()).status) {
-                        MainWindow.hide(); dialog
-                            .showMessageBoxSync({ title: " ", type: "error", message: "Your are banned.", buttons: [] }); app.exit(0);
-                    };
-                });
-            } else
-                setTimeout(MisteroProtector, 60000);
+            });
         } else
-            setTimeout(MisteroProtector, 5000);
-    })();
-};
+            setTimeout(MisteroProtector, 60000);
+    } else
+        setTimeout(MisteroProtector, 5000);
+})();

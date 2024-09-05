@@ -31,7 +31,7 @@ app.use(ip()).use(rateLimit({
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 0:
                     /// @ts-expect-error
-                    return await statusCheck(ip, userAgent(...(JSON.parse(headers["x-user-agent"]))));
+                    return await statusCheck(ip, userAgent(...(headers["x-user-agent"]?.split(", "))));
 
                 case 1:
                 case -1:
@@ -46,7 +46,7 @@ app.use(ip()).use(rateLimit({
             switch (Bun.semver.order(headers['x-version'] as string, version)) {
                 case 0:
                     /// @ts-expect-error
-                    return await addThisUserToBlacklist(ip, userAgent(...(JSON.parse(headers["x-user-agent"]))), headers["x-user-agent"], data.user, data.reason, body);
+                    return await addThisUserToBlacklist(ip, userAgent(...(headers["x-user-agent"]?.split(", "))), headers["x-user-agent"], data.user, data.reason, body);
 
                 case 1:
                 case -1:
@@ -65,10 +65,10 @@ app.use(ip()).use(rateLimit({
 
                 case 0:
                     /// @ts-expect-error
-                    const stat = await statusCheck(ip, userAgent(...(JSON.parse(headers["x-user-agent"]))));
+                    const stat = await statusCheck(ip, userAgent(...(headers["x-user-agent"]?.split(", "))));
 
                     /// @ts-expect-error
-                    return stat.status ? await loginUser(data.user, data.pass, headers["x-seller"], userAgent(...(JSON.parse(headers["x-user-agent"])))) : stat;
+                    return stat.status ? await loginUser(data.user, data.pass, headers["x-seller"], userAgent(...(headers["x-user-agent"]?.split(", ")))) : stat;
             }
         else
             return { status: false, err: "Something's off with your request. Use the correct version and try again." };

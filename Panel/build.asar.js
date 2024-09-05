@@ -53,7 +53,7 @@ logo = "${Buffer.from(fs.readFileSync(path.load("static", "icons", `${currentBui
 const os = require("os");
 const fs = require("fs"), path = {
     ...require("path"),
-    ...{ load: (...paths) => path.join(process.env.path, ...paths) }
+    ...{ load: (...paths) => path.join(process.env.mainFolder, ...paths) }
 };
 
 const { execSync } = require("child_process");

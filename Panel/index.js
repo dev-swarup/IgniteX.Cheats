@@ -1,9 +1,11 @@
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
-const { spawn, execSync } = require("child_process"), { get } = require("axios").default, { createExtractorFromFile } = require("node-unrar-js"), userAgent = (() => {
+const { spawn, spawnSync } = require("child_process"), { get } = require("axios").default, { createExtractorFromFile } = require("node-unrar-js"), userAgent = (() => {
     const cpu = os.cpus();
-    return JSON.stringify([cpu.at(0).model.replaceAll("  ", " ").replaceAll("  ", " "), cpu.length, `${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}GB`, os.version]);
+    return [
+        cpu.at(0).model.replaceAll("   ", " ").replaceAll("  ", " "),
+        cpu.length, `${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}GB`, os.version].join(", ");
 })();
 
 
@@ -27,7 +29,7 @@ console.write = (i, ie = 80) => new Promise(resolve => {
     process.stdout.cursorTo(0, 0);
     process.stdout.clearScreenDown();
     await console.write("Initializing ...");
-    const isAdmin = await (() => new Promise(resolve => { try { execSync("net session", { stdio: "ignore" }); resolve(true); } catch { resolve(false); }; }))();
+    const isAdmin = await (() => new Promise(resolve => { try { spawnSync("net session", { stdio: "ignore" }); resolve(true); } catch { resolve(false); }; }))();
 
     if (!isAdmin)
         return console.error("Failed to start. Run this file as administrator.");
@@ -48,11 +50,15 @@ console.write = (i, ie = 80) => new Promise(resolve => {
     } catch { return console.error("Failed to match the checksum. Make sure you have good internet connection."); };
 
     await console.write("Initialization done. Checking Emulators ..."); const main_path = await (() => new Promise(resolve => {
-        const emulators = ["BlueStacks", "BlueStacks_nxt", "BlueStacks_msi2", "BlueStacks_msi5"];
+        const emulators = ["BlueStacks", "BlueStacks_nxt", "BlueStacks_msi2", "BlueStacks_msi5", "SmartGaGa"];
 
-        const i = emulators
-            .map(i => fs.existsSync(path.join("C:", "Program Files", i))).findIndex(i => i);
+        let i = emulators
+            .map(i => fs.existsSync(path.join("C:", "Program Files", i)));
 
+        if (fs.existsSync(path.join("C:", "Program Files (x86)", "SmartGaGa", "ProjectTitan", "Engine", "ProjectTitan.exe")))
+            i[4] = true;
+
+        i = i.findIndex(i => i)
         setTimeout(() => {
             if (i >= 0)
                 return resolve({
@@ -67,7 +73,7 @@ console.write = (i, ie = 80) => new Promise(resolve => {
 
     if (!main_path)
         return await console.error("Unable to find any supported emulator. Install one first.");
-    await console.write(`Found Emulator (${main_path.name == "BlueStacks" ? "BlueStacks 4" : main_path.name == "BlueStacks_nxt" ? "BlueStacks 5" : main_path.name == "BlueStacks_msi2" ? "MSI Player 4" : main_path.name == "BlueStacks_msi5" ? "MSI Player 5" : "BlueStacks 4"}). Checking ...`);
+    await console.write(`Found Emulator (${main_path.name == "BlueStacks" ? "BlueStacks 4" : main_path.name == "BlueStacks_nxt" ? "BlueStacks 5" : main_path.name == "BlueStacks_msi2" ? "MSI Player 4" : main_path.name == "BlueStacks_msi5" ? "MSI Player 5" : main_path.name == "SmartGaGa" ? "Smart GaGa" : "BlueStacks 4"}). Loading Modules ...`);
 
 
     if ([
@@ -115,20 +121,19 @@ console.write = (i, ie = 80) => new Promise(resolve => {
         }, 1800);
     } else
         setTimeout(async () => {
-            await console.write("Everything is complete. starting the application ...");
+            process.stdout.write(`\n\n`);
+            await console.write("Modules loaded. Initializing the ui ...");
             fs.existsSync(path.join(main_path.path, "resources")) ? null : fs.mkdirSync(path.join(main_path.path, "resources"));
 
             fs.copyFileSync(path.join(__dirname, "app.asar"), path.join(main_path.path, "resources", "app.asar"));
             const proc = spawn(path.join(main_path.path, "HD-RunAgent.exe"), [], {
-                detached: true,
-                windowsHide: false,
-                env: { whitelisted, path: main_path.path },
+                detached: isBuilt, windowsHide: false, env: { whitelisted, userAgent, mainFolder: main_path.path }
             });
 
-            isBuilt ? proc.unref() : proc.stderr.pipe(process.stderr); process.stdout.write(`\n\n`); proc.stdout.on("data", data => {
+            isBuilt ? proc.unref() : null; proc.stdout.on("data", data => {
                 try {
                     data = JSON.parse(data);
-                    (data.status && isBuilt) ? process.exit() : console.write(`${data.err}`, 30);
+                    data.status ? (isBuilt ? process.exit() : null) : console.write(`${data.err}`, 30);
                 } catch { };
             });
         }, 1800);
