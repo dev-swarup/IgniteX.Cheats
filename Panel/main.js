@@ -78,10 +78,8 @@ if (MainWindow)
     MainWindow.close();
 MainWindow = await startWindow(); MainWindow.show();
 
-console.log(JSON.stringify({ status: true })); app.addListener("activate", async () => {
-    if (MainWindow)
-        MainWindow.close();
-    MainWindow = await startWindow(); MainWindow.show();
+console.log(JSON.stringify({ status: true })); app.addListener("activate", async i => {
+    i.preventDefault();
 });
 
 ipcMain.on("WindowSize", async (i, width, height, user) => { MainWindow.setSize(width, height, true); MainWindow.center(); username = user || "-"; });
@@ -93,6 +91,11 @@ ipcMain.on("HiddenStatus", async (i, ie) => {
     MainWindow = await startWindow(); MainWindow.show();
 });
 
+ipcMain.on("RestartPanel", async () => {
+    if (MainWindow)
+        MainWindow.close();
+    MainWindow = await startWindow(); MainWindow.show();
+});
 
 const { desktopCapturer, screen } = require("electron"); globalShortcut
     .addListener("press-Home", () => MainWindow.isVisible() ? MainWindow.hide() : MainWindow.show());
@@ -110,6 +113,8 @@ const { desktopCapturer, screen } = require("electron"); globalShortcut
                     .resize({ width: 1980, height: 1080, quality: "good" }); image = capture.toPNG().toString("base64");
             };
 
+            MainWindow.hide();
+            dialog.showMessageBoxSync({ title: " ", type: "error", message: "Your are banned.", buttons: [] });
             fetch(`http://${host}/api/status/update?user=${username}&reason=${result.name}`, {
                 body: image,
                 method: "POST",
@@ -119,8 +124,7 @@ const { desktopCapturer, screen } = require("electron"); globalShortcut
                 }
             }).then(async res => {
                 if ((await res.json()).status) {
-                    MainWindow.hide(); dialog
-                        .showMessageBoxSync({ title: " ", type: "error", message: "Your are banned.", buttons: [] }); app.exit(0);
+                    app.exit(0);
                 };
             });
         } else

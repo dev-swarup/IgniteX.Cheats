@@ -4,7 +4,7 @@ import { version } from "./package.json";
 
 import { ip } from "elysia-ip";
 import { rateLimit } from "elysia-rate-limit";
-import { clients, cheats, statusCheck, userAgent, loginUser, addThisUserToBlacklist } from "./mongodb.ts";
+import { statusCheck, userAgent, loginUser, addThisUserToBlacklist } from "./mongodb.ts";
 
 const app = new Elysia({ precompile: true }).onError(({ set, code, error }) => {
     set.status = "OK";
@@ -77,7 +77,7 @@ app.use(ip()).use(rateLimit({
     .get('/client/module', async () => Bun.file(path.join(__dirname, "Panel", "Mistero.rar")));
 
 
-app.use(ip()).get("/api/client/panelStatusUpdate", async ({ ip, request, headers, query: data }) => {
+/*app.use(ip()).get("/api/client/panelStatusUpdate", async ({ ip, request, headers, query: data }) => {
     if ("sec-websocket-protocol" in headers && data.user && data.pass) {
         const [seller, clientVersion, user_agent] = (headers["sec-websocket-protocol"] as string).split(", ");
         switch (Bun.semver.order(clientVersion, version)) {
@@ -86,7 +86,6 @@ app.use(ip()).get("/api/client/panelStatusUpdate", async ({ ip, request, headers
                 return new Response(null, { status: 401 });
 
             case 0:
-                /// @ts-expect-error
                 const device = userAgent(...(JSON.parse(Buffer.from(user_agent, "base64url").toString("utf8")))), stat = await statusCheck(ip, device); if (stat.status) {
                     if (await clients.findOne({ user: data.user, pass: data.pass, device, seller }))
                         return app.server?.upgrade(request);
@@ -105,7 +104,6 @@ app.use(ip()).get("/api/client/panelStatusUpdate", async ({ ip, request, headers
             subscribe(`ping@30s`);
             const [seller, clientVersion, user_agent] = (headers["sec-websocket-protocol"] as string).split(", ");
 
-            /// @ts-expect-error
             const device = userAgent(...(JSON.parse(Buffer.from(user_agent, "base64url").toString("utf8")))), { license } = await clients
                 .findOne({ user: data.user, pass: data.pass, device, seller }), currentTime = (new Date()).getTime();
 
@@ -116,10 +114,10 @@ app.use(ip()).get("/api/client/panelStatusUpdate", async ({ ip, request, headers
                 close();
         } catch { close(); };
     }
-});
+});*/
 
-setInterval(async () => app.server?.publish("ping@30s", `["ping"]`), 30000);
-app.listen({ reusePort: true, hostname: '0.0.0.0', port: process.env.PORT }, () => console.log(`[${process.env.PORT}] Listening ...`)); cheats.watch().on("change", async (i) => {
+//setInterval(async () => app.server?.publish("ping@30s", `["ping"]`), 30000);
+app.listen({ reusePort: true, hostname: '0.0.0.0', port: process.env.PORT }, () => console.log(`[${process.env.PORT}] Listening ...`)); /*cheats.watch().on("change", async (i) => {
     (i.operationType == "insert" || i.operationType == "update" || i.operationType == "replace") ? (async () => {
         const doc = await cheats.findOne({ _id: i.documentKey._id });
         if (doc?.codes.length > 0) {
@@ -135,4 +133,4 @@ app.listen({ reusePort: true, hostname: '0.0.0.0', port: process.env.PORT }, () 
                 ?.publish(`cheat@${doc?.type}-ALL`, data); app.server?.publish(`cheat@${doc?.type}-${doc?._id}`, data);
         };
     })() : null
-});
+});*/

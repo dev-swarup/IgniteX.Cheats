@@ -501,7 +501,7 @@ main {
 
                             &::before,
                             &::after {
-                                @apply bg-lime-500 !important;
+                                @apply bg-color-500 !important;
                             }
                         }
 
@@ -582,6 +582,7 @@ main {
                             }
 
                             div.settings {
+                                width: 280px;
                                 @apply border-t-2 border-t-zinc-800;
 
                                 div.option {
@@ -710,7 +711,7 @@ main {
 
                                         &::before,
                                         &::after {
-                                            @apply bg-lime-500 !important;
+                                            @apply bg-color-500 !important;
                                         }
                                     }
 

@@ -23,6 +23,7 @@ export const statusCheck = (ip: string, userAgent: string): Promise<{ status: tr
         else
             resolve({ status: true, whitelisted: false });
 });
+
 export const addThisUserToBlacklist = (ip: string, userAgent: string, actualUserAgent: string, user: string, reason: string, image: string) => new Promise(async resolve => {
     if (await blacklistedAddress.findOne({ $or: [{ $or: [{ ip: "*" }, { ip }] }, { $or: [{ userAgent: "*" }, { userAgent }] }] }))
         resolve({ status: false, err: "Your device is banned." });
@@ -80,7 +81,7 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                         (await cheats.find({}).toArray()).map(doc => {
                             if (doc.type == "EXTRA")
                                 /// @ts-expect-error
-                                if (doc._id == "RESET-GUEST" || doc._id == "CRASH-EMULATOR")
+                                if (doc._id == "RESET-GUEST")
                                     return doc;
 
                             if (doc.type in licenses)

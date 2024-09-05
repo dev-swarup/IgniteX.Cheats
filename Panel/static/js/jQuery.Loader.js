@@ -10,7 +10,7 @@ const addZero = n => n < 10 ? `0${n}` : `${n}`,
         const current_time = new Date(time || new Date());
         const current_hours = current_time.getHours();
 
-        return `${addZero(current_hours > 12 ? current_hours - 12 : current_hours)}:${addZero(current_time.getMinutes())}:${addZero(current_time.getSeconds())} ${current_hours >= 12 ? 'PM' : 'AM'}`;
+        return `${addZero(current_hours > 12 ? current_hours - 12 : current_hours)}:${addZero(current_time.getMinutes())} ${current_hours >= 12 ? 'PM' : 'AM'}`;
     };
 
 let IWantButton, logged, cheat_codes, isHidden, isInternetBlocked = false,
@@ -99,7 +99,7 @@ contextBridge.exposeInMainWorld("InitLogin", async () => {
 
                                     if (!isHidden)
                                         await alertAudio.play();
-                                    (async function reconnectUpdater() {
+                                    /*(async function reconnectUpdater() {
                                         const statusUpdate = new WebSocket(`ws://${host}/api/client/panelStatusUpdate?user=${user}&pass=${pass}`, [
                                             name, version, Buffer.from((() => {
                                                 const cpu = os.cpus();
@@ -132,7 +132,7 @@ contextBridge.exposeInMainWorld("InitLogin", async () => {
                                                 };
                                             } catch { };
                                         });
-                                    })();
+                                    })();*/
                                 }, 100);
                             } else {
                                 span.removeClass('hidden'); svg
@@ -370,6 +370,7 @@ window.addEventListener("DOMContentLoaded", () => {
             menu.removeClass('injected');
     });
 
+    contextBridge.exposeInMainWorld("RestartPanel", () => ipcRenderer.send("RestartPanel"));
     contextBridge.exposeInMainWorld("ToggleStreamer", () => {
         isHidden = !isHidden;
         ipcRenderer.send("HiddenStatus", isHidden);
