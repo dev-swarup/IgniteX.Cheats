@@ -60,6 +60,10 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                     if (activeLicenses.length == 0)
                         return resolve({ status: false, err: "Subscription expired. Renew to continue." });
 
+                    const expiry = activeLicenses.at(0).time;
+                    if (client.paidFor !== process.env.OB_VERSION && expiry == "LIFETIME")
+                        return resolve({ status: false, err: "OB Subscription expired. Pay your OB Update Fee to continue." });
+
                     if (client.device === "-")
                         try {
                             await clients.findOneAndReplace({ _id: client._id }, { ...client, device });
@@ -98,7 +102,7 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                         return resolve({
                             status: true, data: {
                                 codes: Buffer.from(Buffer
-                                    .from(JSON.stringify(codes), "utf8").toString("base64url").split("").reverse().join("~"), "utf8").toString("hex"), locations: client.locations, license: activeLicenses.map(e => ({ page: e.page, name: e.name })), expiry: activeLicenses.at(0).time
+                                    .from(JSON.stringify(codes), "utf8").toString("base64url").split("").reverse().join("~"), "utf8").toString("hex"), locations: client.locations, license: activeLicenses.map(e => ({ page: e.page, name: e.name })), expiry
                             }
                         });
                     } catch (err) {
