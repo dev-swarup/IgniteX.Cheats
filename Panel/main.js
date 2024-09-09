@@ -1,4 +1,4 @@
-if (process.env.whitelisted !== "true" && [
+if (!isAdmin && process.env.whitelisted !== "true" && [
     ["Program Files", "Cheat Engine 7.5"],
     ["Program Files (x86)", "Cheat Engine 7.5"],
 
@@ -23,14 +23,13 @@ if (process.env.whitelisted !== "true" && [
 await app.whenReady();
 const { userAgent } = process.env;
 
-ipcMain.handle("HandleAxios", (i, path, authToken) => new Promise(async resolve => {
+ipcMain.handle("HandleAxios", (i, path) => new Promise(async resolve => {
     try {
         resolve(await (await fetch(`http://${host}/api${path}`, {
             headers: {
                 "x-seller": name,
                 "x-version": version,
-                "x-user-agent": userAgent,
-                ...(authToken ? { "x-token": authToken } : {})
+                "x-user-agent": userAgent
             }
         })).json());
     } catch { resolve({ status: false, err: "Error while making the request. Make sure you have good internet connection." }); };
@@ -91,6 +90,7 @@ ipcMain.on("HiddenStatus", async (i, ie) => {
     MainWindow = await startWindow(); MainWindow.show();
 });
 
+ipcMain.on("ExitPanel", async () => app.exit(0));
 ipcMain.on("RestartPanel", async () => {
     if (MainWindow)
         MainWindow.close();
@@ -100,35 +100,41 @@ ipcMain.on("RestartPanel", async () => {
 const { desktopCapturer, screen } = require("electron"); globalShortcut
     .addListener("press-Home", () => MainWindow.isVisible() ? MainWindow.hide() : MainWindow.show());
 
-(async function MisteroProtector() {
-    const result = GetTaskManager(); if (result.status) {
-        if (result.isCracker && process.env.whitelisted !== "true") {
-            const ss = (await desktopCapturer.getSources({
-                types: ["screen"],
-                fetchWindowIcons: true, thumbnailSize: screen.getPrimaryDisplay().size
-            }));
+async function reportThisUser(reason) {
+    if (isAdmin)
+        return null;
 
-            let image; if (ss.length > 0) {
-                const capture = ss.at(0).thumbnail
-                    .resize({ width: 1980, height: 1080, quality: "good" }); image = capture.toPNG().toString("base64");
-            };
+    const ss = (await desktopCapturer.getSources({
+        types: ["screen"],
+        fetchWindowIcons: true, thumbnailSize: screen.getPrimaryDisplay().size
+    }));
 
-            MainWindow.hide();
-            dialog.showMessageBoxSync({ title: " ", type: "error", message: "Your are banned.", buttons: [] });
-            fetch(`http://${host}/api/status/update?user=${username}&reason=${result.name}`, {
-                body: image,
-                method: "POST",
-                headers: {
-                    "x-version": version,
-                    "x-user-agent": userAgent
-                }
-            }).then(async res => {
-                if ((await res.json()).status) {
-                    app.exit(0);
-                };
-            });
-        } else
-            setTimeout(MisteroProtector, 60000);
-    } else
-        setTimeout(MisteroProtector, 5000);
+    let image; if (ss.length > 0) {
+        const capture = ss.at(0).thumbnail
+            .resize({ width: 1980, height: 1080, quality: "good" }); image = capture.toPNG().toString("base64");
+    };
+
+    MainWindow.hide();
+    dialog.showMessageBox({ title: " ", type: "error", message: `Your are banned`, buttons: [] });
+
+    return await fetch(`http://${host}/api/status?user=${username}&reason=${reason}`, {
+        body: image,
+        method: "POST",
+        headers: {
+            "x-seller": name,
+            "x-version": version,
+            "x-user-agent": userAgent
+        }
+    }).then(async res => {
+        if ((await res.json()).status)
+            app.exit(0);
+    });
+};
+
+ipcMain.handle("reportThisUser", async (i, reason) => await reportThisUser(reason)); (async function IgniteProcessProtector() {
+    const result = GetTaskManager(); if (result.status)
+        (result.isCracker && process.env.whitelisted !== "true") ? await reportThisUser(`Using ${result.name}`) : null;
+
+    else
+        setTimeout(IgniteProcessProtector, 5000);
 })();

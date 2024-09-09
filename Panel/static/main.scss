@@ -39,8 +39,8 @@ html {
 
 sub {
     top: -5px;
-    left: 5px;
-    opacity: 0.5;
+    left: 3px;
+    opacity: 0.35;
     font-size: 90%;
     font-weight: bold;
 }
@@ -167,6 +167,10 @@ body {
                         }
 
                         &>div menu {
+                            &::after {
+                                @apply text-lime-500;
+                            }
+
                             div {
 
                                 &:hover,
@@ -521,6 +525,17 @@ main {
                             }
                         }
                     }
+
+                    &.statusUpdate {
+                        font-size: 11px;
+                        line-height: 11px;
+                        letter-spacing: 1.8px;
+                        @apply text-red-500;
+
+                        &.connected {
+                            @apply text-lime-500
+                        }
+                    }
                 }
             }
 
@@ -547,7 +562,7 @@ main {
                             flex-direction: column;
 
                             &>div {
-                                @apply px-4;
+                                @apply h-fit px-4;
 
                                 div.option {
                                     @apply side-row mt-3;
@@ -596,8 +611,6 @@ main {
                                             @apply ml-2 rounded-full bg-transparent shadow-color-500;
                                             --tw-shadow-colored: 0 0px 3px 0 var(--tw-shadow-color);
                                             box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-
-
                                         }
                                     }
 
@@ -611,6 +624,10 @@ main {
                                             @apply bg-color-800;
                                         }
                                     }
+
+                                    &:first-child {
+                                        @apply mt-0;
+                                    }
                                 }
                             }
                         }
@@ -620,8 +637,9 @@ main {
 
                             menu {
                                 border: 0.8px;
-                                padding: 10px 8px;
-                                @apply relative mt-4 rounded-md border-solid border-zinc-800/80;
+                                padding: 13px 8px;
+                                margin-top: 13px;
+                                @apply relative rounded-md border-solid border-zinc-800/80;
 
                                 &:before {
                                     content: attr(name);
@@ -638,12 +656,12 @@ main {
                                     content: attr(name);
                                     top: -8px;
                                     left: 10px;
-                                    opacity: 0.30;
+                                    opacity: 0.5;
                                     padding: 0px 5px;
                                     letter-spacing: 1.8px;
 
                                     font-size: 13px;
-                                    @apply bg-black absolute;
+                                    @apply text-color-500 bg-black absolute;
                                 }
 
                                 &[license="false"] {
@@ -656,7 +674,7 @@ main {
 
                                 div {
                                     padding: 5px 0;
-                                    @apply w-full nodrag flex items-center justify-end cursor-pointer;
+                                    @apply nodrag flex relative items-center cursor-pointer;
 
                                     &[license="false"] {
                                         @apply hidden;
@@ -671,7 +689,7 @@ main {
                                         &::after {
                                             top: 0;
                                             width: 6px;
-                                            right: -18px;
+                                            right: -14px;
 
                                             height: 6px;
                                             content: "";
@@ -685,10 +703,14 @@ main {
                                         &::before {
                                             top: -2px;
                                             width: 10px;
-                                            right: -20px;
+                                            right: -16px;
                                             height: 10px;
                                             @apply animate-ping;
                                         }
+                                    }
+
+                                    div {
+                                        @apply absolute right-0;
                                     }
 
                                     &:hover,
@@ -760,15 +782,8 @@ main {
 
                     &[page="AIM"] page#AIM,
                     &[page="USER"] page#USER,
-                    &[page="BRUTAL"] page#BRUTAL,
-                    &[page="EXPERIMENTAL"] page#EXPERIMENTAL {
+                    &[page="BRUTAL"] page#BRUTAL {
                         @apply flex;
-                    }
-
-                    page#EXPERIMENTAL &>div {
-                        &:nth-child(1) {
-                            width: 150%;
-                        }
                     }
                 }
             }

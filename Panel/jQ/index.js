@@ -127,13 +127,10 @@ const InjectValues = (pid, addresses, replaceValue) => new Promise(async resolve
 
     if (Array.isArray(replaceValue))
         return resolve(await Promise.all(replaceValue.map(async (value, i) => {
-            if (Array.isArray(value))
-                if (typeof value[1] == "string")
-                    return Promise.all(addresses.map(address => new Promise(resolve =>
-                        resolve(jQFast.writeBuffer(handle, address + value[0], Buffer.from([Number(`0x${value[1]}`)]))))));
-                else
+            if (Array.isArray(value)) {
+                if (typeof value[0] == "number" && typeof value[1] == "number")
                     return await (() => new Promise(resolve => jQFast.InjectAimBot(handle, addresses, value[0], value[1], resolve)))();
-            else
+            } else
                 return jQFast.writeBuffer(handle, addresses[i], value);
         })));
     else
