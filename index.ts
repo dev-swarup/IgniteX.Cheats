@@ -1,3 +1,4 @@
+/// @ts-nocheck
 import path from "path";
 import { Elysia } from "elysia";
 import { version } from "./package.json";
@@ -23,26 +24,34 @@ const app = new Elysia({ precompile: true }).onError(({ set, code, error }) => {
     maxRequestBodySize: 1024 * 1024 * 3,
 
     fetch: async req => {
-        /// @ts-expect-error
         req.ipAddress = mainApp
             .requestIP(req); return await app.handle(req);
     }, reusePort: true
 });
 
-/// @ts-expect-error
 app.group("/api", app => app.use(ip({ injectServer: () => ({ ...mainApp, requestIP: ({ ipAddress }: Request) => ipAddress }) })).use(rateLimit({
     max: 50,
     headers: false,
     duration: 50000,
     errorResponse: Response.json({ status: false, err: "Too many requests. Temporarily banned for 10 minutes." }),
 
-    /// @ts-expect-error
     injectServer: () => ({ ...mainApp, requestIP: ({ ipAddress }: Request) => ipAddress }), skip: async () => NODE_ENV !== "RUN"
 }))
 
-    .state("seller", "")
-    .state("userAgent", "")
-    .state("matchedVersion", false).state("isWebSocket", false).state("UserAgent", "").derive(({ store, request: { headers } }) => {
+    .onRequest(({ request: { headers } }) => {
+        if (["x-version", "x-seller", "x-user-agent"].map(i => headers[i]).filter(i => !i).length == 0 || ["sec-Websocket-key", "sec-websocket-protocol", "sec-websocket-extensions"].map(i => headers.has(i)).filter(i => !i).length == 0)
+            return null;
+
+        else
+            return Response.json({ status: false, err: "Something's is missing in your request. Use the correct version and try again." });
+    })
+
+    .state<string, string>("seller", null)
+    .state<string, string>("userAgent", null)
+    .state<string, string>("UserAgent", null)
+    .state<string, boolean>("isWebSocket", null)
+    .state<string, boolean>("matchedVersion", null)
+    .derive(({ store, request: { headers } }) => {
         if (["sec-Websocket-key", "sec-websocket-protocol", "sec-websocket-extensions"].map(i => headers.has(i)).filter(i => !i).length == 0) {
             const [socketVersion, seller, actualUserAgent] = headers.get("sec-websocket-protocol")?.split(", ") as string[];
 
