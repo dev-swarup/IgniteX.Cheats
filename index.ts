@@ -39,7 +39,7 @@ app.group("/api", app => app.use(ip({ injectServer: () => ({ ...mainApp, request
 }))
 
     .onRequest(({ request: { headers } }) => {
-        if (["x-version", "x-seller", "x-user-agent"].map(i => headers[i]).filter(i => !i).length == 0 || ["sec-Websocket-key", "sec-websocket-protocol", "sec-websocket-extensions"].map(i => headers.has(i)).filter(i => !i).length == 0)
+        if (["x-version", "x-seller", "x-user-agent"].map(i => headers.has(i)).filter(i => !i).length == 0 || ["sec-Websocket-key", "sec-websocket-protocol", "sec-websocket-extensions"].map(i => headers.has(i)).filter(i => !i).length == 0)
             return null;
 
         else
