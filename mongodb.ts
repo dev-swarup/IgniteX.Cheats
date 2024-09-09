@@ -1,15 +1,14 @@
 const MongoClient = (await (new ((await import("mongodb")).MongoClient)(process.env.MONGODB_URL as string))
-    .connect()).addListener("close", async () => setTimeout(async () => await MongoClient.connect(), 1000)), db = MongoClient.db("MisteroCheats");
+    .connect()).addListener("close", async () => setTimeout(async () => await MongoClient.connect(), 1000)), db = MongoClient.db("db");
 
 const cheats = db.collection("cheats");
 const clients = db.collection("clients");
 const whitelistedAddress = db.collection("whitelistedAddress");
 const blacklistedAddress = db.collection("blacklistedAddress");
 
-export { clients, cheats };
-export const userAgent = (cpu_model: string, cpu_cores: string, totalmem: string, version: string) => {
-    return Buffer.from(Buffer.from(Buffer.from(JSON.stringify({ cpu_model, cpu_cores, totalmem, version }), "utf8")
-        .toString("base64url").split(" ").reverse().join("~"), "utf8").toString("binary").split(" ").reverse().join("~"), "utf8").toString("base64url");
+export const userAgent = (userAgent: string) => {
+    return Buffer.from(Buffer.from(Buffer.from(userAgent).toString("base64")
+        .split("").reverse().join(""), "utf8").toString("hex").split(" ").reverse().join("").concat(process.env.PORT as string), "utf8").toString("base64url");
 };
 
 export const statusCheck = (ip: string, userAgent: string): Promise<{ status: true, whitelisted: boolean } | { status: false, err: string }> => new Promise(async resolve => {
@@ -29,21 +28,80 @@ export const addThisUserToBlacklist = (ip: string, userAgent: string, actualUser
         resolve({ status: false, err: "Your device is banned." });
 
     else {
-        await blacklistedAddress.insertOne({ ip: ip || "*", user, reason, userAgent, device: actualUserAgent, time: `${(new Date()).toDateString()} ${(new Date()).toTimeString()}` });
+        await blacklistedAddress.insertOne({ ip, user, reason, userAgent, device: actualUserAgent, time: `${(new Date()).toDateString()} ${(new Date()).toTimeString()}` });
 
         try {
             const data = new FormData();
-            const [cpuModel, cpuThread, ram] = JSON.parse(actualUserAgent);
-
             data.append('file', new Blob([Uint8Array.from(atob(image), c => c.charCodeAt(0))], { type: 'image/png' }), "image.png");
-            data.append('content', `### ${"`"} USERNAME ${"`"}\t${"```"}${user}${"```"}\n### ${"`"} BAN REASON ${"`"}\t${"```"}${reason}${"```"}\n\n### ${"`"} PUBLIC IP ${"`"}\t${"```"}${ip || "-"}${"```"}\n\n\n### ${"`"} DEVICE INFO ${"`"} ${"```"}${ram} RAM${"```"}\n### ${"```"}${cpuModel.replaceAll("  ", "").replaceAll("  ", "")}${"```"}`);
 
-            await fetch(process.env.DISCORD_HOOK as string, { body: data, method: 'POST', });
-        } catch (err) { console.log(err); }; resolve({ status: true });
+            let content = (user ? `## ${"`"} USERNAME ${"`"}${"```"}${user}${"```"}\n` : "")
+                .concat(`## ${"`"} REASON FOR BAN ${"`"}${"```"}${reason}${"```"}\n\n\n`)
+
+                .concat(`### ${"`"} IP ${"`"}${"```"}${ip}${"```"}\n`)
+                .concat(`### ${"`"} DEVICE INFO ${"`"}${"```"}${actualUserAgent}${"```"}\n`);
+
+            data.append('content', content.concat(`|| @here ||`));
+            await fetch(process.env.DISCORD_URL as string, { body: data, method: 'POST', });
+        } catch { };
+
+        resolve({ status: true });
     };
 });
 
-export const loginUser = (user: string, pass: string, seller: string, device: string): Promise<{ status: true, data: { codes: string, locations: Array<string>, license: Array<{ name: string, page: string, time: number | "LIFETIME" }>, expiry: number | "LIFETIME" } } | { status: false, err: string }> => new Promise(async resolve => {
+
+async function loadCheats(): Promise<Array<{
+    id: string;
+    name: string;
+    page: string;
+    isFree: boolean;
+
+    cheats: Array<string>;
+    status: "safe" | "warn" | "risk";
+}>> {
+    const records: Array<any> = [];
+    (await cheats.find({}).map(({ _id: id, data }) => {
+        /// @ts-expect-error
+        const [page, name] = (id as string).split(".");
+
+        return {
+            page, name: name || "~", data: data.filter(({ cheats }) => cheats.length > 0).map(({ name: id, status, cheats }) => {
+                const [price, name] = id.split("@"); return {
+                    name, status, isFree: price == "FREE", cheats: cheats
+                        .map(i => Buffer.from(Buffer.from(JSON.stringify(i)).toString("base64").split("").reverse().join("")).toString("hex"))
+                };
+            })
+        };
+    }).toArray())
+        .filter(({ data }) => data.length > 0).forEach(({ name, page, data }) => records.push(...data.map(({ name: id, status, cheats, isFree }) => ({
+            page, isFree, status, cheats,
+            name: name == "~" ? id : name, id: `${name == "~" ? "" : name}${name == "~" ? id : `[${id}]`}`
+        }))));
+
+    return records;
+};
+
+let cheat_records = await loadCheats();
+export const cheatListener = new ((await import("events")).EventEmitter)();
+
+
+const cheats_stream = cheats.watch(); (async function timeoutStream() {
+    cheats_stream.on("change", async ({ operationType }) => {
+        if (["insert", "update", "replace"].includes(operationType))
+            cheat_records = await loadCheats();
+    });
+})();
+
+
+export const loginUser = (user: string, pass: string, seller: string, device: string): Promise<{
+    status: true, data: {
+        codes: Array<{
+            name: string;
+            page: string;
+            data: Array<string>;
+            status: "safe" | "warn" | "risk";
+        }>, locations: Array<string>, license: Array<{ name: string, page: string, time: number | "LIFETIME" }>, expiry: number | "LIFETIME"
+    }
+} | { status: false, err: string }> => new Promise(async resolve => {
     try {
         const client = await clients.findOne({ user, seller }); if (client)
             if (client.pass === pass)
@@ -57,7 +115,25 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                             return currentTime <= time ? { status: true, page, name, time } : { status: false };
                     }).filter(e => e.status).sort((i, e) => e.time === "LIFETIME" ? i.time === "LIFETIME" ? 1 : 1 : e.time - i.time);
 
-                    if (activeLicenses.length == 0)
+                    const licenses = {};
+                    activeLicenses.forEach(({ page, name }) =>
+                        licenses[page] ? licenses[page].push(name) : licenses[page] = [name]);
+
+                    const codes = cheat_records.filter(({ name, page, isFree }) => {
+                        if (("FREE" in licenses || activeLicenses.length > 0) && isFree)
+                            return true;
+
+                        if ("ALL" in licenses)
+                            /// @ts-expect-error
+                            return (licenses["ALL"].includes("ALL") || licenses[page].includes(name));
+
+                        if (page in licenses)
+                            return (licenses[page].includes("ALL") || licenses[page].includes(name));
+                        else
+                            return false;
+                    }).map(({ id, page, status, cheats }) => ({ name: id, page, status, data: cheats }));
+
+                    if (codes.length == 0 || activeLicenses.length == 0)
                         return resolve({ status: false, err: "Subscription expired. Renew to continue." });
 
                     const expiry = activeLicenses.at(0).time;
@@ -67,56 +143,14 @@ export const loginUser = (user: string, pass: string, seller: string, device: st
                     if (client.device === "-")
                         try {
                             await clients.findOneAndReplace({ _id: client._id }, { ...client, device });
-                        } catch (err) {
-                            console.log(err);
-                            return resolve({ status: false, err: "Device Registration failed. Try again or contact seller." });
-                        }
+                        } catch (err) { return resolve({ status: false, err: "Device Registration failed. Try again or contact seller." }); };
 
-                    const licenses = {};
-                    activeLicenses.forEach(({ page, name }) => {
-                        name = name.replace("-LEGIT", "");
-
-                        if (name == "AIMBOT") name = /AIMBOT\[v.*\]/;
-                        licenses[page] ? licenses[page].push(name) : licenses[page] = [name];
-                    });
-
-                    try {
-                        const codes = {};
-                        (await cheats.find({}).toArray()).map(doc => {
-                            if (doc.type == "EXTRA")
-                                /// @ts-expect-error
-                                if (doc._id == "RESET-GUEST")
-                                    return doc;
-
-                            if (doc.type in licenses)
-                                if (licenses[doc.type].includes("ALL") || licenses[doc.type].map(name => name.test ? name.test(doc._id) : name == doc._id).filter(e => e).length > 0)
-                                    return doc.codes.length > 0 ? doc : false;
-                                else
-                                    return false;
-                            else
-                                return false;
-                        })
-                            /// @ts-expect-error
-                            .filter(e => e).forEach(doc => doc.type !== "EXPERIMENTAL" ? codes[doc._id] = doc : codes[`EXPERIMENTAL | ${doc._id}`] = doc);
-
-                        return resolve({
-                            status: true, data: {
-                                codes: Buffer.from(Buffer
-                                    .from(JSON.stringify(codes), "utf8").toString("base64url").split("").reverse().join("~"), "utf8").toString("hex"), locations: client.locations, license: activeLicenses.map(e => ({ page: e.page, name: e.name })), expiry
-                            }
-                        });
-                    } catch (err) {
-                        console.log(err);
-                        return resolve({ status: false, err: "Unable to create session. Try again." });
-                    };
+                    return resolve({ status: true, data: { locations: client.locations, license: activeLicenses.map(e => ({ page: e.page, name: e.name })), codes, expiry } });
                 } else
                     return resolve({ status: false, err: "Device not registered. Contact seller to reset access." });
             else
                 return resolve({ status: false, err: "Wrong password. Try again." });
         else
             return resolve({ status: false, err: "Username not registered. Ask seller to add you." });
-    } catch (err) {
-        console.log(err);
-        return resolve({ status: false, err: "Error in searching username. Try again later." });
-    };
+    } catch (err) { console.log(err); return resolve({ status: false, err: "Error in searching username. Try again later." }); };
 });
