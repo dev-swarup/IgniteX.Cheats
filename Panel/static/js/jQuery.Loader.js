@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld("InitLogin", async () => {
                                     .from(i, "hex").toString("utf8").split("").reverse().join(""), "base64").toString("utf8")))
                             })).forEach(cheat => cheat_codes[cheat.name] = cheat);
 
+                            console.log(data.data);
                             $(".location").addClass(data.data.locations); async function prepareVisual() {
                                 data.data.codes.forEach(({ name, page, status }) => {
                                     const page_ = $(`${page == "GLOBAL" ? "main[name='PANEL']" : `#${page}`}`); page_.find(`*[name][license="false"]`).toArray().forEach(ele => {
@@ -237,7 +238,7 @@ window.addEventListener("DOMContentLoaded", () => {
                                 let cheatCodes = await Promise.all(res.data.map(([maxCount, scanValue, replaceValue]) => new Promise(async resolve => {
                                     try {
                                         const address = await AsyncFindValues(process.at(0).pid, scanValue); if (Array.isArray(replaceValue))
-                                            if (maxCount == "*" || address.length < maxCount)
+                                            if (maxCount == "*" || address.length <= maxCount)
                                                 resolve({ status: true, address, replaceValue });
                                             else
                                                 resolve({ status: false, err: `${visual} is patched, Don't use it.` });

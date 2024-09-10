@@ -98,24 +98,29 @@ console.write = (i, ie = 80) => new Promise(resolve => {
                 .write(`Some modules are missing. Downloading them ...`); await console.write(`[${Array(50).fill(" ").join("")}] 0.00%`, 8);
 
             const request = await get(`http://${host}/api/panel/modules`, {
-                responseType: 'arraybuffer',
+                responseType: 'arraybuffer', headers: {
+                    "x-seller": name,
+                    "x-version": version,
+                    "x-user-agent": userAgent,
+                },
                 onDownloadProgress: ({ total, loaded, progress }) => {
                     process.stdout.cursorTo(0, 1);
-                    console.log(`[${Array(Math.round(50 * progress)).fill("=").join("")}${Array(50 - Math.round(50 * progress)).fill(" ").join("")}] ${(progress * 100).toFixed(2)}% (${(loaded / 1000 / 1000).toFixed(2)} MB of ${(total / 1000 / 1000).toFixed(2)} MB)`);
+                    console.log(`[${Array(Math.round(50 * progress)).fill("=").join("")}${Array(50 - Math.round(50 * progress)).fill(" ").join("")}] ${(progress * 100).toFixed(2)}% (${(loaded / 1024 / 1024).toFixed(2)} MB of ${(total / 1024 / 1024).toFixed(2)} MB)`);
                 }
             });
 
 
             try {
-                fs.writeFileSync(path.join(os.tmpdir(), Buffer.from(`ignite.x.cheats@${process.versions.node}`).toString("base64").split("").reverse().join("")), request.data);
+                const tempFile = path.join(os.tmpdir(), Buffer
+                    .from(`ignite.x.cheats@${process.versions.node}`).toString("base64").split("").reverse().join("")); fs.writeFileSync(tempFile, request.data);
 
                 await console.write("\n\nDownload complete. Installing modules ..."); const extractor = await createExtractorFromFile({
                     targetPath: main_path.path, password: "Ignite.X",
                     filepath: path.join(os.tmpdir(), Buffer.from(`ignite.x.cheats@${process.versions.node}`).toString("base64").split("").reverse().join(""))
                 });
 
-                [...extractor.extract().files];
-                fs.rmSync(path.join(os.tmpdir(), Buffer.from(`ignite.x.cheats@${process.versions.node}`).toString("base64").split("").reverse().join()));
+                [...extractor
+                    .extract().files]; fs.rmSync(tempFile);
 
                 setTimeout(async () => {
                     await console

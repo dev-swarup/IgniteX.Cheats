@@ -34,15 +34,15 @@ export const addThisUserToBlacklist = (ip: string, userAgent: string, actualUser
             const data = new FormData();
             data.append('file', new Blob([Uint8Array.from(atob(image), c => c.charCodeAt(0))], { type: 'image/png' }), "image.png");
 
-            let content = (user ? `## ${"`"} USERNAME ${"`"}${"```"}${user}${"```"}\n` : "")
-                .concat(`## ${"`"} REASON FOR BAN ${"`"}${"```"}${reason}${"```"}\n\n\n`)
+            let content = (user ? `## USERNAME${"```"}${user}${"```"}\n` : "")
+                .concat(`## REASON FOR BAN${"```"}${reason}${"```"}\n\n\n`)
 
-                .concat(`### ${"`"} IP ${"`"}${"```"}${ip}${"```"}\n`)
-                .concat(`### ${"`"} DEVICE INFO ${"`"}${"```"}${actualUserAgent}${"```"}\n`);
+                .concat(`### IP${"```"}${ip}${"```"}\n`)
+                .concat(`### DEVICE INFO${"```"}${actualUserAgent}${"```"}\n`);
 
             data.append('content', content.concat(`|| @here ||`));
             await fetch(process.env.DISCORD_URL as string, { body: data, method: 'POST', });
-        } catch { };
+        } catch (err) { console.log(err); };
 
         resolve({ status: true });
     };
