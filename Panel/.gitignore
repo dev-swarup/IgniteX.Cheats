@@ -1,10 +1,3 @@
-*.exe
-*.dll
-*.dat
-*.pak
-locales
-v8_context_snapshot.bin
-
-**.jsc
-node_modules
-package-lock.json
+.vs
+x64
+Panel
