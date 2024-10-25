@@ -1,8 +1,8 @@
 {
     "version": "v1.11.0",
     "scripts": {
-        "start": "bun main.ts",
-        "start:serve": "pm2 start -i 1 --name MainServer --interpreter bun --max-memory-restart 150M main.ts"
+        "start": "bun index.ts",
+        "start:serve": "pm2 start -i 2 --name MainServer --interpreter bun --max-memory-restart 150M index.ts"
     },
     "dependencies": {
         "pm2": "~5.4.2",

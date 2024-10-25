@@ -1,13 +1,12 @@
 /// @ts-nocheck
-import path from "node:path";
 import { Elysia } from "elysia";
 
 import { ip } from "elysia-ip";
 import { rateLimit } from "elysia-rate-limit";
+import { Codes, User, addThisUserToBanlist } from "./mongodb.ts";
 import { Env, Version, UserAgent, ElysiaRequest } from "./utils.ts";
-import { Cheats, User, addThisUserToBanlist } from "./mongodb.ts";
 
-const app = new Elysia({ aot: Env.runtime == "LOCAL", analytic: Env.runtime == "LOCAL", precompile: Env.runtime == "CLOUD" }).onError(({ set, code, error }) => {
+const app = new Elysia({ aot: Env.Runtime == "LOCAL", analytic: Env.Runtime == "LOCAL", precompile: Env.Runtime == "CLOUD" }).onError(({ set, code, error }) => {
     set.status = "OK";
 
     if (code !== "NOT_FOUND") {
@@ -17,11 +16,11 @@ const app = new Elysia({ aot: Env.runtime == "LOCAL", analytic: Env.runtime == "
     } else
         return { status: false, err: "Oops! Path doesn't exist. Check URL and try again." };
 }), mainApp = Bun.serve<{}>({
-    port: Env.port,
+    port: Env.Port,
     hostname: "0.0.0.0",
 
     reusePort: true,
-    development: Env.runtime == "LOCAL",
+    development: Env.Runtime == "LOCAL",
     maxRequestBodySize: 1000 * 1000 * 3,
 
     fetch: async (req: ElysiaRequest) => {
@@ -40,11 +39,11 @@ app.group("/api", app => app.use(ip({ injectServer: () => ({ ...mainApp, request
     duration: 50000,
     errorResponse: Response.json({ status: false, err: "Too many requests. Temporarily banned for 10 minutes." }),
 
-    injectServer: () => ({ ...mainApp, requestIP: ({ ipAddress }: ElysiaRequest) => ipAddress }), skip: async () => Env.runtime == "LOCAL"
+    injectServer: () => ({ ...mainApp, requestIP: ({ ipAddress }: ElysiaRequest) => ipAddress }), skip: async () => Env.Runtime == "LOCAL"
 }))
 
     .onRequest(({ request: { headers } }) => {
-        if (["x-version", "x-seller", "x-user-agent"].map(i => headers.has(i)).filter(i => !i).length == 0 || ["sec-Websocket-key", "sec-websocket-protocol", "sec-websocket-extensions"].map(i => headers.has(i)).filter(i => !i).length == 0)
+        if (["x-version", "x-seller", "x-user-agent"].map(i => headers.has(i)).filter(i => !i).length == 0)
             return null;
 
         else
@@ -52,27 +51,16 @@ app.group("/api", app => app.use(ip({ injectServer: () => ({ ...mainApp, request
     })
 
 
-    .state<string, string>("seller", null).state<string, boolean>("isWebSocket", null).state<string, Version>("version", null).state<string, UserAgent>("userAgent", null).derive(({ store, request: { headers } }) => {
-        if (["sec-Websocket-key", "sec-websocket-protocol", "sec-websocket-extensions"].map(i => headers.has(i)).filter(i => !i).length == 0) {
-            const [socketVersion, seller, actualUserAgent] = headers.get("sec-websocket-protocol")?.split(", ") as string[];
+    .state<string, string>("seller", null).state<string, Version>("version", null).state<string, UserAgent>("userAgent", null).derive(({ store, request: { headers } }) => {
+        store.seller = headers.get("x-seller") as string;
 
-            store.seller = seller;
-            store.isWebSocket = true;
-
-            store.version = new Version(socketVersion);
-            store.userAgent = new UserAgent(...((actualUserAgent as string).split(", ")));
-        } else {
-            store.seller = headers
-                .get("x-seller") as string; store.isWebSocket = false;
-
-            store.version = new Version(headers.get("x-version") as string);
-            store.userAgent = new UserAgent(...((headers.get("x-user-agent") as string).split(", ")));
-        }
+        store.version = new Version(headers.get("x-version") as string);
+        store.userAgent = new UserAgent(...((headers.get("x-user-agent") as string).split(", ")));
     })
 
-    .onBeforeHandle(({ store: { version, isWebSocket } }) => {
+    .onBeforeHandle(({ store: { version } }) => {
         if (!(version as Version).isUpdated)
-            return Response.json({ status: false, err: "Using older version. Update to latest." }, { status: isWebSocket ? 401 : 200 });
+            return Response.json({ status: false, err: "Using older version. Update to latest." }, { status: 200 });
     })
 
     .group("/status", app => app
@@ -87,10 +75,7 @@ app.group("/api", app => app.use(ip({ injectServer: () => ({ ...mainApp, request
         })
         .post("/register", async ({ ip, store: { seller, userAgent }, query: { user, pass } }) => {
 
-        }))
-
-    .group("/panel", app => app
-        .get("/modules", async () => Bun.file(path.join(__dirname, "Panel", "IgniteX.rar")))));
+        })));
 
 
-await Cheats.initRecord();
+await Codes.init();
