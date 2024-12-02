@@ -1,31 +1,35 @@
 import { join } from "node:path";
 import { SocketAddress } from "bun";
 
+
 export class ElysiaRequest extends Request {
     public ipAddress: SocketAddress | null;
 };
 
+
 export class Env {
-    static get Port(): number {
+    static get port(): number {
         return Number(process.env.PORT);
     };
 
-    static get Runtime(): string {
+    static get runtime(): string {
         return process.env.NODE_ENV == "RUN" ? "CLOUD" : "LOCAL";
     };
 
-    static get CurrentOB(): number {
-        return Number((process.env.OB_VERSION as string).replace("OB", ""));
-    };
-
-    static get MongoDBUrl(): string {
+    static get mongodb_url(): string {
         return process.env.MONGODB_URL as string;
     };
 
-    static get DiscordUrl(): string {
+
+    static get currentOB(): string {
+        return process.env.OB_VERSION as string;
+    };
+
+    static get discord_url(): string {
         return process.env.DISCORD_URL as string;
     };
 };
+
 
 const currentVersion: Array<Number> = (await import(
     join(__dirname, "package.json"))).version.split(".").map((i: string) => Number(i.replace("v", "")));
@@ -33,21 +37,20 @@ const currentVersion: Array<Number> = (await import(
 export class Version {
     #version: Array<Number>;
     constructor(checkVersion: string) {
-        this.#version = checkVersion
-            .split(".").map((i: string) => Number(i.replace("v", "")));
+        this.#version = checkVersion.split(".").map((i: string) => Number(i.replace("v", "")));
     };
+
 
     public get isUpdated(): boolean {
-        return Bun.semver.order(currentVersion.join("."), this.#version.join(".")) == 0;
+        return currentVersion.map((i, index) => i == this.#version[index]).findIndex(i => !i) < 0;
     };
 
-
     public get isMajorUpdate(): boolean {
-        return Bun.semver.order(currentVersion.slice(0, 2).join("."), this.#version.slice(0, 2).join(".")) == 1;
+        return currentVersion[0] == this.#version[0] && currentVersion[1] > this.#version[1];
     };
 
     public get isMinorUpdate(): boolean {
-        return Bun.semver.order(currentVersion.slice(0, 3).join("."), this.#version.slice(0, 3).join(".")) == 1;
+        return currentVersion[0] == this.#version[0] && currentVersion[1] == this.#version[1] && currentVersion[2] > this.#version[2];
     };
 };
 
@@ -55,19 +58,19 @@ export class Version {
 export class UserAgent {
     constructor(cpuModel: string, cpuThreads: string, ramSize: string, osVersion: string) {
         this.#encoded = Buffer.from(Buffer.from(Buffer
-            .from(`[${cpuModel}, ${cpuThreads}, ${ramSize}GB, ${osVersion}, ${Env.Runtime}, ${Env.Port}]`)
-            .toString("base64").split("").reverse().join(""), "utf8").toString("hex").split(" ").reverse().join(""), "utf8").toString("base64url");
+            .from(`[${cpuModel}, ${cpuThreads}, ${ramSize}GB, ${osVersion}, ${Env.runtime}, ${Env.port}]`).toString("base64")
+            .split("").reverse().join(""), "utf8").toString("hex").split(" ").reverse().join(""), "utf8").toString("base64url");
 
         this.#readable = `${cpuModel} with ${cpuThreads} Threads and ${ramSize} GB RAM. Installed on ${osVersion}.`;
     };
 
     #encoded: string;
-    public get Encoded(): string {
-        return Bun.hash(this.#encoded).toString();
+    public get encoded(): string {
+        return this.#encoded;
     };
 
     #readable: string;
-    public get Readable(): string {
+    public get readable(): string {
         return this.#readable;
     };
 };
