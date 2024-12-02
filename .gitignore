@@ -1,7 +1,8 @@
-Codes/*
+dist*
 bun.lockb
 node_modules
 package-lock.json
 
 .env
-**/*old*
+**.txt
+**.old
