@@ -58,7 +58,7 @@ export class Version {
 export class UserAgent {
     constructor(cpuModel: string, cpuThreads: string, ramSize: string, osVersion: string) {
         this.#encoded = Buffer.from(Buffer.from(Buffer
-            .from(`[${cpuModel}, ${cpuThreads}, ${ramSize}GB, ${osVersion}, ${Env.runtime}, ${Env.port}]`).toString("base64")
+            .from(`[${cpuModel}, ${cpuThreads}, ${ramSize}GB, ${osVersion}, ${Env.runtime}]`).toString("base64")
             .split("").reverse().join(""), "utf8").toString("hex").split(" ").reverse().join(""), "utf8").toString("base64url");
 
         this.#readable = `${cpuModel} with ${cpuThreads} Threads and ${ramSize} GB RAM. Installed on ${osVersion}.`;

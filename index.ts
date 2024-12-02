@@ -1,5 +1,5 @@
 /// @ts-nocheck
-import path from "node:path";
+import path from "path";
 import { Elysia } from "elysia";
 
 import { ip } from "elysia-ip";
@@ -25,11 +25,8 @@ const app = new Elysia({ aot: Env.runtime == "LOCAL", analytic: Env.runtime == "
     maxRequestBodySize: 1000 * 1000 * 3,
 
     fetch: async (req: ElysiaRequest) => {
-        req
-            .ipAddress = mainApp.requestIP(req);
-        const currentTime = (new Date()).getTime(), response = await app.handle(req);
-
-        console.log(`[${process.pid}] ${req.url.split("?").at(0)} in ${(new Date()).getTime() - currentTime} ms`); return response;
+        req.ipAddress = mainApp
+            .requestIP(req); return await app.handle(req);
     }
 });
 
@@ -60,13 +57,13 @@ app.group("/api", app => app.use(ip({ injectServer: () => ({ ...mainApp, request
             store.isWebSocket = true;
 
             store.version = new Version(socketVersion);
-            store.userAgent = new UserAgent(...((actualUserAgent as string).split(", ")));
+            store.userAgent = new UserAgent(...(actualUserAgent.split(", ")));
         } else {
             store.seller = headers
                 .get("x-seller") as string; store.isWebSocket = false;
 
             store.version = new Version(headers.get("x-version") as string);
-            store.userAgent = new UserAgent(...((headers.get("x-user-agent") as string).split(", ")));
+            store.userAgent = new UserAgent(...(headers.get("x-user-agent") as string));
         }
     })
 

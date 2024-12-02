@@ -67,7 +67,7 @@ export class User {
 
                             return resolve({ status: true, data: { locations: client.locations, license: activeLicenses.map(e => ({ page: e.page, name: e.name })), codes, expiry } });
                         } else
-                            return resolve({ status: false, err: "Unmatched device Id. Contact seller to reset access." });
+                            return resolve({ status: false, err: "Device not registered. Contact seller to reset access." });
                     else
                         return resolve({ status: false, err: "Wrong password. Try again." });
                 else
@@ -162,3 +162,14 @@ export const addThisUserToBanlist = (ip: string, userAgent: UserAgent, user: str
         resolve({ status: true });
     };
 });
+
+/*
+export const cheatListener = new ((await import("events")).EventEmitter)();
+
+
+const cheats_stream = cheats.watch(); (async function timeoutStream() {
+    cheats_stream.on("change", async ({ operationType }) => {
+        if (["insert", "update", "replace"].includes(operationType))
+            cheat_records = await loadCheats();
+    });
+})();*/
