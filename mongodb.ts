@@ -16,7 +16,8 @@ export class User {
             codes: Array<{
                 name: string;
                 page: string;
-                data: Array<string>;
+                cheats: Array<string>;
+                anticheats: Array<string>;
                 status: "safe" | "warn" | "risk";
             }>, locations: Array<string>, license: Array<{ name: string, page: string, time: number | "LIFETIME" }>, expiry: number | "LIFETIME"
         }
@@ -51,7 +52,7 @@ export class User {
                                     return (licenses[page].includes("ALL") || licenses[page].includes(name));
                                 else
                                     return false;
-                            }).map(({ id, page, status, cheats }) => ({ name: id, page, status, data: cheats }));
+                            }).map(data => ({ name: data.id, page: data.page, status: data.status, cheats: data.cheats, anticheats: data.anticheats }));
 
                             if (codes.length == 0 || activeLicenses.length == 0)
                                 return resolve({ status: false, err: "Subscription expired. Renew to continue." });
@@ -108,16 +109,17 @@ export class Cheats {
                 const [page, name] = (id as string).split(".");
 
                 return {
-                    page, name: name || "~", data: data.filter(({ cheats }) => cheats.length > 0).map(({ name: id, status, cheats }) => {
-                        const [price, name] = id.split("@"); return {
-                            name, status, isFree: price == "FREE", cheats: cheats
-                                .map(i => Buffer.from(Buffer.from(JSON.stringify(i)).toString("base64").split("").reverse().join("")).toString("hex"))
+                    page, name: name || "~", data: data.filter(({ cheats }) => cheats.length > 0).map(cheat => {
+                        const [price, name] = cheat.name.split("@"); return {
+                            name: name, status: cheat.status, isFree: price == "FREE",
+                            cheats: cheat.cheats.map(i => Buffer.from(Buffer.from(JSON.stringify(i)).toString("base64").split("").reverse().join("")).toString("hex")),
+                            ...(cheat.anticheats ? { anticheats: cheat.anticheats.map(i => Buffer.from(Buffer.from(JSON.stringify(i)).toString("base64").split("").reverse().join("")).toString("hex")) } : { anticheats: [] })
                         };
                     })
                 };
             }).toArray())
-                .filter(({ data }) => data.length > 0).forEach(({ name, page, data }) => records.push(...data.map(({ name: id, status, cheats, isFree }) => ({
-                    page, isFree, status, cheats,
+                .filter(({ data }) => data.length > 0).forEach(({ name, page, data }) => records.push(...data.map(({ name: id, status, cheats, anticheats, isFree }) => ({
+                    page, isFree, status, cheats, anticheats,
                     name: name == "~" ? id : name, id: `${name == "~" ? "" : name}${name == "~" ? id : `[${id}]`}`
                 }))));
 
@@ -132,6 +134,7 @@ export class Cheats {
         isFree: boolean;
 
         cheats: Array<string>;
+        anticheats: Array<string>;
         status: "safe" | "warn" | "risk";
     }> = [];
 };
@@ -162,14 +165,3 @@ export const addThisUserToBanlist = (ip: string, userAgent: UserAgent, user: str
         resolve({ status: true });
     };
 });
-
-/*
-export const cheatListener = new ((await import("events")).EventEmitter)();
-
-
-const cheats_stream = cheats.watch(); (async function timeoutStream() {
-    cheats_stream.on("change", async ({ operationType }) => {
-        if (["insert", "update", "replace"].includes(operationType))
-            cheat_records = await loadCheats();
-    });
-})();*/
